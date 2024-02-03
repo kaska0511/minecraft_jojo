@@ -5,7 +5,7 @@ from stands.Common_func import Common_func
 
 class Killer_Qeen(Common_func):
     def __init__(self, name, mcr, target=None, observe_pos=None, bomb_pos=None, run_stand=False, mode=0, summon_flag=False, air_bomb_dis=0) -> None:
-        super().__init__(name)
+        super().__init__(name, mcr)
         self.name = name
         self.mcr = mcr
         self.uuid = self.get_uuid()

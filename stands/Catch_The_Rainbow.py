@@ -3,7 +3,7 @@ from stands.Common_func import Common_func
 
 class Catch_The_Rainbow(Common_func):
     def __init__(self, name, mcr, ability_limit=0, mask=None, run_stand=False) -> None:
-        super().__init__(name)
+        super().__init__(name, mcr)
         self.name = name
         self.mcr = mcr
         self.uuid = self.get_uuid()
@@ -89,6 +89,8 @@ class Catch_The_Rainbow(Common_func):
 
         # 能力発動可能なバイオームに居て、雨が降っている。
         if (self.ability_limit == 0 or self.ability_limit == 1) and rainny:
+            self.run_stand = True
+        elif rainny is None:
             self.run_stand = True
         else:
             self.run_stand = False

@@ -27,7 +27,7 @@ class The_World(Common_func):
         if tag == "DIO" and self.run_stand == False:
             self.mcr.command(f'execute as {self.name} at @s run tp @e[tag=DIOinter,limit=1] ^ ^ ^1')
             inter = self.mcr.command(f'data get entity @e[tag=DIOinter,limit=1] interaction.player') # Interaction has the following entity data: [I; 123, -1234, -1234, 1234]
-            inter_uuid = re.sub('[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: ', '', inter)
+            inter_uuid = re.sub(r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: ', '', inter)
             self.mcr.command(f'data remove entity @e[tag=DIOinter,limit=1] interaction')
             
             if self.uuid == inter_uuid and self.run_stand == False and self.timer != 0:
@@ -121,31 +121,17 @@ class The_World(Common_func):
         # whileで視線と場所を固定する。
         # アマスタを重なるように配置し行動を制限。
         if not self.fix_flag:
-            #self.poss = self.get_pos()
             self.rots = self.get_rot()
-            #if self.poss == {} or self.rots == {}:
             if self.rots == {}:
                 return
             self.fix_flag = True
         for player in self.get_login_user():
             if player == self.name: # 自分の時は固定しない。
-                #pass
                 continue
-            ## 一番最初にアマスタを各プレイヤーと重なるように配置する。
-            #self.mcr.command(f'execute as {player} at @s run tp @e[tag=The_World,tag={player},limit=1] ~ ~ ~')
 
-            #print(self.poss)
-            #pos_list = self.poss.get(player, None)    # 座標取得
             rot_list = self.rots.get(player, None)    # 視線座標取得
 
-            #if (pos_list is not None) or (rot_list is not None):
             if rot_list is not None:
                 self.mcr.command(f'execute as @e[tag={player},limit=1] at @s run tp {player} ~ ~ ~ {rot_list[0]} {rot_list[1]}')
-                #self.mcr.command(f'execute as {player} at @s run tp {player} ~ ~ ~ {rot_list[0]} {rot_list[1]}')
-                """
-                if self.get_Onground(player):
-                    self.mcr.command(f'execute as {player} at @s run tp {player} ~ ~ ~ {rot_list[0]} {rot_list[1]}')     # 1b -> 地に足ついている。視線だけ固定
-                else:
-                    self.mcr.command(f'execute as {player} at @s run tp {player} {pos_list[0]} {pos_list[1]} {pos_list[2]} {rot_list[0]} {rot_list[1]}')   # 0b 泳いでいる、落下中など。
-                """
+
 

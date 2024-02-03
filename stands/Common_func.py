@@ -9,8 +9,7 @@ class Common_func:
 
     def get_uuid(self):
         result = self.mcr.command(f'data get entity {self.name} UUID')
-        uuid = re.sub('[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: ', '', result)
-        print(uuid)
+        uuid = re.sub(r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: ', '', result)
         return uuid
 
     def get_login_user(self):
@@ -107,7 +106,7 @@ class Common_func:
                 エンティティが死亡しているならTrue、死亡していないならFalseを返します。\n
                 エンティティが見つからないならNoneを返します。
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
+        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
         result = self.mcr.command(f'data get entity nbt={{UUID:{uuid}}}] DeathTime')
 
         split_data = re.split(r' ', result)
@@ -131,21 +130,12 @@ class Common_func:
         pos_dict = {}
         # 参加者リストを取得
         #new_player = 'komine'
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
+        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
         for new_player in self.get_login_user():
             if new_player != '':
                 res = self.mcr.command(f'data get entity {new_player} Pos')        # 座標
-
                 res = re.sub(reg, '', res).strip("[d]")
-                pos = re.split('d, ', res)
-                '''
-                now_locate = split_str[6] + split_str[7] + split_str[8]    # 現在地[5435.5d, 74.0d, -6207.5d]
-                edit_locate = now_locate.strip('[]').replace(',', '')
-                pos = re.split('d', edit_locate)    # pos = ['5435.5', '74.0', '-6207.5', '']
-                pos.remove("")                      # pos = ['5435.5', '74.0', '-6207.5']
-                '''
-
-                pos_dict[new_player] = pos     #{"KASKA0511":[0, 0, 0]}
+                pos_dict[new_player] = re.split('d, ', res)     #{"KASKA0511":[0, 0, 0]}
 
         return pos_dict
 
@@ -167,17 +157,8 @@ class Common_func:
         for new_player in self.get_login_user():
             if new_player != '':
                 res = self.mcr.command(f'data get entity {new_player} Rotation')   # 視線
-                """
-                split_str = re.split(r' ', rec)
-                now_view = split_str[6] + split_str[7]    # 現在地[5435.5f, -6207.5f]
-                edit_view = now_view.strip('[]').replace(',', '')
-                rot = re.split('f', edit_view)    # pos = ['5435.5', '-6207.5', '']
-                rot.remove("")                      # pos = ['5435.5', '-6207.5']
-                """
                 res = re.sub(reg, '', res).strip("[f]")
-                rot = re.split('f, ', res)
-
-                rot_dict[new_player] = rot     #{"KASKA0511":[0, 0]}
+                rot_dict[new_player] = re.split('f, ', res)     #{"KASKA0511":[0, 0]}
 
         return rot_dict
 
@@ -191,7 +172,7 @@ class Common_func:
         Return
             slotno : int
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
+        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
         Slotres = self.mcr.command(f'data get entity {self.name} SelectedItemSlot')
 
         split = re.split(r' ', Slotres)
@@ -211,7 +192,7 @@ class Common_func:
                 アイテム名とそれ付与されているタグが返されます。
                 ex -> ("minecraft.clock", "DIO") or ("minecraft.clock", ["DIO","b"])
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
+        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
         id_rec = self.mcr.command(f'data get entity {self.name} SelectedItem.id')
         tag_rec = self.mcr.command(f'data get entity {self.name} SelectedItem.tag.Tags')     # tag取得はこれがいいかも
         
@@ -260,7 +241,7 @@ class Common_func:
                 エンティティ名とUUIDを返します。\n
                 ex -> "minecraft:horse", "[I; 1963727455, 2072923448, -1958974380, 527210886]"
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
+        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
         res_name = self.mcr.command(f'data get entity {self.name} RootVehicle.Entity.id')
         
         split_ride = re.split(r' ', res_name)
@@ -288,7 +269,7 @@ class Common_func:
                 動きのベクトルを返します。\n
                 何にも乗っていない場合はNoneを返します。
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
+        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
         res = self.mcr.command(f'data get entity {self.name} RootVehicle.Entity.Motion')
         split_ride = re.split(r' ', res)
         ride_motion = None if split_ride[0] == 'Found' or split_ride[0] == 'No' else re.sub(reg, '', res).strip('"')
@@ -316,7 +297,7 @@ class Common_func:
                 エンティティが見つかったら次の中から値が返されます。"minecraft:overworld", "minecraft:the_nether", "minecraft:the_end"\n
                 エンティティが見つからないならNoneを返します。
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
+        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
         result = self.mcr.command(f'data get entity @e[nbt={{UUID:{uuid}}},limit=1] Dimension')
 
         split_data = re.split(r' ', result)
@@ -335,7 +316,7 @@ class Common_func:
             inventory : str
                 インベントリ情報を文字列で返します。
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
+        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
         inventory = self.mcr.command(f'data get entity {self.name} Inventory')
 
         split_inve = re.split(r' ', inventory)
@@ -362,7 +343,7 @@ class Common_func:
             tag : str
                 そのアイテムが持つtag
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
+        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
         id = self.mcr.command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].id')
         tag = self.mcr.command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].tag.Tags')
 
@@ -385,7 +366,7 @@ class Common_func:
             health : float
                 プレイヤーの体力。
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
+        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
         result = self.mcr.command(f'data get entity {self.name} Health')
 
         split_data = re.split(r' ', result)

@@ -4,7 +4,7 @@ from stands.Common_func import Common_func
 
 class Twentieth_Century_Boy(Common_func):
     def __init__(self, name, mcr, rot = None, run_stand=False) -> None:
-        super().__init__(name)
+        super().__init__(name, mcr)
         self.name = name
         self.mcr = mcr
         self.uuid = self.get_uuid()

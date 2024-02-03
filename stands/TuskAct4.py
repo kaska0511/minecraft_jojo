@@ -3,7 +3,7 @@ from stands.Common_func import Common_func
 
 class TuskAct4(Common_func):
     def __init__(self, name, mcr, target=None, ride_uuid = None, run_stand=False, summon_flag=False) -> None:
-        super().__init__(name)
+        super().__init__(name, mcr)
         self.name = name
         self.mcr = mcr
         self.uuid = self.get_uuid()
@@ -47,8 +47,8 @@ class TuskAct4(Common_func):
         uuid = None # 射程距離内にターゲットになるものがない場合はNoneを返す。
         for i in range(1,60):
             y = round(9/60*i + 1)
-            target_uuid = self.mcr.command(f'execute as {self.name} at @s positioned ^ ^ ^{i} if entity @e[name=!{self.name},type=!item,tag=!tuskinter,nbt=!{{UUID:{self.ride_uuid}}},distance=..{y},sort=nearest] run data get entity @e[name=!{self.name},type=player,tag=!tuskinter,limit=1,distance=..{y},sort=nearest] UUID')
-            target_mob_uuid = self.mcr.command(f'execute as {self.name} at @s positioned ^ ^ ^{i} if entity @e[name=!{self.name},type=!item,tag=!tuskinter,nbt=!{{UUID:{self.ride_uuid}}},distance=..{y},sort=nearest] run data get entity @e[name=!{self.name},type=!item,tag=!tuskinter,nbt=!{{UUID:{self.ride_uuid}}},limit=1,distance=..{y},sort=nearest] UUID')
+            target_uuid = self.mcr.command(f'execute as {self.name} at @s positioned ^ ^ ^{i} if entity @e[name=!{self.name},type=!item,type=!armor_stand,tag=!tuskinter,nbt=!{{UUID:{self.ride_uuid}}},distance=..{y},sort=nearest] run data get entity @e[name=!{self.name},type=player,tag=!tuskinter,limit=1,distance=..{y},sort=nearest] UUID')
+            target_mob_uuid = self.mcr.command(f'execute as {self.name} at @s positioned ^ ^ ^{i} if entity @e[name=!{self.name},type=!item,type=!armor_stand,tag=!tuskinter,nbt=!{{UUID:{self.ride_uuid}}},distance=..{y},sort=nearest] run data get entity @e[name=!{self.name},type=!item,tag=!tuskinter,nbt=!{{UUID:{self.ride_uuid}}},limit=1,distance=..{y},sort=nearest] UUID')
             # ここでプレイヤーがいない場所を狙っていたらtarget_uuidに何が入る？Noneか""のどちら？
             # もしNoneなら下の処理でエラーが吐かれる。
             #print(f'player:{target_uuid}, mob:{target_mob_uuid}')

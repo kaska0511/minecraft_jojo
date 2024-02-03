@@ -12,6 +12,8 @@ from stands.Killer_Qeen import Killer_Qeen
 from stands.Catch_The_Rainbow import Catch_The_Rainbow
 from stands.Twentieth_Century_Boy import Twentieth_Century_Boy
 
+# server.propertiesのcommandblockを許可する必要がありそう。
+
 def read_rconinfo():
     '''
     server.propertiesからrconのパスワードとポート番号を取得します。
@@ -98,18 +100,18 @@ def main(mcr):
     gift_stand()
     stand_list = open_stand_list_json()
     
-    #world = The_World(name=stand_list["The_World"], mcr=mcr, pos="[0,0,0]", timer=5)    # 初回5秒
-    world = The_World(name="KASKA0511", mcr=mcr, pos="[0,0,0]", timer=5)    # 初回5秒
+    world = The_World(name=stand_list["The_World"], mcr=mcr, pos="[0,0,0]", timer=5)    # 初回5秒
+    #world = The_World(name="KASKA0511", mcr=mcr, pos="[0,0,0]", timer=5)    # 初回5秒
     mcr.command('kill @e[tag=DIOinter]')
-    mcr.command('summon interaction 0 -64 0 {Tags:["DIOinter"],height:2}')
+    mcr.command('summon interaction 0 -64 0 {Tags:["DIOinter"],height:2,width:1}')
 
     tusk = TuskAct4(name=stand_list["TuskAct4"], mcr=mcr)
     mcr.command('kill @e[tag=tuskinter]')
-    mcr.command('summon interaction 0 -64 0 {Tags:["tuskinter"],height:2}')
+    mcr.command('summon interaction 0 -64 0 {Tags:["tuskinter"],height:2,width:1}')
 
     kqeen = Killer_Qeen(name=stand_list["Killer_Qeen"], mcr=mcr)
     mcr.command('kill @e[tag=kqeeninter]')
-    mcr.command('summon interaction 0 -64 0 {Tags:["kqeeninter"],height:2}')
+    mcr.command('summon interaction 0 -64 0 {Tags:["kqeeninter"],height:2,width:1}')
 
     rain = Catch_The_Rainbow(name=stand_list["Catch_The_Rainbow"], mcr=mcr)
     rain.set_scoreboard()
@@ -118,7 +120,7 @@ def main(mcr):
 
     boy = Twentieth_Century_Boy(name=stand_list["Twentieth_Century_Boy"], mcr=mcr)
     mcr.command('kill @e[tag=boyinter]')
-    mcr.command('summon interaction 0 -64 0 {Tags:["boyinter"],height:2}')
+    mcr.command('summon interaction 0 -64 0 {Tags:["boyinter"],height:2,width:1}')
 
     while True:
         #print(mcr.command('data get entity @e[tag=Amedas,limit=1] Pos'))
@@ -162,19 +164,22 @@ def main(mcr):
         
         # アイテムを付与。死亡時やアイテムをなくした場合自動で与えられる。
         if not world.bool_have_a_stand('DIO') and world.name != '1dummy':
-            mcr.command('give ' + world.name + " clock{Tags:DIO,display:{Name:'" + '[{"text":"' + item_name_list[0] + '"}]'+"'}}")
+            mcr.command('give ' + world.name + " clock{Tags:DIO,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[0] + '"}]'+"'}}")
         if not tusk.bool_have_a_stand('Saint') and tusk.name != '1dummy':
-            mcr.command('give ' + tusk.name + " bone{Tags:Saint,display:{Name:'" + '[{"text":"' + item_name_list[1] + '"}]'+"'}}")
+            mcr.command('give ' + tusk.name + " bone{Tags:Saint,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[1] + '"}]'+"'}}")
         if not kqeen.bool_have_a_stand('Killer') and kqeen.name != '1dummy':   # 全て失わないと再取得できないので注意
-            mcr.command('give ' + kqeen.name + " gunpowder{Tags:Killer,display:{Name:'" + '[{"text":"' + item_name_list[2][0] + '"}]'+"'}}")
-            mcr.command('give ' + kqeen.name + " flint{Tags:Killer,display:{Name:'" + '[{"text":"' + item_name_list[2][1] + '"}]'+"'}}")
-            mcr.command('give ' + kqeen.name + " fire_charge{Tags:Killer,display:{Name:'" + '[{"text":"' + item_name_list[2][2] + '"}]'+"'}}")
+            mcr.command('give ' + kqeen.name + " gunpowder{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][0] + '"}]'+"'}}")
+            mcr.command('give ' + kqeen.name + " flint{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][1] + '"}]'+"'}}")
+            mcr.command('give ' + kqeen.name + " fire_charge{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][2] + '"}]'+"'}}")
         if not rain.bool_have_a_stand('Rain') and rain.name != '1dummy':
-            mcr.command('give ' + rain.name + " skeleton_skull{Tags:Rain,display:{Name:'" + '[{"text":"' + item_name_list[3] + '"}]'+"'}}")
+            mcr.command('give ' + rain.name + " skeleton_skull{Tags:Rain,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[3] + '"}]'+"'}}")
         if not boy.bool_have_a_stand('Boy') and boy.name != '1dummy':
-            mcr.command('give ' + boy.name + " snowball{Tags:Boy,display:{Name:'" + '[{"text":"' + item_name_list[4] + '"}]'+"'}}")
+            mcr.command('give ' + boy.name + " snowball{Tags:Boy,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[4] + '"}]'+"'}}")
         
         # 能力管理。ここで能力を発動させる。
+        # スタンドを追加したらここにスタンド名.loop()を追加するイメージ。
+        # 時を止めているときに能力が止まる場合はifの中に、止まらない場合はifの外に配置する。
+        # 基本的にはifの中に配置するでしょう。
         world.loop()
         tusk.loop()
         if not world.run_stand:
@@ -264,23 +269,6 @@ def time_check_main(mcr):
             boy.loop()
             end = time.time()
             print(f'20th:{end - start}')
-
-
-class Little_Feat(Common_func):
-    def __init__(self, name, uuid) -> None:
-        super().__init__(name)
-        self.name = name
-        self.uuid = uuid
-
-class Made_In_Heaven(Common_func):
-    def __init__(self, name, uuid) -> None:
-        super().__init__(name)
-        self.name = name
-        self.uuid = uuid
-
-
-
-
 
 
 if __name__ == '__main__':
