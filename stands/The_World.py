@@ -68,8 +68,8 @@ class The_World(Common_func):
 
 
     def stop_player_effect_list(self):
-        self.mcr.command(f'effect give @e[name=!{self.name}] minecraft:slowness {self.timer} 255 true')
-        self.mcr.command(f'effect give @e[name=!{self.name}] minecraft:jump_boost {self.timer} 238 true')
+        self.mcr.command(f'attribute @e[name=!{self.name}] minecraft:generic.gravity base set 0')
+        self.mcr.command(f'attribute @e[name=!{self.name}] minecraft:generic.jump_strength base set 0')
         self.mcr.command(f'effect give @e[name=!{self.name}] minecraft:water_breathing {self.timer} 1 true')
         self.mcr.command(f'effect give @e[name=!{self.name}] minecraft:fire_resistance {self.timer} 1 true')
         self.mcr.command(f'effect give @e[name=!{self.name}] minecraft:slow_falling {self.timer} 5 true')
@@ -80,8 +80,8 @@ class The_World(Common_func):
         self.mcr.command(f'effect give @a minecraft:blindness 1 1 true')
         self.mcr.command(f'tick unfreeze')
 
-        self.mcr.command(f'effect clear @e[name=!{self.name}] minecraft:slowness')
-        self.mcr.command(f'effect clear @e[name=!{self.name}] minecraft:jump_boost')
+        self.mcr.command(f'attribute @e[name=!{self.name}] minecraft:generic.gravity base set 0.08')
+        self.mcr.command(f'attribute @e[name=!{self.name}] minecraft:generic.jump_strength base set 0.42')
         self.mcr.command(f'effect clear @e[name=!{self.name}] minecraft:water_breathing')
         self.mcr.command(f'effect clear @e[name=!{self.name}] minecraft:fire_resistance')
         self.mcr.command(f'effect clear @e[name=!{self.name}] minecraft:slow_falling')
