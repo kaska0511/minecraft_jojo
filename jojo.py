@@ -5,6 +5,7 @@ import json
 import os
 from mcrcon import MCRcon
 
+from Steel_Ball_Run_Race.SBR import *
 from stands.Common_func import Common_func
 from stands.The_World import The_World
 from stands.TuskAct4 import TuskAct4
@@ -97,6 +98,8 @@ def main(mcr):
     mcr.command("gamerule sendCommandFeedback false")
     item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ")
 
+    prepare(mcr)
+
     gift_stand()
     stand_list = open_stand_list_json()
     
@@ -123,7 +126,6 @@ def main(mcr):
     mcr.command('summon interaction 0 -64 0 {Tags:["boyinter"],height:2,width:1}')
 
     while True:
-        #print(mcr.command('data get entity @e[tag=Amedas,limit=1] Pos'))
         gift_stand()
         stand_list = open_stand_list_json()
 
