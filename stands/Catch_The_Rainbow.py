@@ -2,16 +2,22 @@ import re
 from stands.Common_func import Common_func
 
 class Catch_The_Rainbow(Common_func):
-    def __init__(self, name, mcr, ability_limit=0, mask=None, run_stand=False) -> None:
+    def __init__(self, name, mcr, controller, ability_limit=0, mask=None, run_stand=False) -> None:
         super().__init__(name, mcr)
         self.name = name
         self.mcr = mcr
+        self.controller = controller
         self.uuid = self.get_uuid()
         self.health = 0.0
         self.ability_limit = ability_limit
         self.mask = mask
         self.run_stand = run_stand
         self.kill_check = False
+        self.pass_point = int(self.get_pass_point('Catch_The_Rainbow'))
+        self.point_pos = self.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
+        self.ticket_item = self.get_ticket_info(self.pass_point)
+        self.ticket_target = False
+
 
     def set_scoreboard(self):
         self.mcr.command(f'scoreboard objectives add SNEAK minecraft.custom:minecraft.sneak_time')
@@ -34,8 +40,8 @@ class Catch_The_Rainbow(Common_func):
         self.mcr.command(f'execute as {self.name} at @s positioned {res[0]} 317 {res[2]} rotated 0 0 run fill ^1 ^ ^-1 ^-1 ^2 ^1 minecraft:barrier destroy')
         self.mcr.command(f'execute as {self.name} at @s positioned {res[0]} 317 {res[2]} rotated 0 0 run fill ^ ^1 ^ ^ ^2 ^ minecraft:air destroy')
         self.mcr.command(f'execute as {self.name} at @s run summon minecraft:snow_golem {res[0]} 318 {res[2]} {{NoAI:1,Silent:1,NoGravity:1,Tags:["Amedas"]}}')
-        self.mcr.command(f'effect give @e[tag=Amedas,limit=1] minecraft:health_boost infinite 125 false')  # 体力最大値をウォーデン並みにする。
-        self.mcr.command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 250 true')     # 最大値を変更したら上限まで回復させる必要がある。（即時回復）
+        self.mcr.command(f'effect give @e[tag=Amedas,limit=1] minecraft:health_boost infinite 255 false')  # 体力最大値をウォーデン並みにする。
+        self.mcr.command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 255 true')     # 最大値を変更したら上限まで回復させる必要がある。（即時回復）
 
 
     def mask_air(self):
@@ -80,6 +86,9 @@ class Catch_The_Rainbow(Common_func):
         if self.name == "1dummy":
             return
         
+        self.assign_throwitem_tag()
+        self.assign_deathitem_tag()
+
         id, tag = self.get_select_Inventory(self.name, "103")
 
         rainny = self.check_amedas()
@@ -138,6 +147,37 @@ class Catch_The_Rainbow(Common_func):
                 health = self.get_Health()
                 if health is not None and health <= 4.0:
                     self.mcr.command(f'kill {self.name}')
+
+        # チケットアイテム獲得によるターゲット該当者処理
+        # チケットアイテムを持っていないならFalse。死んだりチェストにしまうとFalseになる。
+        self.ticket_target = True if self.check_ticket_item(self.name, self.ticket_item[0], self.ticket_item[1]) else False
+
+        # チェックポイント攻撃時処理
+        if self.uuid == self.passcheck_checkpoint(f'No{self.pass_point+1}'):
+            # 同じUUIDであれば持ち物の内容にかかわらずデータを削除。
+            self.mcr.command(f'data remove entity @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] attack')
+
+            if not self.check_active(f'No{self.pass_point+1}') and self.controller.prepare:
+                # そのチェックポイントは誰も通過していないため、一位として扱っていいかチェックする。
+                #! チケットアイテム情報を取得する。処理追加。
+                if self.check_ticket_item(self.name, self.ticket_item[0], self.ticket_item[1]):
+                    # 一位通過者
+                    self.mcr.command(f'tag @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] add active')# チェックポイントアクティブ化処理追加
+                    self.gift_reward(f'No{self.pass_point+1}')
+                    self.controller.progress += 1   # ゲームの進捗を更新。
+                    self.controller.prepare = False # チェックポイント準備状態を解除
+                    self.controller.reset_time()    # 既に一秒数えられている場合があるのでリセット
+
+            # 既にアクティブ化されているなら自分のチェックポイントを加算。
+            # 2位以下の処理。
+            if self.check_active(f'No{self.pass_point+1}'):
+                self.add_checkpoint('Catch_The_Rainbow', self.pass_point) # jsonファイルにチェックポイント情報更新
+                self.pass_point += 1                                # ソースコード内チェックポイント情報更新
+                self.point_pos = self.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
+                print(self.point_pos, self.ticket_item)
+        #! チケットアイテムはゲーム全体の進行状態に依存するため
+        #! ここは随時更新すべき。この場所でも随時更新になるが分かりにくい。
+        self.ticket_item = self.get_ticket_info(self.controller.progress)
 
     def cancel_stand(self):
         self.run_stand = False
@@ -210,7 +250,7 @@ class Catch_The_Rainbow(Common_func):
         #self.mcr.command(f'execute as @e[tag=biomechecker] at @s run tp ~ -64 ~')    # 死亡時煙のようなエフェクトが出るので奈落に移動させて殺す。
         self.mcr.command(f'kill @e[tag=biomechecker]')
 
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
+        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
         
         split_data = re.split(r' ', result)
         biome = None if split_data[0] == 'Found' or split_data[0] == 'No' else re.sub(reg, '', result).strip('"')    # uuidのエンティティがいないならNone

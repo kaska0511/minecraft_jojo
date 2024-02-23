@@ -5,6 +5,7 @@ import json
 import os
 from mcrcon import MCRcon
 
+from Steel_Ball_Run_Race.GameController import *
 from Steel_Ball_Run_Race.SBR import *
 from stands.Common_func import Common_func
 from stands.The_World import The_World
@@ -49,24 +50,25 @@ def json_make():
         json.dump(first, f, ensure_ascii=False)
 
 
-def open_stand_list_json():
+def open_json(json_file):
     '''
-    stand_list.jsonの情報を取得します。
+    jsonの情報を取得します。
 
     Parameter
-        なし
+        json_file : str
+            開きたいjsonファイル名を指定します。
 
     Return
-        stand_list.jsonのデータ。
+        jsonのデータ。
     '''
-    with open('stand_list.json') as f:
+    with open(json_file) as f:
         df = json.load(f)
     return df
 
 
 def gift_stand():
     # stand_list.jsonを開く。
-    res = open_stand_list_json()
+    res = open_json('stand_list.json')
 
     # 未割り当てを表す1dummyをvalueで探し、総数とスタンドを抽出。
     none_cnt = sum(v == "1dummy" for v in res.values())
@@ -94,93 +96,184 @@ def gift_stand():
                     json.dump(df, f, indent=4)
 
 
-def main(mcr):
-    mcr.command("gamerule sendCommandFeedback false")
+def checkpoint_prepare():
+    '''
+    チェックポイントの座標リストとチケットアイテムを決定し\n
+    checkpoint.json、ticket_list.jsonとしてファイルを作成します。
+
+    Parameter
+        なし
+
+    Return
+        なし
+    '''
+    is_file = os.path.isfile('checkpoint.json')
+    if not is_file:
+        prepare(mcr)
+    is_file = os.path.isfile('ticket_list.json')
+    if not is_file:
+        ticket_item_choice()
+    is_file = os.path.isfile('pass_checkpoint_list.json')
+    if not is_file:
+        make_checkpointrecoder_json()
+
+
+def name_registration(world,tusk,kqeen,rain,boy):
+    stand_list = open_json('stand_list.json')
+    world.name = stand_list["The_World"]
+    #world.name = "KASKA0511"
+    tusk.name = stand_list["TuskAct4"]
+    kqeen.name = stand_list["Killer_Qeen"]
+    rain.name = stand_list["Catch_The_Rainbow"]
+    #rain.name = "KASKA0511"
+    boy.name = stand_list["Twentieth_Century_Boy"]
+    #boy.name = "KASKA0511"
+
+
+def set_uuid(world,tusk,kqeen,rain,boy):
+    if world.name != "1dummy":
+        world.uuid = world.get_uuid()
+    if tusk.name != "1dummy":
+        tusk.uuid = tusk.get_uuid()
+        mcr.command('give ' + tusk.name + 'saddle')     # tusk最初に能力が付与されたタイミングだけサドルを与える。
+    if kqeen.name != "1dummy":
+        kqeen.uuid = kqeen.get_uuid()
+    if rain.name != "1dummy":
+        rain.uuid = rain.get_uuid()
+    if boy.name != "1dummy":
+        boy.uuid = boy.get_uuid()
+
+
+def death_or_logout_check(world,tusk,kqeen,rain,boy):
+    if (world.get_logout() or world.get_player_Death()) and world.run_stand:
+        world.cancel_stand()
+    if (tusk.get_logout() or tusk.get_player_Death()) and tusk.run_stand:
+        tusk.cancel_stand()
+    if (kqeen.get_logout() or kqeen.get_player_Death()) and kqeen.run_stand:
+        kqeen.cancel_stand()
+    if (rain.get_logout() or rain.get_player_Death()) and rain.run_stand:
+        rain.cancel_stand()
+    if (boy.get_logout() or boy.get_player_Death()) and boy.run_stand:
+        boy.cancel_stand()
+
+
+def stand_lost_check(world,tusk,kqeen,rain,boy):
     item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ")
 
-    prepare(mcr)
+    if not world.bool_have_a_stand('DIO') and world.name != '1dummy':
+        mcr.command('give ' + world.name + " clock{Tags:DIO,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[0] + '"}]'+"'}}")
+        nbt = make_commpass_nbt(world.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket")
+        mcr.command('execute unless data entity '+world.name+' Inventory[{tag:{Tags:ticket}}] run give '+world.name+' compass{'+nbt+'}')
+        nbt = make_commpass_nbt("チェックポイントの座標", "現在未公開", "overworld", [0,0,0], "checkpoint")
+        mcr.command('execute unless data entity '+world.name+' Inventory[{tag:{Tags:checkpoint}}] run give '+world.name+' compass{'+nbt+'}')
+
+    if not tusk.bool_have_a_stand('Saint') and tusk.name != '1dummy':
+        mcr.command('give ' + tusk.name + " bone{Tags:Saint,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[1] + '"}]'+"'}}")
+        nbt = make_commpass_nbt(tusk.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket")
+        mcr.command('execute unless data entity '+tusk.name+' Inventory[{tag:{Tags:ticket}}] run give '+tusk.name+' compass{'+nbt+'}')
+        nbt = make_commpass_nbt("チェックポイントの座標", "現在未公開", "overworld", [0,0,0], "checkpoint")
+        mcr.command('execute unless data entity '+tusk.name+' Inventory[{tag:{Tags:checkpoint}}] run give '+tusk.name+' compass{'+nbt+'}')
+
+    if not kqeen.bool_have_a_stand('Killer') and kqeen.name != '1dummy':   # 全て失わないと再取得できないので注意
+        mcr.command('give ' + kqeen.name + " gunpowder{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][0] + '"}]'+"'}}")
+        mcr.command('give ' + kqeen.name + " flint{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][1] + '"}]'+"'}}")
+        mcr.command('give ' + kqeen.name + " fire_charge{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][2] + '"}]'+"'}}")
+        nbt = make_commpass_nbt(kqeen.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket")
+        mcr.command('execute unless data entity '+kqeen.name+' Inventory[{tag:{Tags:ticket}}] run give '+kqeen.name+' compass{'+nbt+'}')
+        nbt = make_commpass_nbt("チェックポイントの座標", "現在未公開", "overworld", [0,0,0], "checkpoint")
+        mcr.command('execute unless data entity '+kqeen.name+' Inventory[{tag:{Tags:checkpoint}}] run give '+kqeen.name+' compass{'+nbt+'}')
+
+    if not rain.bool_have_a_stand('Rain') and rain.name != '1dummy':
+        mcr.command('give ' + rain.name + " skeleton_skull{Tags:Rain,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[3] + '"}]'+"'}}")
+        nbt = make_commpass_nbt(rain.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket")
+        mcr.command('execute unless data entity '+rain.name+' Inventory[{tag:{Tags:ticket}}] run give '+rain.name+' compass{'+nbt+'}')
+        nbt = make_commpass_nbt("チェックポイントの座標", "現在未公開", "overworld", [0,0,0], "checkpoint")
+        mcr.command('execute unless data entity '+rain.name+' Inventory[{tag:{Tags:checkpoint}}] run give '+rain.name+' compass{'+nbt+'}')
+
+    if not boy.bool_have_a_stand('Boy') and boy.name != '1dummy':
+        mcr.command('give ' + boy.name + " snowball{Tags:Boy,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[4] + '"}]'+"'}}")
+        nbt = make_commpass_nbt(boy.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket")
+        mcr.command('execute unless data entity '+boy.name+' Inventory[{tag:{Tags:ticket}}] run give '+boy.name+' compass{'+nbt+'}')
+        nbt = make_commpass_nbt("チェックポイントの座標", "現在未公開", "overworld", [0,0,0], "checkpoint")
+        mcr.command('execute unless data entity '+boy.name+' Inventory[{tag:{Tags:checkpoint}}] run give '+boy.name+' compass{'+nbt+'}')
+
+def find_target(world,tusk,kqeen,rain,boy):
+    player = []
+    if world.ticket_target:
+        #print("world",world.ticket_item)
+        player.append(world.name)
+    if tusk.ticket_target:
+        #print("tusk",tusk.ticket_item)
+        player.append(tusk.name)
+    if kqeen.ticket_target:
+        #print("kqeen",kqeen.ticket_item)
+        player.append(kqeen.name)
+    if rain.ticket_target:
+        #print("rain",rain.ticket_item)
+        player.append(rain.name)
+    if boy.ticket_target:
+        #print("boy",boy.ticket_item)
+        player.append(boy.name)
+    return player
+
+def main(mcr):
+    mcr.command("gamerule sendCommandFeedback false")
+
+    checkpoint_prepare()
 
     gift_stand()
-    stand_list = open_stand_list_json()
+
+    stand_list = open_json('stand_list.json')
     
-    world = The_World(name=stand_list["The_World"], mcr=mcr, pos="[0,0,0]", timer=5)    # 初回5秒
+    controller = GameController()
+    # ゲーム全体の進捗を読み込む。
+    controller.get_progress()
+
+    world = The_World(name=stand_list["The_World"], mcr=mcr, controller=controller, pos="[0,0,0]", timer=5)    # 初回5秒
     #world = The_World(name="KASKA0511", mcr=mcr, pos="[0,0,0]", timer=5)    # 初回5秒
     mcr.command('kill @e[tag=DIOinter]')
     mcr.command('summon interaction 0 -64 0 {Tags:["DIOinter"],height:2,width:1}')
 
-    tusk = TuskAct4(name=stand_list["TuskAct4"], mcr=mcr)
+    tusk = TuskAct4(name=stand_list["TuskAct4"], mcr=mcr, controller=controller)
     mcr.command('kill @e[tag=tuskinter]')
     mcr.command('summon interaction 0 -64 0 {Tags:["tuskinter"],height:2,width:1}')
 
-    kqeen = Killer_Qeen(name=stand_list["Killer_Qeen"], mcr=mcr)
+    kqeen = Killer_Qeen(name=stand_list["Killer_Qeen"], mcr=mcr, controller=controller)
     mcr.command('kill @e[tag=kqeeninter]')
     mcr.command('summon interaction 0 -64 0 {Tags:["kqeeninter"],height:2,width:1}')
 
-    rain = Catch_The_Rainbow(name=stand_list["Catch_The_Rainbow"], mcr=mcr)
+    rain = Catch_The_Rainbow(name=stand_list["Catch_The_Rainbow"], mcr=mcr, controller=controller)
     rain.set_scoreboard()
     rain.summon_amedas()
     rain.mask_air()
 
-    boy = Twentieth_Century_Boy(name=stand_list["Twentieth_Century_Boy"], mcr=mcr)
+    boy = Twentieth_Century_Boy(name=stand_list["Twentieth_Century_Boy"], mcr=mcr, controller=controller)
     mcr.command('kill @e[tag=boyinter]')
     mcr.command('summon interaction 0 -64 0 {Tags:["boyinter"],height:2,width:1}')
 
+
+    controller.start()
+
     while True:
+
+        # スタンド能力を付与。
         gift_stand()
-        stand_list = open_stand_list_json()
 
         # スタンド使いの名前を登録する。
-        world.name = stand_list["The_World"]
-        #world.name = "KASKA0511"
-        tusk.name = stand_list["TuskAct4"]
-        kqeen.name = stand_list["Killer_Qeen"]
-        rain.name = stand_list["Catch_The_Rainbow"]
-        #rain.name = "KASKA0511"
-        boy.name = stand_list["Twentieth_Century_Boy"]
-        #boy.name = "KASKA0511"
+        name_registration(world,tusk,kqeen,rain,boy)
 
         # プレイヤーが入ってきたときuuidを設定しなくてはならない。
-        if world.name != "1dummy":
-            world.uuid = world.get_uuid()
-        if tusk.name != "1dummy": 
-            tusk.uuid = tusk.get_uuid()
-            mcr.command('give ' + tusk.name + 'saddle')     # tusk最初に能力が付与されたタイミングだけサドルを与える。
-        if kqeen.name != "1dummy": 
-            kqeen.uuid = kqeen.get_uuid()
-        if rain.name != "1dummy":
-            rain.uuid = rain.get_uuid()
-        if boy.name != "1dummy":  
-            boy.uuid = boy.get_uuid()
+        set_uuid(world,tusk,kqeen,rain,boy)
         
         # 能力者が死んでいたり、ログアウトしていたりしたら能力を解除
-        if (world.get_logout() or world.get_player_Death()) and world.run_stand:
-            world.cancel_stand()
-        if (tusk.get_logout() or tusk.get_player_Death()) and tusk.run_stand:
-            tusk.cancel_stand()
-        if (kqeen.get_logout() or kqeen.get_player_Death()) and kqeen.run_stand:
-            kqeen.cancel_stand()
-        if (rain.get_logout() or rain.get_player_Death()) and rain.run_stand:
-            rain.cancel_stand()
-        if (boy.get_logout() or boy.get_player_Death()) and boy.run_stand:
-            boy.cancel_stand()
+        death_or_logout_check(world,tusk,kqeen,rain,boy)
         
-        # アイテムを付与。死亡時やアイテムをなくした場合自動で与えられる。
-        if not world.bool_have_a_stand('DIO') and world.name != '1dummy':
-            mcr.command('give ' + world.name + " clock{Tags:DIO,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[0] + '"}]'+"'}}")
-        if not tusk.bool_have_a_stand('Saint') and tusk.name != '1dummy':
-            mcr.command('give ' + tusk.name + " bone{Tags:Saint,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[1] + '"}]'+"'}}")
-        if not kqeen.bool_have_a_stand('Killer') and kqeen.name != '1dummy':   # 全て失わないと再取得できないので注意
-            mcr.command('give ' + kqeen.name + " gunpowder{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][0] + '"}]'+"'}}")
-            mcr.command('give ' + kqeen.name + " flint{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][1] + '"}]'+"'}}")
-            mcr.command('give ' + kqeen.name + " fire_charge{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][2] + '"}]'+"'}}")
-        if not rain.bool_have_a_stand('Rain') and rain.name != '1dummy':
-            mcr.command('give ' + rain.name + " skeleton_skull{Tags:Rain,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[3] + '"}]'+"'}}")
-        if not boy.bool_have_a_stand('Boy') and boy.name != '1dummy':
-            mcr.command('give ' + boy.name + " snowball{Tags:Boy,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[4] + '"}]'+"'}}")
-        
+        # スタンドアイテムを付与。死亡時やスタンドアイテムをなくした場合自動で与えられる。
+        stand_lost_check(world,tusk,kqeen,rain,boy)
+
         # 能力管理。ここで能力を発動させる。
         # スタンドを追加したらここにスタンド名.loop()を追加するイメージ。
-        # 時を止めているときに能力が止まる場合はifの中に、止まらない場合はifの外に配置する。
+        # 時を止めているときに能力が止まるタイプのスタンドの場合はifの中に、止まらない場合はifの外に配置する。
         # 基本的にはifの中に配置するでしょう。
         world.loop()
         tusk.loop()
@@ -189,6 +282,21 @@ def main(mcr):
             rain.loop()
             boy.loop()
 
+        target = find_target(world,tusk,kqeen,rain,boy)
+        # ザ・ワールドが発動中は基準値の更新を止める。＝時間計測が一時的に止まる。
+        # targetによりチケットアイテム所持者がいれば5分計測が始まる。
+        if target and not world.run_stand and not controller.prepare:
+            controller.stop()
+        print(controller.elapsed_time)
+        if controller.elapsed_time == 30:   # 300秒（5分）経ったらチェックポイントの準備完了。test中は30秒
+            # みんなで稼ぐ時間
+            print(controller.elapsed_time)
+            controller.prepare = True
+            controller.elapsed_time = 0
+        if controller.elapsed_time == 60:
+            # 各人で稼ぐので
+            # ボーナスタイム。1分経過ごとにボーナスとして報酬が一つ増える。最大3分経過を計測する。
+            pass
 
 def time_check_main(mcr):
     

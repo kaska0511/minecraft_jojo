@@ -3,19 +3,26 @@ from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_EVEN
 from stands.Common_func import Common_func
 
 class Twentieth_Century_Boy(Common_func):
-    def __init__(self, name, mcr, rot = None, run_stand=False) -> None:
+    def __init__(self, name, mcr, controller, rot = None, run_stand=False) -> None:
         super().__init__(name, mcr)
         self.name = name
         self.mcr = mcr
+        self.controller = controller
         self.uuid = self.get_uuid()
         self.rot = rot
         self.run_stand = run_stand
-
+        self.pass_point = int(self.get_pass_point('Twentieth_Century_Boy'))
+        self.point_pos = self.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
+        self.ticket_item = self.get_ticket_info(self.pass_point)
+        self.ticket_target = False
 
     def loop(self):
         if self.name == "1dummy":
             return
         
+        self.assign_throwitem_tag()
+        self.assign_deathitem_tag()
+
         item, tag = self.get_SelectedItem()
 
         if tag == "Boy":
@@ -24,7 +31,7 @@ class Twentieth_Century_Boy(Common_func):
             else:
                 self.mcr.command(f'execute as {self.name} at @s run tp @e[tag=boyinter,limit=1] ^ ^ ^1')
             inter = self.mcr.command(f'data get entity @e[tag=boyinter,limit=1] interaction.player') # Interaction has the following entity data: [I; 123, -1234, -1234, 1234]
-            inter_uuid = re.sub('[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: ', '', inter)
+            inter_uuid = re.sub(r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: ', '', inter)
             self.mcr.command(f'data remove entity @e[tag=boyinter,limit=1] interaction')
             
             if self.uuid == inter_uuid and self.run_stand == False:
@@ -35,7 +42,6 @@ class Twentieth_Century_Boy(Common_func):
                 self.ride_stand()
                 self.effect_stand()
                 self.rot = self.get_my_rot()
-
 
         else:
             # killしてもいいけど今のところはスタンドアイテムを持っていないときは元の場所に戻す。
@@ -57,6 +63,37 @@ class Twentieth_Century_Boy(Common_func):
                 #self.mcr.command(f'data modify entity @e[tag=boy,type=turtle,limit=1] Age set value -999999999') # 子供である時間をリセットする。
             else:                           # 少なくとも能力を解除している。
                 self.cancel_stand()
+
+        # チケットアイテム獲得によるターゲット該当者処理
+        # チケットアイテムを持っていないならFalse。死んだりチェストにしまうとFalseになる。
+        self.ticket_target = True if self.check_ticket_item(self.name, self.ticket_item[0], self.ticket_item[1]) else False
+
+        # チェックポイント攻撃時処理
+        if self.uuid == self.passcheck_checkpoint(f'No{self.pass_point+1}'):
+            # 同じUUIDであれば持ち物の内容にかかわらずデータを削除。
+            self.mcr.command(f'data remove entity @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] attack')
+
+            if not self.check_active(f'No{self.pass_point+1}') and self.controller.prepare:
+                # そのチェックポイントは誰も通過していないため、一位として扱っていいかチェックする。
+                #! チケットアイテム情報を取得する。処理追加。
+                if self.check_ticket_item(self.name, self.ticket_item[0], self.ticket_item[1]):
+                    # 一位通過者
+                    self.mcr.command(f'tag @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] add active')# チェックポイントアクティブ化処理追加
+                    self.gift_reward(f'No{self.pass_point+1}')
+                    self.controller.progress += 1   # ゲームの進捗を更新。
+                    self.controller.prepare = False # チェックポイント準備状態を解除
+                    self.controller.reset_time()    # 既に一秒数えられている場合があるのでリセット
+
+            # 既にアクティブ化されているなら自分のチェックポイントを加算。
+            # 2位以下の処理。
+            if self.check_active(f'No{self.pass_point+1}'):
+                self.add_checkpoint('Twentieth_Century_Boy', self.pass_point) # jsonファイルにチェックポイント情報更新
+                self.pass_point += 1                                # ソースコード内チェックポイント情報更新
+                self.point_pos = self.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
+                print(self.point_pos, self.ticket_item)
+        #! チケットアイテムはゲーム全体の進行状態に依存するため
+        #! ここは随時更新すべき。この場所でも随時更新になるが分かりにくい。
+        self.ticket_item = self.get_ticket_info(self.controller.progress)
 
     def cancel_stand(self):
         self.run_stand = False

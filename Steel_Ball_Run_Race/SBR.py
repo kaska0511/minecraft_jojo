@@ -1,31 +1,38 @@
 import re
 import time
-
-ticket_overworld = {}
-ticket_nether = {}
-ticket_end = {'diamond':9, 'crying_obsidian':3, 'ender_pearl':3, 'slime_ball':9, 'amethyst_shard':1}
+import json
+import random
 
 def prepare(mcr):
     x,z = 0, 0
+    checkpoint = []
     set_checkpoint(mcr, x, z, f'No0')
-    #print(f'checkpoint0 = {x},{z}')
 
     for i in range(4):
         if i == 3:
             break    # i=3の時のチェックポイント情報は使われないので処理もしない。
         x, z = search_village_xz(mcr, f'No{i}')
         set_checkpoint(mcr, x, z, f'No{i+1}')
+        checkpoint.append((f'checkpoint{i+1}', [int(x), int(z)]))
         print(f'checkpoint{i+1} = {x},{z}')
 
     x, z = search_fortress_xz(mcr, 'No3')
     set_checkpoint(mcr, x, z, f'No4', "the_nether")
+    checkpoint.append(('checkpoint4', [int(x), int(z)]))
     print(f'checkpoint4 = {x},{z}')
 
     # エンドは0,0座標で決め打ち
     set_checkpoint(mcr, 0, 0, f'No5', "the_end")
+    checkpoint.append(('checkpoint5', [0,0]))
+
+    checkpoint_dict = dict(checkpoint)
 
     # 最初に設置したチェックポイントは不要なので削除する。
     mcr.command(f'kill @e[tag=No0]')
+
+    with open('checkpoint.json', 'w', encoding='utf-8') as f:
+        json.dump(checkpoint_dict, f, ensure_ascii=False)
+
 
 def set_checkpoint(mcr, x, z, tag, dimention="overworld"):
     '''
@@ -45,8 +52,8 @@ def set_checkpoint(mcr, x, z, tag, dimention="overworld"):
     Return
         None
     '''
-    ap0 = mcr.command(f'/data get entity @e[tag=checkpoint,tag={tag},limit=1] Pos')
-    ap1 = mcr.command(f'/data get entity @e[tag=attackinter,tag={tag},limit=1] Pos')
+    ap0 = mcr.command(f'data get entity @e[tag=checkpoint,tag={tag},limit=1] Pos')
+    ap1 = mcr.command(f'data get entity @e[tag=attackinter,tag={tag},limit=1] Pos')
     # command sample
     # execute positioned -6300 ~ -814 positioned over motion_blocking_no_leaves run summon armor_stand ~ ~ ~ \
     # {Invisible:1b,Invulnerable:1b,PersistenceRequired:1b,NoGravity:1b,Tags:["checkpoint","No1"]}
@@ -57,7 +64,7 @@ def set_checkpoint(mcr, x, z, tag, dimention="overworld"):
         z = int(z) + 11
         y = 80
         mcr.command(f'execute in {dimention} run forceload add {x} {z}')
-        time.sleep(1) #チャンクロード時間
+        time.sleep(2) #チャンクロード時間
         if ap0 == 'No entity was found':    # まだチェックポイントとしての防具立てが召喚されていないなら
             mcr.command(f'execute in {dimention} run summon armor_stand {x} {y} {z}  \
                     {{Invisible:1b,Invulnerable:1b,PersistenceRequired:1b,NoGravity:1b,Tags:["checkpoint","{tag}"]}}')
@@ -142,4 +149,54 @@ def search_fortress_xz(mcr, tag):
 
     x, z = str(xz[0][0]), str(xz[0][1])
     return x, z
+
+
+def ticket_item_choice():
+    ticket_list_overworld_easy = {'rotten_flesh': 8, 'bone': 8, 'string': 6, 'gunpowder': 3, 'bow': 1, 'crossbow': 1, 'arrow': 12, \
+                    'sugar_cane': 20, 'wheat': 16, 'hay_block': 6, 'egg': 9, 'shears': 1, 'flint_and_steel': 1}
+
+    ticket_list_overworld_hard = {'iron_helmet': 1, 'iron_chestplate': 1, 'iron_ingot': 16, \
+                        'copper_ingot': 16, 'lapis_lazuli': 32, 'redstone': 32, 'lava_bucket': 2, 'magma_block': 6, \
+                        'deepslate': 64, 'minecart': 1, 'azalea': 32, 'flowering_azalea': 16, 'spore_blossom': 2}
+
+    ticket_list_nether = {'shroomlight': 16, 'soul_sand': 32, 'magma_cream': 16, 'quartz': 32, 'ghast_tear': 1, 'golden_apple': 1, \
+                    'golden_carrot': 3, 'golden_leggings': 1, 'golden_boots': 1, 'clock': 3, 'glowstone_dust': 32, 'bone_block': 32}
+
+    ticket_list_end = {'diamond':9, 'crying_obsidian':3, 'ender_pearl':3, 'slime_ball':9, 'amethyst_shard':1}
+
+    ticket_easy = random.sample(list(ticket_list_overworld_easy.items()),1)
+    ticket_hard = random.sample(list(ticket_list_overworld_hard.items()),2)
+    ticket_nether = random.sample(list(ticket_list_nether.items()),1)
+    ticket_end = random.sample(list(ticket_list_end.items()),1)
+
+    ticket_list = ticket_easy + ticket_hard + ticket_nether + ticket_end
+    ticket_dict = dict(ticket_list)
+
+    with open('ticket_list.json', 'w', encoding='utf-8') as f:
+        json.dump(ticket_dict, f, ensure_ascii=False)
+
+
+def make_commpass_nbt(Custom_name="名前", Explanatory_text="説明文", dimension="overworld", pos = [0, 0, 0],tag = "ticket"):
+    Tags = f'Tags:{tag}, '
+    Enchantments = 'Enchantments:[{}], '
+    LodestoneDimension = f'LodestoneDimension:"minecraft:{dimension}", '
+    LodestoneTracked = 'LodestoneTracked: 0b, '
+    LodestonePos = f'LodestonePos: [I; {pos[0]}, {pos[1]}, {pos[2]}], '
+    display = "display:{Name:'[{" + '"text":"'+Custom_name+'"}]' + "',Lore:['[{" + '"text":"'+Explanatory_text+'"}]' + "']}"
+    nbt = Tags + Enchantments + LodestoneDimension + LodestoneTracked + LodestonePos + display
+
+    return nbt
+    #mcr.command('execute unless data entity KASKA0511 Inventory[{tag:{Tags:ticket}}] run give KASKA0511 compass{'+nbt+'}')
+
+
+def make_checkpointrecoder_json():
+    with open('stand_list.json') as f:
+        stand_list = json.load(f)
+
+    data = []
+    for stand in stand_list:
+        data.append((stand,0))
+
+    with open('pass_checkpoint_list.json', 'w', encoding='utf-8') as f:
+        json.dump(dict(data), f, ensure_ascii=False)
 
