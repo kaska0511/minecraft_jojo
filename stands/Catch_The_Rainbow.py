@@ -17,7 +17,7 @@ class Catch_The_Rainbow(Common_func):
         self.point_pos = self.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
         self.ticket_item = self.get_ticket_info(self.pass_point)
         self.ticket_target = False
-
+        self.ticketcom_update = False
 
     def set_scoreboard(self):
         self.mcr.command(f'scoreboard objectives add SNEAK minecraft.custom:minecraft.sneak_time')
@@ -85,9 +85,6 @@ class Catch_The_Rainbow(Common_func):
     def loop(self):
         if self.name == "1dummy":
             return
-        
-        self.assign_throwitem_tag()
-        self.assign_deathitem_tag()
 
         id, tag = self.get_select_Inventory(self.name, "103")
 
@@ -152,6 +149,8 @@ class Catch_The_Rainbow(Common_func):
         # チケットアイテムを持っていないならFalse。死んだりチェストにしまうとFalseになる。
         self.ticket_target = True if self.check_ticket_item(self.name, self.ticket_item[0], self.ticket_item[1]) else False
 
+        update_flag = False     # チェックポイントコンパス更新フラグを下げておく。
+
         # チェックポイント攻撃時処理
         if self.uuid == self.passcheck_checkpoint(f'No{self.pass_point+1}'):
             # 同じUUIDであれば持ち物の内容にかかわらずデータを削除。
@@ -167,6 +166,9 @@ class Catch_The_Rainbow(Common_func):
                     self.controller.progress += 1   # ゲームの進捗を更新。
                     self.controller.prepare = False # チェックポイント準備状態を解除
                     self.controller.reset_time()    # 既に一秒数えられている場合があるのでリセット
+                    self.controller.false_ticketitem_get_frag() # 一旦下げる。誰かが次のチケットアイテムを手に入れているならすぐにフラグが経つはず。
+                    self.ticketcom_update = False
+                    self.ticket_target = False      # 次のチェックポイントのチケットアイテムへ更新するため一旦所持していない状態にする。
 
             # 既にアクティブ化されているなら自分のチェックポイントを加算。
             # 2位以下の処理。
@@ -175,9 +177,27 @@ class Catch_The_Rainbow(Common_func):
                 self.pass_point += 1                                # ソースコード内チェックポイント情報更新
                 self.point_pos = self.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
                 print(self.point_pos, self.ticket_item)
+                update_flag = True
         #! チケットアイテムはゲーム全体の進行状態に依存するため
         #! ここは随時更新すべき。この場所でも随時更新になるが分かりにくい。
         self.ticket_item = self.get_ticket_info(self.controller.progress)
+
+        if self.controller.get_ticketitem_get_frag():   # 誰かがチケットアイテムを手に入れたのでチケットコンパスを更新させる。
+            self.ticketcom_update = False
+
+        if not self.ticketcom_update:   # False＝まだアプデしていない
+            update_flag = True
+
+        if update_flag:
+            if self.controller.get_ticketitem_get_frag():
+                self.ticketcom_update = True
+            self.create_ticket_compass()
+
+    def create_ticket_compass(self):
+        dim = self.controller.get_dimention(self.pass_point+1)
+        nbt = self.controller.crate_ticket_compass(self.ticket_item, dim, self.point_pos)
+        self.mcr.command('clear ' + self.name + ' compass{Tags:ticket} 1')
+        self.mcr.command('give ' + self.name + ' compass{'+nbt+'}')
 
     def cancel_stand(self):
         self.run_stand = False

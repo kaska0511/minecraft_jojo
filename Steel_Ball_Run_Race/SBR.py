@@ -18,7 +18,7 @@ def prepare(mcr):
 
     x, z = search_fortress_xz(mcr, 'No3')
     set_checkpoint(mcr, x, z, f'No4', "the_nether")
-    checkpoint.append(('checkpoint4', [int(x), int(z)]))
+    checkpoint.append(('checkpoint4', [int(x)+11, int(z)+11]))
     print(f'checkpoint4 = {x},{z}')
 
     # エンドは0,0座標で決め打ち
@@ -30,7 +30,7 @@ def prepare(mcr):
     # 最初に設置したチェックポイントは不要なので削除する。
     mcr.command(f'kill @e[tag=No0]')
 
-    with open('checkpoint.json', 'w', encoding='utf-8') as f:
+    with open('./json_list/checkpoint.json', 'w', encoding='utf-8') as f:
         json.dump(checkpoint_dict, f, ensure_ascii=False)
 
 
@@ -172,7 +172,7 @@ def ticket_item_choice():
     ticket_list = ticket_easy + ticket_hard + ticket_nether + ticket_end
     ticket_dict = dict(ticket_list)
 
-    with open('ticket_list.json', 'w', encoding='utf-8') as f:
+    with open('./json_list/ticket_list.json', 'w', encoding='utf-8') as f:
         json.dump(ticket_dict, f, ensure_ascii=False)
 
 
@@ -190,13 +190,13 @@ def make_commpass_nbt(Custom_name="名前", Explanatory_text="説明文", dimens
 
 
 def make_checkpointrecoder_json():
-    with open('stand_list.json') as f:
+    with open('./json_list/stand_list.json') as f:
         stand_list = json.load(f)
 
     data = []
     for stand in stand_list:
         data.append((stand,0))
 
-    with open('pass_checkpoint_list.json', 'w', encoding='utf-8') as f:
+    with open('./json_list/pass_checkpoint_list.json', 'w', encoding='utf-8') as f:
         json.dump(dict(data), f, ensure_ascii=False)
 

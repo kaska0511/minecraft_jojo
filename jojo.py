@@ -38,6 +38,8 @@ def read_rconinfo():
                 rport = int(re.sub(r'rcon.port=', '', i))
     return rpassword, rport
 
+def json_dir_make():
+    os.makedirs('./json_list')
 
 def json_make():
     '''
@@ -46,7 +48,7 @@ def json_make():
     スタンド能力を新たに追加するときは注意が必要。
     '''
     first = {"The_World": "1dummy", "TuskAct4": "1dummy", "Killer_Qeen": "1dummy", "Catch_The_Rainbow": "1dummy", "Twentieth_Century_Boy": "1dummy"}
-    with open('stand_list.json', 'w', encoding='utf-8') as f:
+    with open('./json_list/stand_list.json', 'w', encoding='utf-8') as f:
         json.dump(first, f, ensure_ascii=False)
 
 
@@ -68,7 +70,7 @@ def open_json(json_file):
 
 def gift_stand():
     # stand_list.jsonを開く。
-    res = open_json('stand_list.json')
+    res = open_json('./json_list/stand_list.json')
 
     # 未割り当てを表す1dummyをvalueで探し、総数とスタンドを抽出。
     none_cnt = sum(v == "1dummy" for v in res.values())
@@ -88,11 +90,11 @@ def gift_stand():
             if player in res.values():  # 既に割り当てられているなら次へ
                 continue
             else:                       # 割り当てられていないならスタンド割り当てを行う。
-                with open('stand_list.json') as f:
+                with open('./json_list/stand_list.json') as f:
                     df = json.load(f)
                     df[none_stand[random.randint(0,none_cnt-1)]] = player  #ランダムに割り当て
 
-                with open('stand_list.json', 'w') as f:     # 編集データを上書き
+                with open('./json_list/stand_list.json', 'w') as f:     # 編集データを上書き
                     json.dump(df, f, indent=4)
 
 
@@ -107,19 +109,19 @@ def checkpoint_prepare():
     Return
         なし
     '''
-    is_file = os.path.isfile('checkpoint.json')
+    is_file = os.path.isfile('./json_list/checkpoint.json')
     if not is_file:
         prepare(mcr)
-    is_file = os.path.isfile('ticket_list.json')
+    is_file = os.path.isfile('./json_list/ticket_list.json')
     if not is_file:
         ticket_item_choice()
-    is_file = os.path.isfile('pass_checkpoint_list.json')
+    is_file = os.path.isfile('./json_list/pass_checkpoint_list.json')
     if not is_file:
         make_checkpointrecoder_json()
 
 
 def name_registration(world,tusk,kqeen,rain,boy):
-    stand_list = open_json('stand_list.json')
+    stand_list = open_json('./json_list/stand_list.json')
     world.name = stand_list["The_World"]
     #world.name = "KASKA0511"
     tusk.name = stand_list["TuskAct4"]
@@ -162,43 +164,37 @@ def stand_lost_check(world,tusk,kqeen,rain,boy):
 
     if not world.bool_have_a_stand('DIO') and world.name != '1dummy':
         mcr.command('give ' + world.name + " clock{Tags:DIO,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[0] + '"}]'+"'}}")
-        nbt = make_commpass_nbt(world.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket")
-        mcr.command('execute unless data entity '+world.name+' Inventory[{tag:{Tags:ticket}}] run give '+world.name+' compass{'+nbt+'}')
-        nbt = make_commpass_nbt("チェックポイントの座標", "現在未公開", "overworld", [0,0,0], "checkpoint")
-        mcr.command('execute unless data entity '+world.name+' Inventory[{tag:{Tags:checkpoint}}] run give '+world.name+' compass{'+nbt+'}')
-
+        world.create_ticket_compass()
     if not tusk.bool_have_a_stand('Saint') and tusk.name != '1dummy':
         mcr.command('give ' + tusk.name + " bone{Tags:Saint,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[1] + '"}]'+"'}}")
-        nbt = make_commpass_nbt(tusk.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket")
-        mcr.command('execute unless data entity '+tusk.name+' Inventory[{tag:{Tags:ticket}}] run give '+tusk.name+' compass{'+nbt+'}')
-        nbt = make_commpass_nbt("チェックポイントの座標", "現在未公開", "overworld", [0,0,0], "checkpoint")
-        mcr.command('execute unless data entity '+tusk.name+' Inventory[{tag:{Tags:checkpoint}}] run give '+tusk.name+' compass{'+nbt+'}')
-
+        tusk.create_ticket_compass()
     if not kqeen.bool_have_a_stand('Killer') and kqeen.name != '1dummy':   # 全て失わないと再取得できないので注意
         mcr.command('give ' + kqeen.name + " gunpowder{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][0] + '"}]'+"'}}")
         mcr.command('give ' + kqeen.name + " flint{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][1] + '"}]'+"'}}")
         mcr.command('give ' + kqeen.name + " fire_charge{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][2] + '"}]'+"'}}")
-        nbt = make_commpass_nbt(kqeen.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket")
-        mcr.command('execute unless data entity '+kqeen.name+' Inventory[{tag:{Tags:ticket}}] run give '+kqeen.name+' compass{'+nbt+'}')
-        nbt = make_commpass_nbt("チェックポイントの座標", "現在未公開", "overworld", [0,0,0], "checkpoint")
-        mcr.command('execute unless data entity '+kqeen.name+' Inventory[{tag:{Tags:checkpoint}}] run give '+kqeen.name+' compass{'+nbt+'}')
-
+        kqeen.create_ticket_compass()
     if not rain.bool_have_a_stand('Rain') and rain.name != '1dummy':
         mcr.command('give ' + rain.name + " skeleton_skull{Tags:Rain,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[3] + '"}]'+"'}}")
-        nbt = make_commpass_nbt(rain.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket")
-        mcr.command('execute unless data entity '+rain.name+' Inventory[{tag:{Tags:ticket}}] run give '+rain.name+' compass{'+nbt+'}')
-        nbt = make_commpass_nbt("チェックポイントの座標", "現在未公開", "overworld", [0,0,0], "checkpoint")
-        mcr.command('execute unless data entity '+rain.name+' Inventory[{tag:{Tags:checkpoint}}] run give '+rain.name+' compass{'+nbt+'}')
-
+        rain.create_ticket_compass()
     if not boy.bool_have_a_stand('Boy') and boy.name != '1dummy':
         mcr.command('give ' + boy.name + " snowball{Tags:Boy,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[4] + '"}]'+"'}}")
-        nbt = make_commpass_nbt(boy.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket")
-        mcr.command('execute unless data entity '+boy.name+' Inventory[{tag:{Tags:ticket}}] run give '+boy.name+' compass{'+nbt+'}')
-        nbt = make_commpass_nbt("チェックポイントの座標", "現在未公開", "overworld", [0,0,0], "checkpoint")
-        mcr.command('execute unless data entity '+boy.name+' Inventory[{tag:{Tags:checkpoint}}] run give '+boy.name+' compass{'+nbt+'}')
+        boy.create_ticket_compass()
 
-def find_target(world,tusk,kqeen,rain,boy):
+def set_commandblock(world,tusk,kqeen,rain,boy):
+    command = f'execute as {world.name} at @s run tp @e[tag=worldinter,limit=1] ^ ^ ^1'
+    mcr.command(f'setblock 0 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+    command = f'execute as {tusk.name} at @s run tp @e[tag=tuskinter,limit=1] ^ ^ ^1'
+    mcr.command(f'setblock 1 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+    command = f'execute as {kqeen.name} at @s run tp @e[tag=kqeeninter,limit=1] ^ ^ ^1'
+    mcr.command(f'setblock 2 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+    command = f'execute as {rain.name} at @s run tp @e[tag=raininter,limit=1] ^ ^ ^1'
+    mcr.command(f'setblock 3 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+    command = f'execute as {boy.name} at @s run tp @e[tag=boyinter,limit=1] ^ ^ ^1'
+    mcr.command(f'setblock 4 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+
+def find_target(controller,world,tusk,kqeen,rain,boy):
     player = []
+    pos = []
     if world.ticket_target:
         #print("world",world.ticket_item)
         player.append(world.name)
@@ -214,6 +210,19 @@ def find_target(world,tusk,kqeen,rain,boy):
     if boy.ticket_target:
         #print("boy",boy.ticket_item)
         player.append(boy.name)
+    # kqeen.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket"
+    if player != []:
+        #! ゲーム進捗状況に合わせてplayerをsortすべき
+        #! 30秒ごとにgiveするように修正する
+        controller.true_ticketitem_get_frag()       #  チケットアイテムが誰かがgetしているならフラグを立てる。
+        dimention = controller.target_dim(player[0])
+        pos = controller.get_pos(player[0])
+        nbt = controller.crate_target_compass(player, dimention, pos)
+        mcr.command('clear @a compass{Tags:target} 1')
+        mcr.command('give @a compass{'+nbt+'}')
+    else:   # まだチケットアイテムを持っている人がいない。
+        pass
+
     return player
 
 def main(mcr):
@@ -223,9 +232,9 @@ def main(mcr):
 
     gift_stand()
 
-    stand_list = open_json('stand_list.json')
+    stand_list = open_json('./json_list/stand_list.json')
     
-    controller = GameController()
+    controller = GameController(mcr)
     # ゲーム全体の進捗を読み込む。
     controller.get_progress()
 
@@ -251,11 +260,14 @@ def main(mcr):
     mcr.command('kill @e[tag=boyinter]')
     mcr.command('summon interaction 0 -64 0 {Tags:["boyinter"],height:2,width:1}')
 
-
     controller.start()
 
-    while True:
+    set_commandblock(world,tusk,kqeen,rain,boy)
 
+    while True:
+        #mcr.command('give KASKA0511 compass{LodestoneDimension:"minecraft:overworld", LodestoneTracked: 0b, LodestonePos: [I; -223, 88, -144],display:{Name:'[{"text":"宇良"}]'}}')
+        #mcr.command('clear @a compass{Tags:test} 1')
+        #mcr.command('give KASKA0511 compass{Tags:test,LodestoneDimension:"minecraft:overworld", LodestoneTracked: 0b, LodestonePos: [I; '+str(random.randint(0,100))+', 88, -144]}')
         # スタンド能力を付与。
         gift_stand()
 
@@ -281,8 +293,14 @@ def main(mcr):
             kqeen.loop()
             rain.loop()
             boy.loop()
+        else:   # ザ・ワールドが起動していたら
+            mcr.command(f'data modify block 2 -64 0 auto set value 0')
+            mcr.command(f'data modify block 3 -64 0 auto set value 0')
+            mcr.command(f'data modify block 4 -64 0 auto set value 0')
 
-        target = find_target(world,tusk,kqeen,rain,boy)
+
+        target = find_target(controller,world,tusk,kqeen,rain,boy)
+
         # ザ・ワールドが発動中は基準値の更新を止める。＝時間計測が一時的に止まる。
         # targetによりチケットアイテム所持者がいれば5分計測が始まる。
         if target and not world.run_stand and not controller.prepare:
@@ -382,7 +400,10 @@ def time_check_main(mcr):
 
 
 if __name__ == '__main__':
-    is_file = os.path.isfile('stand_list.json')
+    is_dir = os.path.isdir('./json_list')
+    if not is_dir:
+        json_dir_make()
+    is_file = os.path.isfile('./json_list/stand_list.json')
     if not is_file:
         json_make()
     password, rport = read_rconinfo()

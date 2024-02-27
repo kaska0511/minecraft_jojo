@@ -20,20 +20,18 @@ class The_World(Common_func):
         self.point_pos = self.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
         self.ticket_item = self.get_ticket_info(self.pass_point)
         self.ticket_target = False
-
+        self.ticketcom_update = False
 
     def loop(self):
         if self.name == "1dummy":
             return
-        
-        self.assign_throwitem_tag()
-        self.assign_deathitem_tag()
 
         self.watch_time()
         item, tag = self.get_SelectedItem()
         #import pdb;pdb.set_trace()
         if tag == "DIO" and self.run_stand == False:
-            self.mcr.command(f'execute as {self.name} at @s run tp @e[tag=DIOinter,limit=1] ^ ^ ^1')
+            #self.mcr.command(f'execute as {self.name} at @s run tp @e[tag=DIOinter,limit=1] ^ ^ ^1')
+            self.mcr.command(f'data modify block 0 -64 0 auto set value 1')
             inter = self.mcr.command(f'data get entity @e[tag=DIOinter,limit=1] interaction.player') # Interaction has the following entity data: [I; 123, -1234, -1234, 1234]
             inter_uuid = re.sub(r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: ', '', inter)
             self.mcr.command(f'data remove entity @e[tag=DIOinter,limit=1] interaction')
@@ -45,6 +43,7 @@ class The_World(Common_func):
 
         else:
             # killしてもいいけど今のところはスタンドアイテムを持っていないときは元の場所に戻す。
+            self.mcr.command(f'data modify block 0 -64 0 auto set value 0')
             self.mcr.command(f'tp @e[tag=DIOinter,limit=1] 0 -64 0')
 
         if self.run_stand:
@@ -54,6 +53,8 @@ class The_World(Common_func):
          # チケットアイテム獲得によるターゲット該当者処理
         # チケットアイテムを持っていないならFalse。死んだりチェストにしまうとFalseになる。
         self.ticket_target = True if self.check_ticket_item(self.name, self.ticket_item[0], self.ticket_item[1]) else False
+
+        update_flag = False     # チェックポイントコンパス更新フラグを下げておく。
 
         # チェックポイント攻撃時処理
         if self.uuid == self.passcheck_checkpoint(f'No{self.pass_point+1}'):
@@ -70,6 +71,9 @@ class The_World(Common_func):
                     self.controller.progress += 1   # ゲームの進捗を更新。
                     self.controller.prepare = False # チェックポイント準備状態を解除
                     self.controller.reset_time()    # 既に一秒数えられている場合があるのでリセット
+                    self.controller.false_ticketitem_get_frag() # 一旦下げる。誰かが次のチケットアイテムを手に入れているならすぐにフラグが経つはず。
+                    self.ticketcom_update = False
+                    self.ticket_target = False      # 次のチェックポイントのチケットアイテムへ更新するため一旦所持していない状態にする。
 
             # 既にアクティブ化されているなら自分のチェックポイントを加算。
             # 2位以下の処理。
@@ -77,11 +81,28 @@ class The_World(Common_func):
                 self.add_checkpoint('The_World', self.pass_point) # jsonファイルにチェックポイント情報更新
                 self.pass_point += 1                                # ソースコード内チェックポイント情報更新
                 self.point_pos = self.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
-                print(self.point_pos, self.ticket_item)
+                #print(self.point_pos, self.ticket_item)
+                update_flag = True
         #! チケットアイテムはゲーム全体の進行状態に依存するため
         #! ここは随時更新すべき。この場所でも随時更新になるが分かりにくい。
         self.ticket_item = self.get_ticket_info(self.controller.progress)
 
+        if self.controller.get_ticketitem_get_frag():   # 誰かがチケットアイテムを手に入れたのでチケットコンパスを更新させる。
+            self.ticketcom_update = False
+
+        if not self.ticketcom_update:   # False＝まだアプデしていない
+            update_flag = True
+
+        if update_flag:
+            if self.controller.get_ticketitem_get_frag():
+                self.ticketcom_update = True
+            self.create_ticket_compass()
+
+    def create_ticket_compass(self):
+        dim = self.controller.get_dimention(self.pass_point+1)
+        nbt = self.controller.crate_ticket_compass(self.ticket_item, dim, self.point_pos)
+        self.mcr.command('clear ' + self.name + ' compass{Tags:ticket} 1')
+        self.mcr.command('give ' + self.name + ' compass{'+nbt+'}')
 
     def cancel_stand(self):
         # スタンド解除は実質下の関数。

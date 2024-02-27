@@ -413,7 +413,7 @@ class Common_func:
             df[stand] : int
                 最新の通過済チェックポイント。
         '''
-        with open('pass_checkpoint_list.json') as f:
+        with open('./json_list/pass_checkpoint_list.json') as f:
             df = json.load(f)
 
         return df[stand]
@@ -449,11 +449,11 @@ class Common_func:
             None
         '''
         #self.mcr.command(f'data remove entity @e[tag=No{number},tag=checkpoint,limit=1] attack')
-        with open('pass_checkpoint_list.json') as f:
+        with open('./json_list/pass_checkpoint_list.json') as f:
             df = json.load(f)
             df[stand] = number + 1
 
-        with open('pass_checkpoint_list.json', 'w') as f:     # 編集データを上書き
+        with open('./json_list/pass_checkpoint_list.json', 'w') as f:     # 編集データを上書き
             json.dump(df, f, indent=4)
 
     def check_active(self, number):
@@ -510,7 +510,7 @@ class Common_func:
             list(df.items()) : list
                 チェックポイントの座標。
         '''
-        with open('checkpoint.json') as f:
+        with open('./json_list/checkpoint.json') as f:
             df = json.load(f)
         if checkpoint == 'checkpoint6':     # 範囲外参照にならないよう修正。
             checkpoint = 'checkpoint5'
@@ -529,7 +529,7 @@ class Common_func:
             list_item[number] : tuple
                 0番目がアイテム名。1番目が個数。
         '''
-        with open('ticket_list.json') as f:
+        with open('./json_list/ticket_list.json') as f:
             df = json.load(f)
 
         list_item = list(df.items())
