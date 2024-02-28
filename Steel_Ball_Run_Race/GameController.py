@@ -82,7 +82,7 @@ class GameController:
     def target_dim(self, player):
         dimention = ('overworld','the_nether','the_end')
         for dim in dimention:
-            res = self.mcr.command(f'execute as {player} if dimension minecraft:{dim}')
+            res = self.mcr.command(f'execute as {player} at @s if dimension minecraft:{dim}')
             if 'Test passed' == res:
                 return dim
 
