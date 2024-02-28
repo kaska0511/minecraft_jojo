@@ -215,13 +215,21 @@ def find_target(controller,world,tusk,kqeen,rain,boy):
         #! ゲーム進捗状況に合わせてplayerをsortすべき
         #! 30秒ごとにgiveするように修正する
         controller.true_ticketitem_get_frag()       #  チケットアイテムが誰かがgetしているならフラグを立てる。
+        if controller.get_old_flag() == False:      # Falseということは初回
+            controller.true_old_flag()
+            controller.true_someone_get_ticket()
+        elif controller.get_old_flag() == True:     # Trueの場合は既にフラグを立ち上げた状態なのでsomeone_get_ticketを下げる。
+            controller.false_someone_get_ticket()
         dimention = controller.target_dim(player[0])
+        print(dimention)
         pos = controller.get_pos(player[0])
         nbt = controller.crate_target_compass(player, dimention, pos)
         mcr.command('clear @a compass{Tags:target} 1')
         mcr.command('give @a compass{'+nbt+'}')
     else:   # まだチケットアイテムを持っている人がいない。
-        pass
+        if controller.get_old_flag() == True:
+            controller.false_old_flag()
+            controller.false_someone_get_ticket()
 
     return player
 
@@ -305,10 +313,10 @@ def main(mcr):
         # targetによりチケットアイテム所持者がいれば5分計測が始まる。
         if target and not world.run_stand and not controller.prepare:
             controller.stop()
-        print(controller.elapsed_time)
+        #print(controller.elapsed_time)
         if controller.elapsed_time == 30:   # 300秒（5分）経ったらチェックポイントの準備完了。test中は30秒
             # みんなで稼ぐ時間
-            print(controller.elapsed_time)
+            #print(controller.elapsed_time)
             controller.prepare = True
             controller.elapsed_time = 0
         if controller.elapsed_time == 60:

@@ -182,7 +182,7 @@ class Catch_The_Rainbow(Common_func):
         #! ここは随時更新すべき。この場所でも随時更新になるが分かりにくい。
         self.ticket_item = self.get_ticket_info(self.controller.progress)
 
-        if self.controller.get_ticketitem_get_frag():   # 誰かがチケットアイテムを手に入れたのでチケットコンパスを更新させる。
+        if self.controller.get_someone_get_ticket():    # 誰かがチケットアイテムを手に入れたのでチケットコンパスを更新させる。
             self.ticketcom_update = False
 
         if not self.ticketcom_update:   # False＝まだアプデしていない

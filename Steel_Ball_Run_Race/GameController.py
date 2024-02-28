@@ -12,6 +12,8 @@ class GameController:
         self.progress = None    # チケットアイテムのナンバー
         self.checkpoint_pass_flag = False  # 
         self.ticketitem_get_frag = False
+        self.old_flag = False
+        self.someone_get_ticket = False
 
     def start(self):
         self.start_time = time.time()
@@ -43,6 +45,24 @@ class GameController:
 
     def get_ticketitem_get_frag(self):
         return self.ticketitem_get_frag
+
+    def true_old_flag(self):
+        self.old_flag = True
+
+    def false_old_flag(self):
+        self.old_flag = False
+
+    def get_old_flag(self):
+        return self.old_flag
+
+    def true_someone_get_ticket(self):
+        self.someone_get_ticket = True
+
+    def false_someone_get_ticket(self):
+        self.someone_get_ticket = False
+
+    def get_someone_get_ticket(self):
+        return self.someone_get_ticket
 
     def get_progress(self):
         # pass_checkpoint_listから最大の進捗をself.progressに反映させる。
