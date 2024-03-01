@@ -159,3 +159,17 @@ class GameController:
 
         #nbt = make_commpass_nbt(kqeen.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket")
         return nbt
+
+    def add_bossbar(self, id, display_str, color="blue", max=300):
+        self.mcr.command(f'bossbar add {id} "{display_str}"')
+        self.mcr.command(f'bossbar set minecraft:{id} color {color}')
+        self.mcr.command(f'bossbar set minecraft:{id} max {max}')
+
+    def set_bossbar(self, id):
+        self.mcr.command(f'bossbar set minecraft:{id} players @a')
+
+    def set_bossbar_value(self, id, value):
+        self.mcr.command(f'bossbar set minecraft:{id} value {value}')
+
+    def reset_bossbar(self, id):
+        self.mcr.command(f'bossbar set minecraft:{id} value 0')

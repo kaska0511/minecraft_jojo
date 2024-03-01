@@ -122,9 +122,10 @@ def checkpoint_prepare():
 
 def name_registration(world,tusk,kqeen,rain,boy):
     stand_list = open_json('./json_list/stand_list.json')
-    world.name = stand_list["The_World"]
+    world.name = stand_list["The_World"]   #DnD_sk
     #world.name = "KASKA0511"
     tusk.name = stand_list["TuskAct4"]
+    #tusk.name = "KASKA0511"
     kqeen.name = stand_list["Killer_Qeen"]
     rain.name = stand_list["Catch_The_Rainbow"]
     #rain.name = "KASKA0511"
@@ -181,7 +182,8 @@ def stand_lost_check(world,tusk,kqeen,rain,boy):
         boy.create_ticket_compass()
 
 def set_commandblock(world,tusk,kqeen,rain,boy):
-    command = f'execute as {world.name} at @s run tp @e[tag=worldinter,limit=1] ^ ^ ^1'
+    mcr.command(f'forceload add 0 0 16 16')
+    command = f'execute as {world.name} at @s run tp @e[tag=DIOinter,limit=1] ^ ^ ^1'
     mcr.command(f'setblock 0 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
     command = f'execute as {tusk.name} at @s run tp @e[tag=tuskinter,limit=1] ^ ^ ^1'
     mcr.command(f'setblock 1 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
@@ -213,19 +215,19 @@ def find_target(controller,world,tusk,kqeen,rain,boy):
     # kqeen.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket"
     if player != []:
         #! ゲーム進捗状況に合わせてplayerをsortすべき
-        #! 30秒ごとにgiveするように修正する
         controller.true_ticketitem_get_frag()       #  チケットアイテムが誰かがgetしているならフラグを立てる。
         if controller.get_old_flag() == False:      # Falseということは初回
             controller.true_old_flag()
             controller.true_someone_get_ticket()
         elif controller.get_old_flag() == True:     # Trueの場合は既にフラグを立ち上げた状態なのでsomeone_get_ticketを下げる。
             controller.false_someone_get_ticket()
-        dimention = controller.target_dim(player[0])
-        print(dimention)
-        pos = controller.get_pos(player[0])
-        nbt = controller.crate_target_compass(player, dimention, pos)
-        mcr.command('clear @a compass{Tags:target} 1')
-        mcr.command('give @a compass{'+nbt+'}')
+        # 10秒ごとにgiveする。
+        if controller.elapsed_time % 10 == 0:
+            dimention = controller.target_dim(player[0])
+            pos = controller.get_pos(player[0])
+            nbt = controller.crate_target_compass(player, dimention, pos)
+            mcr.command('clear @a compass{Tags:target} 1')
+            mcr.command('give @a compass{'+nbt+'}')
     else:   # まだチケットアイテムを持っている人がいない。
         if controller.get_old_flag() == True:
             controller.false_old_flag()
@@ -272,6 +274,8 @@ def main(mcr):
 
     set_commandblock(world,tusk,kqeen,rain,boy)
 
+    controller.add_bossbar("ticket", "チェックポイント解放まで", "blue", 300)
+
     while True:
         #mcr.command('give KASKA0511 compass{LodestoneDimension:"minecraft:overworld", LodestoneTracked: 0b, LodestonePos: [I; -223, 88, -144],display:{Name:'[{"text":"宇良"}]'}}')
         #mcr.command('clear @a compass{Tags:test} 1')
@@ -291,6 +295,9 @@ def main(mcr):
         # スタンドアイテムを付与。死亡時やスタンドアイテムをなくした場合自動で与えられる。
         stand_lost_check(world,tusk,kqeen,rain,boy)
 
+        # 作成したbossbarを見られるようにする。一度ワールドを離れたプレイヤーはこれを実行しないとみることができないのでwhile内で実行する。
+        controller.set_bossbar("ticket")
+        controller.set_bossbar_value("ticket", controller.elapsed_time)
         # 能力管理。ここで能力を発動させる。
         # スタンドを追加したらここにスタンド名.loop()を追加するイメージ。
         # 時を止めているときに能力が止まるタイプのスタンドの場合はifの中に、止まらない場合はifの外に配置する。
@@ -306,7 +313,6 @@ def main(mcr):
             mcr.command(f'data modify block 3 -64 0 auto set value 0')
             mcr.command(f'data modify block 4 -64 0 auto set value 0')
 
-
         target = find_target(controller,world,tusk,kqeen,rain,boy)
 
         # ザ・ワールドが発動中は基準値の更新を止める。＝時間計測が一時的に止まる。
@@ -314,14 +320,13 @@ def main(mcr):
         if target and not world.run_stand and not controller.prepare:
             controller.stop()
         #print(controller.elapsed_time)
-        if controller.elapsed_time == 30:   # 300秒（5分）経ったらチェックポイントの準備完了。test中は30秒
+        if controller.elapsed_time == 300:   # 300秒（5分）経ったらチェックポイントの準備完了。test中は30秒
             # みんなで稼ぐ時間
-            #print(controller.elapsed_time)
+            print(controller.elapsed_time)
             controller.prepare = True
-            controller.elapsed_time = 0
         if controller.elapsed_time == 60:
             # 各人で稼ぐので
-            # ボーナスタイム。1分経過ごとにボーナスとして報酬が一つ増える。最大3分経過を計測する。
+            #! ボーナスタイム。1分経過ごとにボーナスとして報酬が一つ増える。最大3分経過を計測する。
             pass
 
 def time_check_main(mcr):

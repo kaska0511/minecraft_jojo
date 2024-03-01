@@ -67,7 +67,7 @@ def set_checkpoint(mcr, x, z, tag, dimention="overworld"):
         time.sleep(2) #チャンクロード時間
         if ap0 == 'No entity was found':    # まだチェックポイントとしての防具立てが召喚されていないなら
             mcr.command(f'execute in {dimention} run summon armor_stand {x} {y} {z}  \
-                    {{Invisible:1b,Invulnerable:1b,PersistenceRequired:1b,NoGravity:1b,Tags:["checkpoint","{tag}"]}}')
+                    {{Invisible:0b,Invulnerable:1b,PersistenceRequired:1b,NoGravity:1b,Tags:["checkpoint","{tag}"]}}')
         for _ in range(40):
             res = mcr.command(f'execute as @e[tag=checkpoint,tag={tag},limit=1] at @s in {dimention} if block ^ ^-1 ^ nether_bricks')
             if res == '':
@@ -82,7 +82,7 @@ def set_checkpoint(mcr, x, z, tag, dimention="overworld"):
         time.sleep(0.2) #チャンクロード時間
         if ap0 == 'No entity was found':    # まだチェックポイントとしての防具立てが召喚されていないなら
             mcr.command(f'execute in {dimention} positioned {x} ~ {z} positioned over motion_blocking_no_leaves run summon armor_stand ~ ~ ~ \
-                        {{Invisible:1b,Invulnerable:1b,PersistenceRequired:1b,NoGravity:1b,Tags:["checkpoint","{tag}"]}}')
+                        {{Invisible:0b,Invulnerable:1b,PersistenceRequired:1b,NoGravity:1b,Tags:["checkpoint","{tag}"]}}')
         if ap1 == 'No entity was found':    # まだチェックポイントとしてのインタラクションが召喚されていないなら
             # オーバーワールド、エンド共通処理
             mcr.command(f'execute in {dimention} positioned {x} ~ {z} positioned over motion_blocking_no_leaves run summon interaction ~ ~ ~ {{Tags:["attackinter","{tag}"],height:2,width:1}}')
@@ -108,12 +108,13 @@ def search_village_xz(mcr, tag):
     '''
     village_list =  ('desert', 'savanna', 'snowy', 'taiga', 'plains')
     r_comp = 10000
+    distance = 2500
     xz = []
-    mcr.command(f'execute as @e[tag=checkpoint,tag={tag},limit=1] at @s rotated 90 0 positioned ^ ^ ^2500 run forceload add ~ ~')
+    mcr.command(f'execute as @e[tag=checkpoint,tag={tag},limit=1] at @s rotated 90 0 positioned ^ ^ ^{distance} run forceload add ~ ~')
     time.sleep(1)
     for _ in range(2):
         for i in range(5):
-            res = mcr.command(f'execute as @e[tag=checkpoint,tag={tag},limit=1] at @s rotated 90 0 positioned ^ ^ ^2500 run locate structure minecraft:village_{village_list[i]}')
+            res = mcr.command(f'execute as @e[tag=checkpoint,tag={tag},limit=1] at @s rotated 90 0 positioned ^ ^ ^{distance} run locate structure minecraft:village_{village_list[i]}')
             #time.sleep(2)#execute as KASKA0511 at @s rotated 90 0 positioned ^ ^ ^2500 run locate structure minecraft:village_
             #res = mcr.command(f'execute as @e[tag=checkpoint,tag={tag},limit=1] at @s rotated 90 0 positioned ^ ^ ^2500 run locate structure minecraft:village_{village_list[i]}')
             if res == '':

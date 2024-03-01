@@ -161,8 +161,11 @@ class Catch_The_Rainbow(Common_func):
                 #! チケットアイテム情報を取得する。処理追加。
                 if self.check_ticket_item(self.name, self.ticket_item[0], self.ticket_item[1]):
                     # 一位通過者
+                    self.mcr.command(f'playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1')
                     self.mcr.command(f'tag @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] add active')# チェックポイントアクティブ化処理追加
                     self.gift_reward(f'No{self.pass_point+1}')
+                    self.controller.elapsed_time = 0
+                    self.controller.reset_bossbar("ticket")     # ticketのbossbarをリセット。
                     self.controller.progress += 1   # ゲームの進捗を更新。
                     self.controller.prepare = False # チェックポイント準備状態を解除
                     self.controller.reset_time()    # 既に一秒数えられている場合があるのでリセット
@@ -175,6 +178,7 @@ class Catch_The_Rainbow(Common_func):
             if self.check_active(f'No{self.pass_point+1}'):
                 self.add_checkpoint('Catch_The_Rainbow', self.pass_point) # jsonファイルにチェックポイント情報更新
                 self.pass_point += 1                                # ソースコード内チェックポイント情報更新
+                self.mcr.command(f'setworldspawn {self.point_pos[0]} {self.point_pos[1]} {self.point_pos[2]}')
                 self.point_pos = self.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
                 print(self.point_pos, self.ticket_item)
                 update_flag = True
