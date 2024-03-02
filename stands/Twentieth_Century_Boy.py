@@ -135,6 +135,7 @@ class Twentieth_Century_Boy(Common_func):
                 self.point_pos = self.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
                 print(self.point_pos, self.ticket_item)
                 update_flag = True
+
         #! チケットアイテムはゲーム全体の進行状態に依存するため
         #! ここは随時更新すべき。この場所でも随時更新になるが分かりにくい。
         self.ticket_item = self.get_ticket_info(self.controller.progress)
@@ -146,8 +147,7 @@ class Twentieth_Century_Boy(Common_func):
             update_flag = True
 
         if update_flag:
-            if self.controller.get_ticketitem_get_frag():
-                self.ticketcom_update = True
+            self.ticketcom_update = True
             self.create_ticket_compass()
 
     def create_ticket_compass(self):

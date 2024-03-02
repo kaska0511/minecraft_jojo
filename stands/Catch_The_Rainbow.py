@@ -227,8 +227,7 @@ class Catch_The_Rainbow(Common_func):
             update_flag = True
 
         if update_flag:
-            if self.controller.get_ticketitem_get_frag():
-                self.ticketcom_update = True
+            self.ticketcom_update = True
             self.create_ticket_compass()
 
     def create_ticket_compass(self):

@@ -140,6 +140,7 @@ class Killer_Qeen(Common_func):
         if self.uuid == self.passcheck_checkpoint(f'No{self.pass_point+1}'):
             # 同じUUIDであれば持ち物の内容にかかわらずデータを削除。
             self.mcr.command(f'data remove entity @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] attack')
+
             if not self.check_active(f'No{self.pass_point+1}') and self.controller.prepare:
                 # そのチェックポイントは誰も通過していないため、一位として扱っていいかチェックする。
                 #! チケットアイテム情報を取得する。処理追加。
@@ -187,8 +188,6 @@ class Killer_Qeen(Common_func):
             update_flag = True
 
         if update_flag:
-            #if self.controller.get_ticketitem_get_frag():
-            #    self.ticketcom_update = True
             self.ticketcom_update = True
             self.create_ticket_compass()
 
