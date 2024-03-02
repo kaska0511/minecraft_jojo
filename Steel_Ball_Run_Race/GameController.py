@@ -7,6 +7,7 @@ class GameController:
     def __init__(self, mcr) -> None:
         self.mcr = mcr
         self.start_time = 0
+        self.ticket_start_time = 0
         self.elapsed_time = 0
         self.prepare = False    # チェックポイントの準備状態を保持。チェックポイント5分経ったらTrue。誰かが一位通過したときにFalse。
         self.progress = None    # チケットアイテムのナンバー
@@ -18,12 +19,24 @@ class GameController:
     def start(self):
         self.start_time = time.time()
 
+    def ticket_start(self):
+        self.ticket_start_time = time.time()
+
     def stop(self):
         end_time = time.time()
         elapsed = end_time - self.start_time
         if elapsed >= 1.0:
             self.elapsed_time += 1
             self.start()
+
+    def check_10s_ticket(self):
+        end_time = time.time()
+        elapsed = end_time - self.ticket_start_time
+        if elapsed >= 10.0:
+            self.ticket_start()
+            return True
+        else:
+            return False
 
     def reset_time(self):
         self.elapsed_time = 0
@@ -161,6 +174,8 @@ class GameController:
         return nbt
 
     def add_bossbar(self, id, display_str, color="blue", max=300):
+        if max >= 300:
+            max = 300
         self.mcr.command(f'bossbar add {id} "{display_str}"')
         self.mcr.command(f'bossbar set minecraft:{id} color {color}')
         self.mcr.command(f'bossbar set minecraft:{id} max {max}')
@@ -169,7 +184,13 @@ class GameController:
         self.mcr.command(f'bossbar set minecraft:{id} players @a')
 
     def set_bossbar_value(self, id, value):
+        if value >= 300:
+            value = 300
         self.mcr.command(f'bossbar set minecraft:{id} value {value}')
 
     def reset_bossbar(self, id):
         self.mcr.command(f'bossbar set minecraft:{id} value 0')
+
+    def checkpoint_particle(self):
+        self.mcr.command(f'execute as @e[type=minecraft:armor_stand,tag=checkpoint] at @s run particle minecraft:shriek 0 ^ ^0 ^ 0 0 0 1 1 force @a')
+        self.mcr.command(f'execute as @e[tag=active] at @s run particle minecraft:happy_villager ^ ^2 ^ 0 0 0 0.1 1 force @a')

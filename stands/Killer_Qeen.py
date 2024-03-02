@@ -138,8 +138,9 @@ class Killer_Qeen(Common_func):
             if self.check_active(f'No{self.pass_point+1}'):
                 #! スポーン地点更新処理追加(set_spone_point)
                 self.add_checkpoint('Killer_Qeen', self.pass_point) # jsonファイルにチェックポイント情報更新
+                if self.pass_point+1 < 4:
+                    self.mcr.command(f'execute as {self.name} at @s positioned over motion_blocking_no_leaves run setworldspawn {self.point_pos[0]} ~ {self.point_pos[1]}')
                 self.pass_point += 1                                # ソースコード内チェックポイント情報更新
-                self.mcr.command(f'setworldspawn {self.point_pos[0]} {self.point_pos[1]} {self.point_pos[2]}')
                 self.point_pos = self.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
                 print(self.point_pos, self.ticket_item)
                 update_flag = True

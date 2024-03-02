@@ -222,7 +222,7 @@ def find_target(controller,world,tusk,kqeen,rain,boy):
         elif controller.get_old_flag() == True:     # Trueの場合は既にフラグを立ち上げた状態なのでsomeone_get_ticketを下げる。
             controller.false_someone_get_ticket()
         # 10秒ごとにgiveする。
-        if controller.elapsed_time % 10 == 0:
+        if controller.check_10s_ticket():
             dimention = controller.target_dim(player[0])
             pos = controller.get_pos(player[0])
             nbt = controller.crate_target_compass(player, dimention, pos)
@@ -271,6 +271,7 @@ def main(mcr):
     mcr.command('summon interaction 0 -64 0 {Tags:["boyinter"],height:2,width:1}')
 
     controller.start()
+    controller.ticket_start()
 
     set_commandblock(world,tusk,kqeen,rain,boy)
 
@@ -317,17 +318,21 @@ def main(mcr):
 
         # ザ・ワールドが発動中は基準値の更新を止める。＝時間計測が一時的に止まる。
         # targetによりチケットアイテム所持者がいれば5分計測が始まる。
-        if target and not world.run_stand and not controller.prepare:
-            controller.stop()
-        #print(controller.elapsed_time)
-        if controller.elapsed_time == 300:   # 300秒（5分）経ったらチェックポイントの準備完了。test中は30秒
-            # みんなで稼ぐ時間
-            print(controller.elapsed_time)
-            controller.prepare = True
-        if controller.elapsed_time == 60:
-            # 各人で稼ぐので
-            #! ボーナスタイム。1分経過ごとにボーナスとして報酬が一つ増える。最大3分経過を計測する。
-            pass
+        if not world.run_stand:
+            if target and not world.run_stand and not controller.prepare:
+                controller.stop()
+            #print(controller.elapsed_time)
+            if controller.elapsed_time == 301:   # 300秒（5分）経ったらチェックポイントの準備完了。test中は30秒
+                # みんなで稼ぐ時間
+                print(controller.elapsed_time)
+                controller.prepare = True
+            if controller.elapsed_time == 60:
+                # 各人で稼ぐので
+                #! ボーナスタイム。1分経過ごとにボーナスとして報酬が一つ増える。最大3分経過を計測する。
+                pass
+
+            controller.checkpoint_particle()
+
 
 def time_check_main(mcr):
     
