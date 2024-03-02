@@ -138,7 +138,7 @@ def set_uuid(world,tusk,kqeen,rain,boy):
         world.uuid = world.get_uuid()
     if tusk.name != "1dummy":
         tusk.uuid = tusk.get_uuid()
-        mcr.command('give ' + tusk.name + 'saddle')     # tusk最初に能力が付与されたタイミングだけサドルを与える。
+        #mcr.command('give ' + tusk.name + 'saddle')     # tusk最初に能力が付与されたタイミングだけサドルを与える。
     if kqeen.name != "1dummy":
         kqeen.uuid = kqeen.get_uuid()
     if rain.name != "1dummy":
@@ -167,6 +167,7 @@ def stand_lost_check(world,tusk,kqeen,rain,boy):
         mcr.command('give ' + world.name + " clock{Tags:DIO,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[0] + '"}]'+"'}}")
         world.create_ticket_compass()
     if not tusk.bool_have_a_stand('Saint') and tusk.name != '1dummy':
+        mcr.command('give ' + tusk.name + 'saddle')
         mcr.command('give ' + tusk.name + " bone{Tags:Saint,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[1] + '"}]'+"'}}")
         tusk.create_ticket_compass()
     if not kqeen.bool_have_a_stand('Killer') and kqeen.name != '1dummy':   # 全て失わないと再取得できないので注意
@@ -235,6 +236,26 @@ def find_target(controller,world,tusk,kqeen,rain,boy):
 
     return player
 
+def make_bonus_bar(controller,world,tusk,kqeen,rain,boy):
+    # ボーナスバーは事前に作る。
+    controller.add_bonus_bossbar(world.name, "追加報酬+1")
+    controller.add_bonus_bossbar(tusk.name, "追加報酬+1")
+    controller.add_bonus_bossbar(kqeen.name, "追加報酬+1")
+    controller.add_bonus_bossbar(rain.name, "追加報酬+1")
+    controller.add_bonus_bossbar(boy.name, "追加報酬+1")
+
+    controller.set_bonus_bossbar(world.name)
+    controller.set_bonus_bossbar(tusk.name)
+    controller.set_bonus_bossbar(kqeen.name)
+    controller.set_bonus_bossbar(rain.name)
+    controller.set_bonus_bossbar(boy.name)
+    # 作った直後は不可視
+    controller.set_bonus_bossbar_visible(world.name, False)
+    controller.set_bonus_bossbar_visible(tusk.name, False)
+    controller.set_bonus_bossbar_visible(kqeen.name, False)
+    controller.set_bonus_bossbar_visible(rain.name, False)
+    controller.set_bonus_bossbar_visible(boy.name, False)
+
 def main(mcr):
     mcr.command("gamerule sendCommandFeedback false")
 
@@ -274,6 +295,8 @@ def main(mcr):
     controller.ticket_start()
 
     set_commandblock(world,tusk,kqeen,rain,boy)
+
+    make_bonus_bar(controller,world,tusk,kqeen,rain,boy)
 
     controller.add_bossbar("ticket", "チェックポイント解放まで", "blue", 300)
 
@@ -316,7 +339,7 @@ def main(mcr):
 
         target = find_target(controller,world,tusk,kqeen,rain,boy)
 
-        # ザ・ワールドが発動中は基準値の更新を止める。＝時間計測が一時的に止まる。
+        # ザ・ワールドが発動中は基準値の更新を止める。＝時間計測が一時的に止める。
         # targetによりチケットアイテム所持者がいれば5分計測が始まる。
         if not world.run_stand:
             if target and not world.run_stand and not controller.prepare:
@@ -324,12 +347,8 @@ def main(mcr):
             #print(controller.elapsed_time)
             if controller.elapsed_time == 301:   # 300秒（5分）経ったらチェックポイントの準備完了。test中は30秒
                 # みんなで稼ぐ時間
-                print(controller.elapsed_time)
+                #print(controller.elapsed_time)
                 controller.prepare = True
-            if controller.elapsed_time == 60:
-                # 各人で稼ぐので
-                #! ボーナスタイム。1分経過ごとにボーナスとして報酬が一つ増える。最大3分経過を計測する。
-                pass
 
             controller.checkpoint_particle()
 

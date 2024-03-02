@@ -1,6 +1,6 @@
 import re
 import json
-
+import time
 class Common_func:
     def __init__(self, name, mcr, uuid = None):
         self.name = name
@@ -460,14 +460,10 @@ class Common_func:
         res = self.mcr.command(f'tag @e[tag={number},tag=attackinter,limit=1] list')
         return True if 'active' in res else False   # 文字列にactiveが含むならTrue
 
-    def gift_reward(self, number):
+    def gift_reward(self, number, many=0):
         print(self.mcr.command(f'tag @e[tag={number},tag=attackinter,limit=1] list'))  # タグの確認。
-        #! 以下の処理は自力で手に入れた場合の2倍報酬は考慮されていない。ので注意。
-        # if tagにactiveが設定されていないなら(firstペンギンなら)
-        #       ダイヤモンドを付与。
-        # そうでないなら
-        #       ダイヤモンドは付与しない。
-        self.mcr.command(f'give {self.name} diamond 3')  # タグの確認。
+        #! ボーナスタイムで稼いだ場合それに合わせてダイヤモンドの数を増やす。
+        self.mcr.command(f'give {self.name} diamond {3+many}')  # タグの確認。
 
     def check_ticket_item(self, player, item, count):
         '''
@@ -564,7 +560,10 @@ class Common_func:
         else:   # プレイヤーが見つからない or　プレイヤーが死んでいないなら
             return
 
-
-    def set_spone_point(self, x, y, z, dim='minecraft:overworld'):
-        self.mcr.command(f'execute in {dim} run spawnpoint {self.name} {x} {y} {z}')
-        pass
+    def bonus_elapse_start(self, start_time):
+        end_time = time.time()
+        elapsed = end_time - start_time
+        if elapsed >= 1.0:
+            return True
+        else:
+            return False

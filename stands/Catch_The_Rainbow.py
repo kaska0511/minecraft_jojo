@@ -1,4 +1,5 @@
 import re
+import time
 from stands.Common_func import Common_func
 
 class Catch_The_Rainbow(Common_func):
@@ -18,6 +19,9 @@ class Catch_The_Rainbow(Common_func):
         self.ticket_item = self.get_ticket_info(self.pass_point)
         self.ticket_target = False
         self.ticketcom_update = False
+        self.bonus_start_time = time.time()
+        self.bonus_time = None
+        self.bonus_cnt = 0
 
     def set_scoreboard(self):
         self.mcr.command(f'scoreboard objectives add SNEAK minecraft.custom:minecraft.sneak_time')
@@ -148,6 +152,27 @@ class Catch_The_Rainbow(Common_func):
         # チケットアイテム獲得によるターゲット該当者処理
         # チケットアイテムを持っていないならFalse。死んだりチェストにしまうとFalseになる。
         self.ticket_target = True if self.check_ticket_item(self.name, self.ticket_item[0], self.ticket_item[1]) else False
+        # チケットアイテムを持ち、既にチェックポイント開放がされているならボーナス処理
+        if self.ticket_target and self.controller.elapsed_time >= 300:
+            self.mcr.command(f'bossbar set minecraft:ticket visible false')   # ゲージが多すぎると目障りなので画面から不可視
+            self.controller.set_bonus_bossbar_visible(self.name, True)
+            self.controller.set_bonus_bossbar_value(self.name, self.bonus_time)
+            if self.bonus_cnt < 3:         # ボーナス数、最大値の3以下の時処理を行う。
+
+                if self.bonus_time is None:
+                    self.bonus_time = 0
+                    self.bonus_start_time = time.time()
+
+                if self.bonus_time >= 60:
+                    self.bonus_cnt += 1     # この値が直接ボーナスの数を示す。
+                    if self.bonus_cnt < 3:
+                        self.bonus_time = None
+                    # ボスバーの表示名を変える。
+                    self.controller.set_bonus_bossbar_name(self.name, f'追加報酬+{self.bonus_cnt+1}')
+
+                if self.bonus_elapse_start(self.bonus_start_time) and self.bonus_time is not None:  # 1秒経ったらTrueが返される。
+                    self.bonus_time += 1
+                    self.bonus_start_time = time.time()
 
         update_flag = False     # チェックポイントコンパス更新フラグを下げておく。
 
@@ -163,7 +188,7 @@ class Catch_The_Rainbow(Common_func):
                     # 一位通過者
                     self.mcr.command(f'playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1')
                     self.mcr.command(f'tag @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] add active')# チェックポイントアクティブ化処理追加
-                    self.gift_reward(f'No{self.pass_point+1}')
+                    self.gift_reward(f'No{self.pass_point+1}', self.bonus_cnt)
                     self.controller.elapsed_time = 0
                     self.controller.reset_bossbar("ticket")     # ticketのbossbarをリセット。
                     self.controller.progress += 1   # ゲームの進捗を更新。
@@ -176,6 +201,14 @@ class Catch_The_Rainbow(Common_func):
             # 既にアクティブ化されているなら自分のチェックポイントを加算。
             # 2位以下の処理。
             if self.check_active(f'No{self.pass_point+1}'):
+                self.bonus_start_time = time.time()
+                self.bonus_time = None
+                self.bonus_cnt = 0
+                self.mcr.command(f'bossbar set minecraft:ticket visible true')   # 画面から不可視にしていたticketゲージを再可視化
+                self.controller.set_bonus_bossbar_visible(self.name, False)
+                self.controller.set_bonus_bossbar_name(self.name, f'追加報酬+1')
+                self.controller.reset_bonus_bossbar(self.name)
+
                 self.add_checkpoint('Catch_The_Rainbow', self.pass_point) # jsonファイルにチェックポイント情報更新
                 if self.pass_point+1 < 4:
                     self.mcr.command(f'execute as {self.name} at @s positioned over motion_blocking_no_leaves run setworldspawn {self.point_pos[0]} ~ {self.point_pos[1]}')

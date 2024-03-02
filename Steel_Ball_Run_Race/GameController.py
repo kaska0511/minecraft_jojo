@@ -176,21 +176,61 @@ class GameController:
     def add_bossbar(self, id, display_str, color="blue", max=300):
         if max >= 300:
             max = 300
+        id = id.lower()
         self.mcr.command(f'bossbar add {id} "{display_str}"')
         self.mcr.command(f'bossbar set minecraft:{id} color {color}')
         self.mcr.command(f'bossbar set minecraft:{id} max {max}')
 
     def set_bossbar(self, id):
+        id = id.lower()
         self.mcr.command(f'bossbar set minecraft:{id} players @a')
 
     def set_bossbar_value(self, id, value):
         if value >= 300:
             value = 300
+        id = id.lower()
         self.mcr.command(f'bossbar set minecraft:{id} value {value}')
 
     def reset_bossbar(self, id):
+        id = id.lower()
         self.mcr.command(f'bossbar set minecraft:{id} value 0')
 
     def checkpoint_particle(self):
         self.mcr.command(f'execute as @e[type=minecraft:armor_stand,tag=checkpoint] at @s run particle minecraft:shriek 0 ^ ^0 ^ 0 0 0 1 1 force @a')
         self.mcr.command(f'execute as @e[tag=active] at @s run particle minecraft:happy_villager ^ ^2 ^ 0 0 0 0.1 1 force @a')
+
+    def add_bonus_bossbar(self, id, display_str, color="green", max=60):
+        # display_str -> 追加報酬+1
+        id = id.lower()
+        self.mcr.command(f'bossbar add {id} "{display_str}"')
+        self.mcr.command(f'bossbar set minecraft:{id} color {color}')
+        self.mcr.command(f'bossbar set minecraft:{id} max {max}')
+
+    def set_bonus_bossbar(self, id):
+        # ボーナスのゲージは全員に見えるようにする。
+        id = id.lower()
+        self.mcr.command(f'bossbar set minecraft:{id} players @a')
+
+    def set_bonus_bossbar_value(self, id, value):
+        id = id.lower()
+        self.mcr.command(f'bossbar set minecraft:{id} value {value}')
+
+    def set_bonus_bossbar_name(self, id, display_str):
+        id = id.lower()
+        self.mcr.command(f'bossbar set minecraft:{id} name "{display_str}"')
+
+    def set_bonus_bossbar_visible(self, id, bool=True):
+        if bool:
+            bool = "true"
+        elif not bool:
+            bool = "false"
+        elif bool == "true" or bool == "false":
+            pass
+        else:
+            return
+        id = id.lower()
+        self.mcr.command(f'bossbar set minecraft:{id} visible {bool}')
+
+    def reset_bonus_bossbar(self, id):
+        id = id.lower()
+        self.mcr.command(f'bossbar set minecraft:{id} value 0')
