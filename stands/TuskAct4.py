@@ -73,8 +73,8 @@ class TuskAct4(Common_func):
                     self.bonus_cnt += 1     # この値が直接ボーナスの数を示す。
                     if self.bonus_cnt < 3:
                         self.bonus_time = None
-                    # ボスバーの表示名を変える。
-                    self.controller.set_bonus_bossbar_name(self.name, f'追加報酬+{self.bonus_cnt+1}')
+                        # ボスバーの表示名を変える。
+                        self.controller.set_bonus_bossbar_name(self.name, f'追加報酬+{self.bonus_cnt+1}')
 
                 if self.bonus_elapse_start(self.bonus_start_time) and self.bonus_time is not None:  # 1秒経ったらTrueが返される。
                     self.bonus_time += 1

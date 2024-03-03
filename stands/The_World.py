@@ -50,8 +50,8 @@ class The_World(Common_func):
             self.mcr.command(f'tp @e[tag=DIOinter,limit=1] 0 -64 0')
 
         if self.run_stand:
-            self.count_down()
             self.fix_player()
+            self.count_down()
 
          # チケットアイテム獲得によるターゲット該当者処理
         # チケットアイテムを持っていないならFalse。死んだりチェストにしまうとFalseになる。
@@ -71,8 +71,8 @@ class The_World(Common_func):
                     self.bonus_cnt += 1     # この値が直接ボーナスの数を示す。
                     if self.bonus_cnt < 3:
                         self.bonus_time = None
-                    # ボスバーの表示名を変える。
-                    self.controller.set_bonus_bossbar_name(self.name, f'追加報酬+{self.bonus_cnt+1}')
+                        # ボスバーの表示名を変える。
+                        self.controller.set_bonus_bossbar_name(self.name, f'追加報酬+{self.bonus_cnt+1}')
 
                 if self.bonus_elapse_start(self.bonus_start_time) and self.bonus_time is not None:  # 1秒経ったらTrueが返される。
                     self.bonus_time += 1
@@ -147,7 +147,7 @@ class The_World(Common_func):
 
     def stop_time(self):
         self.mcr.command(f'tp @e[type=interaction,limit=1] 0 -64 0')
-        self.mcr.command(f'execute at {self.name} run tick freeze')
+        self.mcr.command(f'execute as {self.name} at @s run tick freeze')
         self.mcr.command(f'execute as {self.name} at @s run playsound minecraft:entity.bee.death master @a ~ ~ ~ 4 0')
         self.mcr.command(f'effect give @a minecraft:blindness 1 1 true')  # 能力演出
         self.mcr.command(f'effect give {self.name} minecraft:strength {self.timer} 12 true') # ピグリンブルートを二発で倒せるレベルのパワーを付与。
@@ -163,23 +163,29 @@ class The_World(Common_func):
 
 
     def stop_player_effect_list(self):
-        self.mcr.command(f'attribute @e[name=!{self.name}] minecraft:generic.gravity base set 0')
-        self.mcr.command(f'attribute @e[name=!{self.name}] minecraft:generic.jump_strength base set 0')
-        self.mcr.command(f'effect give @e[name=!{self.name}] minecraft:water_breathing {self.timer} 1 true')
-        self.mcr.command(f'effect give @e[name=!{self.name}] minecraft:fire_resistance {self.timer} 1 true')
-        self.mcr.command(f'effect give @e[name=!{self.name}] minecraft:slow_falling {self.timer} 5 true')
+        self.mcr.command(f'execute as @a[name=!{self.name},nbt={{OnGround:0b}}] at @s run attribute @s minecraft:generic.gravity base set 0')
+        self.mcr.command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.jump_strength base set 0')
+        self.mcr.command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.movement_speed base set 0')
+        self.mcr.command(f'effect give @a[name=!{self.name}] minecraft:water_breathing {self.timer} 1 true')
+        self.mcr.command(f'effect give @a[name=!{self.name}] minecraft:fire_resistance {self.timer} 1 true')
+        self.mcr.command(f'effect give @a[name=!{self.name}] minecraft:slow_falling {self.timer} 5 true')
 
 
     def start_time(self):
 
         self.mcr.command(f'effect give @a minecraft:blindness 1 1 true')
+
         self.mcr.command(f'tick unfreeze')
 
-        self.mcr.command(f'attribute @e[name=!{self.name}] minecraft:generic.gravity base set 0.08')
-        self.mcr.command(f'attribute @e[name=!{self.name}] minecraft:generic.jump_strength base set 0.42')
-        self.mcr.command(f'effect clear @e[name=!{self.name}] minecraft:water_breathing')
-        self.mcr.command(f'effect clear @e[name=!{self.name}] minecraft:fire_resistance')
-        self.mcr.command(f'effect clear @e[name=!{self.name}] minecraft:slow_falling')
+        self.mcr.command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.gravity base set 0.08')
+        self.mcr.command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.jump_strength base set 0.42')
+        self.mcr.command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.movement_speed base set 0.1')
+        self.mcr.command(f'effect clear @a[name=!{self.name}] minecraft:water_breathing')
+        self.mcr.command(f'effect clear @a[name=!{self.name}] minecraft:fire_resistance')
+        self.mcr.command(f'effect clear @a[name=!{self.name}] minecraft:slow_falling')
+
+
+
         ## 各プレイヤーに重なるアマスタを切る。
         self.mcr.command(f'kill @e[tag=The_World]')
 
@@ -222,6 +228,7 @@ class The_World(Common_func):
             self.fix_flag = True
         for player in self.get_login_user():
             if player == self.name: # 自分の時は固定しない。
+                #pass
                 continue
 
             rot_list = self.rots.get(player, None)    # 視線座標取得
