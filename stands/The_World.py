@@ -146,7 +146,7 @@ class The_World(Common_func):
 
 
     def stop_time(self):
-        self.mcr.command(f'tp @e[type=interaction,limit=1] 0 -64 0')
+        self.mcr.command(f'tp @e[type=interaction,tag!=attackinter,limit=1] 0 -64 0')
         self.mcr.command(f'execute as {self.name} at @s run tick freeze')
         self.mcr.command(f'execute as {self.name} at @s run playsound minecraft:block.bell.resonate master @a ~ ~ ~ 1 1')
         self.mcr.command(f'execute as {self.name} at @s run playsound minecraft:entity.bee.death master @a ~ ~ ~ 4 0')
