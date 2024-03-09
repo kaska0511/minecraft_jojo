@@ -162,7 +162,7 @@ class GameController:
     def crate_ticket_compass_nbt(self, Custom_name="チケットアイテム", dimension="overworld", pos = [0, 0],tag = "ticket"):
         # 個別アイテム
         # チェックポイント情報、チケットアイテム情報
-        #print(self.get_ticketitem_get_frag())
+        print(self.get_ticketitem_get_frag())
         if self.get_ticketitem_get_frag() == False:     # チケットアイテムを誰も手に入れていない場合
         #if self.get_progress() == 0 or self.get_ticketitem_get_frag() == False:  #ゲーム進捗が0の場合、又はチケットアイテムを誰も手に入れていない場合
             dimension = 'the_end'

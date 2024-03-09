@@ -21,7 +21,6 @@ class Killer_Qeen(Common_func):
         self.point_pos = self.controller.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
         self.ticket_item = self.controller.get_ticket_info(self.pass_point)
         self.ticket_target = False
-        self.ticketcom_update = False
         self.bonus_start_time = time.time()
         self.bonus_time = None
         self.bonus_cnt = 0
@@ -153,8 +152,6 @@ class Killer_Qeen(Common_func):
                     self.controller.progress += 1   # ゲームの進捗を更新。
                     self.controller.prepare = False # チェックポイント準備状態を解除
                     self.controller.reset_time()    # 既に一秒数えられている場合があるのでリセット
-                    self.controller.false_ticketitem_get_frag() # 一旦下げる。誰かが次のチケットアイテムを手に入れているならすぐにフラグが経つはず。
-                    self.ticketcom_update = False
                     self.ticket_target = False      # 次のチェックポイントのチケットアイテムへ更新するため一旦所持していない状態にする。
 
             # 既にアクティブ化されているなら自分のチェックポイントを加算。
@@ -167,7 +164,7 @@ class Killer_Qeen(Common_func):
                 self.controller.set_bonus_bossbar_visible(self.name, False)
                 self.controller.set_bonus_bossbar_name(self.name, f'{self.name}:追加報酬+1個獲得まで')
                 self.controller.reset_bonus_bossbar(self.name)
-
+                self.controller.false_ticketitem_get_frag() # 一旦下げる。誰かが次のチケットアイテムを手に入れているならすぐにフラグが立つはず。
                 self.controller.add_checkpoint('Killer_Qeen', self.pass_point) # jsonファイルにチェックポイント情報更新
                 if self.pass_point+1 < 4:
                     self.mcr.command(f'execute as {self.name} at @s positioned over motion_blocking_no_leaves run setworldspawn {self.point_pos[0]} ~ {self.point_pos[1]}')
