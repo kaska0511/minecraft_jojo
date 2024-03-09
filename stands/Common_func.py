@@ -43,7 +43,7 @@ class Common_func:
                 自分がワールドに居ないならTrue、居るならFalseを返します。
         '''
         reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        if not 'No' in self.uuid and 'found' in self.uuid:
+        if not ('No' in self.uuid and 'found' in self.uuid):
             result = self.mcr.command(f'data get entity @e[nbt={{UUID:{self.uuid}}},limit=1] UUID')
             logout = True if result == 'No entity was found' else False
 

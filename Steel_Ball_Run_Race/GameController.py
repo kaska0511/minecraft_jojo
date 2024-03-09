@@ -15,6 +15,7 @@ class GameController:
         self.ticketitem_get_frag = False
         self.old_flag = False
         self.someone_get_ticket = False
+        self.run_The_World = False      # ザ・ワールド発動検知
 
     def start(self):
         self.start_time = time.time()
@@ -23,6 +24,8 @@ class GameController:
         self.ticket_start_time = time.time()
 
     def stop(self):
+        if self.run_The_World:  # ザ・ワールド発動中なら計測しない。
+            return
         end_time = time.time()
         elapsed = end_time - self.start_time
         if elapsed >= 1.0:
@@ -30,6 +33,8 @@ class GameController:
             self.start()
 
     def check_10s_ticket(self):
+        if self.run_The_World:  # ザ・ワールド発動中なら計測しない。
+            return False
         end_time = time.time()
         elapsed = end_time - self.ticket_start_time
         if elapsed >= 10.0:
@@ -410,6 +415,8 @@ class GameController:
         return list_item[number]
 
     def bonus_elapse_start(self, start_time):
+        if self.run_The_World:  # ザ・ワールド発動中なら計測しない。
+            return False
         end_time = time.time()
         elapsed = end_time - start_time
         if elapsed >= 1.0:

@@ -43,6 +43,7 @@ class The_World(Common_func):
                 # 右クリックした人が本人なら能力発動
                 self.run_stand = True
                 self.stop_time()
+                self.controller.run_The_World = True
 
         else:
             # killしてもいいけど今のところはスタンドアイテムを持っていないときは元の場所に戻す。
@@ -184,12 +185,11 @@ class The_World(Common_func):
         self.mcr.command(f'effect clear @a[name=!{self.name}] minecraft:fire_resistance')
         self.mcr.command(f'effect clear @a[name=!{self.name}] minecraft:slow_falling')
 
-
-
         ## 各プレイヤーに重なるアマスタを切る。
         self.mcr.command(f'kill @e[tag=The_World]')
 
         self.run_stand = False
+        self.controller.run_The_World = False
         self.fix_flag = False
         self.standard_time = time.time()    # 念のため基準時間を更新
         self.timer = 0
