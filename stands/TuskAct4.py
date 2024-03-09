@@ -33,8 +33,8 @@ class TuskAct4(Common_func):
         if ride_name == "minecraft:horse" and ride_motion_b:
             # 馬に騎乗していて動いていれば。できれば走っているのを判定したいが・・・→ ride_motion_bがその役割だったが上手く行かない。。。
             ride_motion = True
-        #if tag == "Saint" and ride_motion:
-        if tag == "Saint":
+        if tag == "Saint" and ride_motion:
+        #if tag == "Saint":
             #self.mcr.command(f'execute as {self.name} at @s run tp @e[tag=tuskinter,limit=1] ^ ^ ^1')
             self.mcr.command(f'data modify block 1 -64 0 auto set value 1')
             inter = self.mcr.command(f'data get entity @e[tag=tuskinter,limit=1] interaction.player') # Interaction has the following entity data: [I; 123, -1234, -1234, 1234]
@@ -162,7 +162,7 @@ class TuskAct4(Common_func):
         if self.summon_flag == False and self.target:
             self.mcr.command(f'execute as {self.name} at @s run playsound minecraft:block.beacon.activate master @a ~ ~ ~ 4 2')
             # アマスタを召喚。見えない、無敵、ちょっと小さい。
-            self.mcr.command(f'execute as {self.name} at @s anchored feet run summon minecraft:armor_stand ^ ^ ^1 {{Invisible:1,Invulnerable:1,Small:1,NoGravity:1,Tags:["TuskAct4"]}}')
+            self.mcr.command(f'execute as {self.name} at @s anchored feet run summon minecraft:armor_stand ^ ^ ^1 {{Attributes:[{{Name:"generic.scale",Base:0.0625}}],Invisible:1,Invulnerable:1,Small:1,NoGravity:1,Tags:["TuskAct4"]}}')
             self.summon_flag = True
 
         # 追いかけるタスクact4
@@ -185,7 +185,7 @@ class TuskAct4(Common_func):
         self.mcr.command(f'execute as @e[tag=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!tuskinter,tag=!TuskAct4] run particle minecraft:sculk_charge_pop ^ ^1 ^ 0.5 0.5 0.5 0 20 force @a') # 当たったら回転演出
         self.mcr.command(f'execute as @e[tag=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!tuskinter,tag=!TuskAct4] run particle minecraft:explosion_emitter ~ ~ ~') # 当たったら爆発演出
         self.mcr.command(f'execute as @e[tag=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!tuskinter,tag=!TuskAct4] run playsound minecraft:entity.generic.explode master @a ~ ~ ~ 4')
-        kill_res = self.mcr.command(f'execute as @e[tag=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!tuskinter,tag=!TuskAct4] run kill @e[distance=..1,type=!item,tag=!tuskinter]')   # ターゲットキル。接触しているものもキル。スタンド自身もキル。
+        kill_res = self.mcr.command(f'execute as @e[tag=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!tuskinter,tag=!TuskAct4] run kill @e[distance=..1,type=!item,tag=!checkpoint,type=!interaction,tag=!tuskinter]')   # ターゲットキル。接触しているものもキル。スタンド自身もキル。
 
         split_killres = re.split(r' ', kill_res)     # killした？
         # もしターゲットがいないなら処理。デスポーンやログアウト用

@@ -168,7 +168,7 @@ def stand_lost_check(world,tusk,kqeen,rain,boy):
         world.create_ticket_compass()
         world.create_target_compass()
     if not tusk.bool_have_a_stand('Saint') and tusk.name != '1dummy':
-        mcr.command('give ' + tusk.name + 'saddle')
+        mcr.command('give ' + tusk.name + ' saddle')
         mcr.command('give ' + tusk.name + " bone{Tags:Saint,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[1] + '"}]'+"'}}")
         tusk.create_ticket_compass()
         tusk.create_target_compass()
