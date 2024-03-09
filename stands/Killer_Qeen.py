@@ -114,6 +114,7 @@ class Killer_Qeen(Common_func):
         # チケットアイテムを持ち、既にチェックポイント開放がされているならボーナス処理
         if self.ticket_target and self.controller.elapsed_time >= 300:
             self.mcr.command(f'bossbar set minecraft:ticket visible false')   # ゲージが多すぎると目障りなので画面から不可視
+            self.controller.set_bonus_bossbar(self.name)
             self.controller.set_bonus_bossbar_visible(self.name, True)
             self.controller.set_bonus_bossbar_value(self.name, self.bonus_time)
             if self.bonus_cnt < 3:         # ボーナス数、最大値の3以下の時処理を行う。
@@ -171,7 +172,7 @@ class Killer_Qeen(Common_func):
                 self.pass_point += 1                                # ソースコード内チェックポイント情報更新
                 self.point_pos = self.controller.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
                 self.ticket_item = self.controller.get_ticket_info(self.controller.progress)
-                print(self.point_pos, self.ticket_item)
+                #print(self.point_pos, self.ticket_item)
                 self.create_ticket_compass()
 
         #! チケットアイテムはゲーム全体の進行状態に依存するため
