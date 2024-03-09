@@ -198,7 +198,7 @@ class Catch_The_Rainbow(Common_func):
                     self.ticket_target = False      # 次のチェックポイントのチケットアイテムへ更新するため一旦所持していない状態にする。
 
             # 既にアクティブ化されているなら自分のチェックポイントを加算。
-            # 2位以下の処理。
+            # 通過者共通処理。
             if self.controller.check_active(f'No{self.pass_point+1}'):
                 self.bonus_start_time = time.time()
                 self.bonus_time = None
@@ -213,6 +213,7 @@ class Catch_The_Rainbow(Common_func):
                     self.mcr.command(f'execute as {self.name} at @s positioned over motion_blocking_no_leaves run setworldspawn {self.point_pos[0]} ~ {self.point_pos[1]}')
                 self.pass_point += 1                                # ソースコード内チェックポイント情報更新
                 self.point_pos = self.controller.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
+                self.ticket_item = self.controller.get_ticket_info(self.controller.progress)
                 print(self.point_pos, self.ticket_item)
                 self.create_ticket_compass()
 

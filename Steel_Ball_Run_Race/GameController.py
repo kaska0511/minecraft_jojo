@@ -454,3 +454,4 @@ class GameController:
         else:   # プレイヤーが見つからない or　プレイヤーが死んでいないなら
             return
         """
+

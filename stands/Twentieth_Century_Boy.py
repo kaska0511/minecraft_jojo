@@ -117,7 +117,7 @@ class Twentieth_Century_Boy(Common_func):
                     self.ticket_target = False      # 次のチェックポイントのチケットアイテムへ更新するため一旦所持していない状態にする。
 
             # 既にアクティブ化されているなら自分のチェックポイントを加算。
-            # 2位以下の処理。
+            # 通過者共通処理。
             if self.controller.check_active(f'No{self.pass_point+1}'):
                 self.bonus_start_time = time.time()
                 self.bonus_time = None
