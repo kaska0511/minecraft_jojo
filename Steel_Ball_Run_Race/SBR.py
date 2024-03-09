@@ -104,11 +104,11 @@ def search_village_xz(mcr, tag):
 
     Return
         x, z : str
-            約2500ブロック離れた村のxとz座標。
+            約1500ブロック離れた村のxとz座標。
     '''
     village_list =  ('desert', 'savanna', 'snowy', 'taiga', 'plains')
     r_comp = 10000
-    distance = 2500
+    distance = 1500
     xz = []
     mcr.command(f'execute as @e[tag=checkpoint,tag={tag},limit=1] at @s rotated 90 0 positioned ^ ^ ^{distance} run forceload add ~ ~')
     time.sleep(1)
@@ -140,7 +140,7 @@ def search_fortress_xz(mcr, tag):
 
     Return
         x, z : str
-            約2500ブロック離れた村のxとz座標。
+            約1500ブロック離れた村のxとz座標。
     '''
     #execute in minecraft:the_nether run locate structure minecraft:fortress
     for _ in range(2):

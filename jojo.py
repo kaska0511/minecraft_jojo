@@ -166,21 +166,26 @@ def stand_lost_check(world,tusk,kqeen,rain,boy):
     if not world.bool_have_a_stand('DIO') and world.name != '1dummy':
         mcr.command('give ' + world.name + " clock{Tags:DIO,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[0] + '"}]'+"'}}")
         world.create_ticket_compass()
+        world.create_target_compass()
     if not tusk.bool_have_a_stand('Saint') and tusk.name != '1dummy':
         mcr.command('give ' + tusk.name + 'saddle')
         mcr.command('give ' + tusk.name + " bone{Tags:Saint,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[1] + '"}]'+"'}}")
         tusk.create_ticket_compass()
+        tusk.create_target_compass()
     if not kqeen.bool_have_a_stand('Killer') and kqeen.name != '1dummy':   # 全て失わないと再取得できないので注意
         mcr.command('give ' + kqeen.name + " gunpowder{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][0] + '"}]'+"'}}")
         mcr.command('give ' + kqeen.name + " flint{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][1] + '"}]'+"'}}")
         mcr.command('give ' + kqeen.name + " fire_charge{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][2] + '"}]'+"'}}")
         kqeen.create_ticket_compass()
+        kqeen.create_target_compass()
     if not rain.bool_have_a_stand('Rain') and rain.name != '1dummy':
         mcr.command('give ' + rain.name + " skeleton_skull{Tags:Rain,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[3] + '"}]'+"'}}")
         rain.create_ticket_compass()
+        rain.create_target_compass()
     if not boy.bool_have_a_stand('Boy') and boy.name != '1dummy':
         mcr.command('give ' + boy.name + " snowball{Tags:Boy,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[4] + '"}]'+"'}}")
         boy.create_ticket_compass()
+        boy.create_target_compass()
 
 def set_commandblock(world,tusk,kqeen,rain,boy):
     mcr.command(f'forceload add 0 0 16 16')
@@ -197,7 +202,7 @@ def set_commandblock(world,tusk,kqeen,rain,boy):
 
 def find_target(controller,world,tusk,kqeen,rain,boy):
     player = []
-    pos = []
+
     if world.ticket_target:
         #print("world",world.ticket_item)
         player.append(world.name)
@@ -213,48 +218,36 @@ def find_target(controller,world,tusk,kqeen,rain,boy):
     if boy.ticket_target:
         #print("boy",boy.ticket_item)
         player.append(boy.name)
-    # kqeen.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket"
-    if player != []:
-        #! ゲーム進捗状況に合わせてplayerをsortすべき
-        controller.true_ticketitem_get_frag()       #  チケットアイテムが誰かがgetしているならフラグを立てる。
-        if controller.get_old_flag() == False:      # Falseということは初回
-            controller.true_old_flag()
-            controller.true_someone_get_ticket()
-        elif controller.get_old_flag() == True:     # Trueの場合は既にフラグを立ち上げた状態なのでsomeone_get_ticketを下げる。
-            controller.false_someone_get_ticket()
-        # 10秒ごとにgiveする。
-        if controller.check_10s_ticket():
-            dimention = controller.target_dim(player[0])
-            pos = controller.get_pos(player[0])
-            nbt = controller.crate_target_compass(player, dimention, pos)
-            mcr.command('clear @a compass{Tags:target} 1')
-            mcr.command('give @a compass{'+nbt+'}')
-    else:   # まだチケットアイテムを持っている人がいない。
-        if controller.get_old_flag() == True:
-            controller.false_old_flag()
-            controller.false_someone_get_ticket()
+
+    controller.give_target_compass(player)
 
     return player
 
 def make_bonus_bar(controller,world,tusk,kqeen,rain,boy):
     # ボーナスバーは事前に作る。
-    controller.add_bonus_bossbar(world.name, "追加報酬+1")
-    controller.add_bonus_bossbar(tusk.name, "追加報酬+1")
-    controller.add_bonus_bossbar(kqeen.name, "追加報酬+1")
-    controller.add_bonus_bossbar(rain.name, "追加報酬+1")
-    controller.add_bonus_bossbar(boy.name, "追加報酬+1")
+    controller.add_bonus_bossbar(world.name, f"{world.name}:追加報酬+1個獲得まで")
+    controller.add_bonus_bossbar(tusk.name, f"{tusk.name}:追加報酬+1個獲得まで")
+    controller.add_bonus_bossbar(kqeen.name, f"{kqeen.name}:追加報酬+1個獲得まで")
+    controller.add_bonus_bossbar(rain.name, f"{rain.name}:追加報酬+1個獲得まで")
+    controller.add_bonus_bossbar(boy.name, f"{boy.name}:追加報酬+1個獲得まで")
 
     controller.set_bonus_bossbar(world.name)
     controller.set_bonus_bossbar(tusk.name)
     controller.set_bonus_bossbar(kqeen.name)
     controller.set_bonus_bossbar(rain.name)
     controller.set_bonus_bossbar(boy.name)
+
     # 作った直後は不可視
-    controller.set_bonus_bossbar_visible(world.name, False)
-    controller.set_bonus_bossbar_visible(tusk.name, False)
-    controller.set_bonus_bossbar_visible(kqeen.name, False)
-    controller.set_bonus_bossbar_visible(rain.name, False)
-    controller.set_bonus_bossbar_visible(boy.name, False)
+    indicate_bonus_bossbar(False,controller,world,tusk,kqeen,rain,boy)
+
+
+def indicate_bonus_bossbar(booler,controller,world,tusk,kqeen,rain,boy):
+    # 作った直後は不可視
+    controller.set_bonus_bossbar_visible(world.name, booler)
+    controller.set_bonus_bossbar_visible(tusk.name, booler)
+    controller.set_bonus_bossbar_visible(kqeen.name, booler)
+    controller.set_bonus_bossbar_visible(rain.name, booler)
+    controller.set_bonus_bossbar_visible(boy.name, booler)
 
 def main(mcr):
     mcr.command("gamerule sendCommandFeedback false")
@@ -320,8 +313,11 @@ def main(mcr):
         stand_lost_check(world,tusk,kqeen,rain,boy)
 
         # 作成したbossbarを見られるようにする。一度ワールドを離れたプレイヤーはこれを実行しないとみることができないのでwhile内で実行する。
-        controller.set_bossbar("ticket")
-        controller.set_bossbar_value("ticket", controller.elapsed_time)
+        if not controller.prepare:
+            controller.set_bonus_bossbar_visible("ticket", True)
+            controller.set_bossbar_value("ticket", controller.elapsed_time)
+        #indicate_bonus_bossbar(True,controller,world,tusk,kqeen,rain,boy)
+
         # 能力管理。ここで能力を発動させる。
         # スタンドを追加したらここにスタンド名.loop()を追加するイメージ。
         # 時を止めているときに能力が止まるタイプのスタンドの場合はifの中に、止まらない場合はifの外に配置する。
@@ -342,7 +338,7 @@ def main(mcr):
         # ザ・ワールドが発動中は基準値の更新を止める。＝時間計測が一時的に止める。
         # targetによりチケットアイテム所持者がいれば5分計測が始まる。
         if not world.run_stand:
-            if target and not world.run_stand and not controller.prepare:
+            if target and not controller.prepare:
                 controller.stop()
             #print(controller.elapsed_time)
             if controller.elapsed_time == 301:   # 300秒（5分）経ったらチェックポイントの準備完了。test中は30秒

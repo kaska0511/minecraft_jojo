@@ -43,11 +43,13 @@ class Common_func:
                 自分がワールドに居ないならTrue、居るならFalseを返します。
         '''
         reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        result = self.mcr.command(f'data get entity @e[nbt={{UUID:{self.uuid}}},limit=1] UUID')
+        if not 'No' in self.uuid and 'found' in self.uuid:
+            result = self.mcr.command(f'data get entity @e[nbt={{UUID:{self.uuid}}},limit=1] UUID')
+            logout = True if result == 'No entity was found' else False
 
-        logout = True if result == 'No entity was found' else False
-
-        return logout
+            return logout
+        else:
+            return True
 
     def bool_have_a_stand(self, tag):
         '''
@@ -64,8 +66,11 @@ class Common_func:
         '''
         # runの後は何でもよかった。メインは「nbt=」の部分で特定のタグ名を持つアイテムを所持しているならrunの後が実行される。
         # 持っていないなら空文字が返される。
-        standres = self.mcr.command('execute as @a[name=' + self.name + ',nbt={Inventory:[{tag:{Tags:"' + tag + '"}}]}] run data get entity ' + self.name + ' Pos')
-        return True if standres != '' else False
+        if self.get_player_Death() == False or not self.get_logout():
+            standres = self.mcr.command('execute as @a[name=' + self.name + ',nbt={Inventory:[{tag:{Tags:"' + tag + '"}}]}] run data get entity ' + self.name + ' Pos')
+            return True if standres != '' else False
+        else:
+            return True
         """
         if standres != '':
             return True
@@ -400,170 +405,3 @@ class Common_func:
         health = None if split_data[0] == 'No' or split_data[0] == 'Found' else float(re.sub(reg, '', result).strip('f"'))
 
         return health
-
-    def get_pass_point(self, stand):
-        '''
-        スタンド名を元に最新の通過済チェックポイントを調べます。
-
-        Parameter
-            stand : str
-                最新の通過済チェックポイントを知りたいスタンド名を指定。
-
-        Return
-            df[stand] : int
-                最新の通過済チェックポイント。
-        '''
-        with open('./json_list/pass_checkpoint_list.json') as f:
-            df = json.load(f)
-
-        return df[stand]
-
-    def passcheck_checkpoint(self, checkpoint_tag):
-        '''
-        チェックポイントを指定して通過申請されているプレイヤーのUUIDを調べます。
-
-        Parameter
-            checkpoint_tag : str
-                知りたいチェックポイントを指定。
-
-        Return
-            attack_uuid : str
-                通過申請しているプレイヤーのUUID。
-        '''
-        attack = self.mcr.command(f'data get entity @e[tag={checkpoint_tag},tag=attackinter,limit=1] attack.player') # Interaction has the following entity data: [I; 123, -1234, -1234, 1234]
-        # self.mcr.command(f'data remove entity @e[tag={checkpoint_tag},tag=checkpoint,limit=1] attack')
-        attack_uuid = re.sub(r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: ', '', attack)
-        return attack_uuid
-
-    def add_checkpoint(self, stand, number):
-        '''
-        チェックポイントの通過が認められた場合、次のチェックポイントを目指せるように、リストを加算します。
-
-        Parameter
-            stand : str
-                通過が認められたスタンド名。
-            number : int
-                現在のチェックポイント番号。
-
-        Return
-            None
-        '''
-        #self.mcr.command(f'data remove entity @e[tag=No{number},tag=checkpoint,limit=1] attack')
-        with open('./json_list/pass_checkpoint_list.json') as f:
-            df = json.load(f)
-            df[stand] = number + 1
-
-        with open('./json_list/pass_checkpoint_list.json', 'w') as f:     # 編集データを上書き
-            json.dump(df, f, indent=4)
-
-    def check_active(self, number):
-        res = self.mcr.command(f'tag @e[tag={number},tag=attackinter,limit=1] list')
-        return True if 'active' in res else False   # 文字列にactiveが含むならTrue
-
-    def gift_reward(self, number, many=0):
-        print(self.mcr.command(f'tag @e[tag={number},tag=attackinter,limit=1] list'))  # タグの確認。
-        #! ボーナスタイムで稼いだ場合それに合わせてダイヤモンドの数を増やす。
-        self.mcr.command(f'give {self.name} diamond {3+many}')  # タグの確認。
-
-    def check_ticket_item(self, player, item, count):
-        '''
-        チケットアイテムを持っているか判定しつつ、数えます。
-
-        Parameter
-            player : str
-                チェックしたいプレイヤー名。
-            item : str
-                確認したいアイテム。
-            count : str
-                確認したいアイテムの数。
-
-        Return
-            変数名なし : bool
-                プレイヤーが指定のアイテムを指定の数以上持っている場合はTrueを、そうでないならFalseを返します。
-        '''
-        # アイテムを持っている場合：res = Found 128 matching item(s) on player KASKA0511
-        # アイテムを持っていない場合:res = No items were found on player KASAKA0511
-        res = self.mcr.command(f'clear {player} minecraft:{item} 0')
-        if 'No' in res and 'found' in res:
-            return False
-        else:
-            split_data = re.split(r' ', res)
-            print
-            if int(split_data[1]) >= count:
-                #! 更に全て自分で集めたものなのか検知が必要。
-                return True
-
-    def get_point_pos(self, checkpoint):
-        '''
-        特定のチェックポイントの座標を取得します。
-
-        Parameter
-            checkpoint : str
-                知りたいチェックポイント座標のチェックポイント名。\n
-                例:checkpoint1, checkpoint2, checkpoint3...
-
-        Return
-            list(df.items()) : list
-                チェックポイントの座標。
-        '''
-        with open('./json_list/checkpoint.json') as f:
-            df = json.load(f)
-        if checkpoint == 'checkpoint6':     # 範囲外参照にならないよう修正。
-            checkpoint = 'checkpoint5'
-        return df[checkpoint]
-
-    def get_ticket_info(self, number):
-        '''
-        特定のチェックポイントのチケットアイテムを取得します。
-
-        Parameter
-            number : int
-                知りたいチェックポイントの番号。\n
-                例:0 -> checkpoint1, 1 -> checkpoint2, 2 -> checkpoint3...
-
-        Return
-            list_item[number] : tuple
-                0番目がアイテム名。1番目が個数。
-        '''
-        with open('./json_list/ticket_list.json') as f:
-            df = json.load(f)
-
-        list_item = list(df.items())
-        if number >= 5:     # 範囲外参照にならないよう修正。
-            number = 4
-        return list_item[number]
-
-    def assign_throwitem_tag(self):
-        '''
-        投げられたアイテムに対して投げたプレイヤー自身のUUIDをtagとして設定します。\n
-        この時既にUUIDのtagが付けられていた場合、上書きやappendされることはありません。\n
-        また1.20.Xではアイテムを投げたかどうかを判定することができないため、\n
-        常に呼び出すことを推奨します。
-        '''
-        self.mcr.command('execute as @e[type=item] at @s unless data entity @s Item.tag.Tags run data modify entity @s Item.tag.Tags set from entity @s Thrower')
-
-    def assign_deathitem_tag(self):
-        '''
-        死亡時に飛び散るアイテムに対して死亡したプレイヤー自身のUUIDをtagとして設定します。\n
-        この時既にUUIDのtagが付けられていた場合、上書きやappendされることはありません。\n
-        また1.20.Xではアイテムを投げたかどうかを判定することができないため、\n
-        常に呼び出すことを推奨します。
-        '''
-        alive = self.get_player_Death()
-
-        if alive:
-            pos, dim = self.get_DeathLocation_info()
-            self.mcr.command(f'execute in {dim} run summon armor_stand {pos[0]} {pos[1]} {pos[2]} {{Invisible:1b,Invulnerable:1b,Tags:["{self.name}","death"]}}')  # 死亡地点にアマスタを召喚
-            self.mcr.command(f'execute as @e[type=item] at @s run tp @e[tag={self.name},tag=death,distance=..7,limit=1]')   # 召喚したアマスタを中心に半径7ブロック以内のアイテムをアマスタに集める
-            self.mcr.command(f'execute as @e[type=item] at @s if entity @e[tag={self.name},tag=death,distance=..1] unless data entity @s Item.tag.Tags run data modify entity @s Item.tag.Tags set from entity {self.name} UUID')    #実行者をitemに移し、アイテム自身がアマスタの半径1ブロック以内にいるならタグを付与
-            self.mcr.command(f'kill @e[tag={self.name},tag=death]')
-        else:   # プレイヤーが見つからない or　プレイヤーが死んでいないなら
-            return
-
-    def bonus_elapse_start(self, start_time):
-        end_time = time.time()
-        elapsed = end_time - start_time
-        if elapsed >= 1.0:
-            return True
-        else:
-            return False
