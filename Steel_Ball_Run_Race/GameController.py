@@ -141,7 +141,7 @@ class GameController:
             dim = "overworld"
         return dim
 
-    def crate_target_compass_nbt(self, Custom_name="名前", dimension="overworld", pos = [0, 0, 0],tag = "target"):
+    def crate_target_compass_nbt(self, Custom_name=["名前"], dimension="overworld", pos = [0, 0, 0],tag = "target"):
         # 共通アイテム
         Tags = f'Tags:{tag}, '
         Enchantments = 'Enchantments:[{}], '

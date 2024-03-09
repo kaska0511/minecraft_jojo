@@ -190,7 +190,7 @@ class Killer_Qeen(Common_func):
         self.controller.create_ticket_compass(self.name, self.pass_point, self.ticket_item, self.point_pos)
 
     def create_target_compass(self):
-        self.controller.create_target_compass(self.name)
+        self.controller.create_target_compass([self.name])
 
     def cancel_stand(self):
         self.bomb_pos = []  # 記録された座標をクリア

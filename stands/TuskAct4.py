@@ -135,7 +135,7 @@ class TuskAct4(Common_func):
         self.controller.create_ticket_compass(self.name, self.pass_point, self.ticket_item, self.point_pos)
 
     def create_target_compass(self):
-        self.controller.create_target_compass(self.name)
+        self.controller.create_target_compass([self.name])
 
     def search_entity(self):
         uuid = None # 射程距離内にターゲットになるものがない場合はNoneを返す。

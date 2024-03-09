@@ -292,6 +292,8 @@ def main(mcr):
     make_bonus_bar(controller,world,tusk,kqeen,rain,boy)
 
     controller.add_bossbar("ticket", "チェックポイント解放まで", "blue", 300)
+    controller.set_bonus_bossbar("ticket")
+    controller.set_bonus_bossbar_visible("ticket", True)
 
     while True:
         #mcr.command('give KASKA0511 compass{LodestoneDimension:"minecraft:overworld", LodestoneTracked: 0b, LodestonePos: [I; -223, 88, -144],display:{Name:'[{"text":"宇良"}]'}}')
@@ -314,6 +316,7 @@ def main(mcr):
 
         # 作成したbossbarを見られるようにする。一度ワールドを離れたプレイヤーはこれを実行しないとみることができないのでwhile内で実行する。
         if not controller.prepare:
+            controller.set_bonus_bossbar("ticket")
             controller.set_bonus_bossbar_visible("ticket", True)
             controller.set_bossbar_value("ticket", controller.elapsed_time)
         #indicate_bonus_bossbar(True,controller,world,tusk,kqeen,rain,boy)
