@@ -22,7 +22,7 @@ class TuskAct4(Common_func):
         self.bonus_cnt = 0
 
     def loop(self):
-        if self.name == "1dummy":
+        if self.name == "1dummy" or self.get_logout():
             return
 
         item, tag = self.get_SelectedItem()
@@ -90,7 +90,7 @@ class TuskAct4(Common_func):
                 #! チケットアイテム情報を取得する。処理追加。
                 if self.controller.check_ticket_item(self.name, self.ticket_item[0], self.ticket_item[1]):
                     # 一位通過者
-                    self.mcr.command(f'playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1')
+                    self.mcr.command(f'playsound minecraft:ui.toast.challenge_complete master @a[name=!{self.name}] ~ ~ ~ 1 1 1')
                     self.mcr.command(f'tag @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] add active')# チェックポイントアクティブ化処理追加
                     self.mcr.command(f'bossbar set minecraft:ticket visible true')
                     self.controller.gift_reward(self.name, f'No{self.pass_point+1}', self.bonus_cnt)
@@ -104,6 +104,7 @@ class TuskAct4(Common_func):
             # 既にアクティブ化されているなら自分のチェックポイントを加算。
             # 通過者共通処理。
             if self.controller.check_active(f'No{self.pass_point+1}'):
+                self.mcr.command(f'playsound minecraft:ui.toast.challenge_complete master @s ~ ~ ~ 1 1 1')
                 self.bonus_start_time = time.time()
                 self.bonus_time = None
                 self.bonus_cnt = 0

@@ -43,9 +43,8 @@ class Catch_The_Rainbow(Common_func):
         self.mcr.command(f'execute as {self.name} at @s positioned {res[0]} 317 {res[2]} rotated 0 0 run fill ^1 ^ ^-1 ^-1 ^2 ^1 minecraft:barrier destroy')
         self.mcr.command(f'execute as {self.name} at @s positioned {res[0]} 317 {res[2]} rotated 0 0 run fill ^ ^1 ^ ^ ^2 ^ minecraft:air destroy')
         self.mcr.command(f'execute as {self.name} at @s run summon minecraft:snow_golem {res[0]} 318 {res[2]} {{NoAI:1,Silent:1,NoGravity:1,Tags:["Amedas"]}}')
-        self.mcr.command(f'effect give @e[tag=Amedas,limit=1] minecraft:health_boost infinite 255 false')  # 体力最大値をウォーデン並みにする。
-        self.mcr.command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 255 true')     # 最大値を変更したら上限まで回復させる必要がある。（即時回復）
-
+        self.mcr.command(f'effect give @e[tag=Amedas,limit=1] minecraft:health_boost infinite 120 false')  # 体力最大値をウォーデン並みにする。
+        self.mcr.command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 120 true')     # 最大値を変更したら上限まで回復させる必要がある。（即時回復）
 
     def mask_air(self):
         biome = ('deep_cold_ocean','cold_ocean','deep_ocean')
@@ -86,32 +85,33 @@ class Catch_The_Rainbow(Common_func):
                         continue
 
     def loop(self):
-        if self.name == "1dummy":
+        if self.name == "1dummy" or self.get_logout():
             return
 
         id, tag = self.get_select_Inventory(self.name, "103")
 
-        rainny = self.check_amedas()
+        if id == "minecraft:skeleton_skull":
+            rainny = self.check_amedas()
 
-        if rainny == None:  # アメダスが見つからない場合は再召喚
-            self.summon_amedas()
+            if rainny == None:  # アメダスが見つからない場合は再召喚
+                self.summon_amedas()
 
-        # 能力発動可能なバイオームに居て、雨が降っている。
-        if (self.ability_limit == 0 or self.ability_limit == 1) and rainny:
-            self.run_stand = True
-        elif rainny is None:
-            self.run_stand = True
-        else:
-            self.run_stand = False
+            # 能力発動可能なバイオームに居て、雨が降っている。
+            if (self.ability_limit == 0 or self.ability_limit == 1) and rainny:
+                self.run_stand = True
+            elif rainny is None:
+                self.run_stand = True
+            else:
+                self.run_stand = False
 
-        # 頭上に遮蔽物があるかチェック
-        shield_flag = self.check_Shield()
+            # 頭上に遮蔽物があるかチェック
+            shield_flag = self.check_Shield()
 
-        if rainny and shield_flag == False:
-            #start = time.time()
-            self.test_biome_new()   # プレイヤーの現在地で雨が降る環境か調べる。
-            #end = time.time()
-            #print(f'{end - start}')
+            if rainny and shield_flag == False:
+                #start = time.time()
+                self.test_biome_new()   # プレイヤーの現在地で雨が降る環境か調べる。
+                #end = time.time()
+                #print(f'{end - start}')
 
         if id == "minecraft:skeleton_skull" and tag == "Rain" and shield_flag == False and self.run_stand:
             # 能力解除時に死ぬかどうかのフラグ。
@@ -184,7 +184,7 @@ class Catch_The_Rainbow(Common_func):
                 #! チケットアイテム情報を取得する。処理追加。
                 if self.controller.check_ticket_item(self.name, self.ticket_item[0], self.ticket_item[1]):
                     # 一位通過者
-                    self.mcr.command(f'playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1')
+                    self.mcr.command(f'playsound minecraft:ui.toast.challenge_complete master @a[name=!{self.name}] ~ ~ ~ 1 1 1')
                     self.mcr.command(f'tag @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] add active')# チェックポイントアクティブ化処理追加
                     self.mcr.command(f'bossbar set minecraft:ticket visible true')
                     self.controller.gift_reward(self.name, f'No{self.pass_point+1}', self.bonus_cnt)
@@ -198,6 +198,7 @@ class Catch_The_Rainbow(Common_func):
             # 既にアクティブ化されているなら自分のチェックポイントを加算。
             # 通過者共通処理。
             if self.controller.check_active(f'No{self.pass_point+1}'):
+                self.mcr.command(f'playsound minecraft:ui.toast.challenge_complete master @s ~ ~ ~ 1 1 1')
                 self.bonus_start_time = time.time()
                 self.bonus_time = None
                 self.bonus_cnt = 0
@@ -346,8 +347,7 @@ class Catch_The_Rainbow(Common_func):
         if sec == None:
             rainny = None
 
-        self.mcr.command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 250 true')     # 体力を最大値まで回復させる。（即時回復）
-
+        self.mcr.command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 120 true')     # 体力を最大値まで回復させる。（即時回復）
         return rainny
 
     def check_Shield(self):
