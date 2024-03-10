@@ -219,7 +219,9 @@ def find_target(controller,world,tusk,kqeen,rain,boy):
         #print("boy",boy.ticket_item)
         player.append(boy.name)
 
-    controller.give_target_compass(player)
+    if player != []:
+        controller.new_target_player = player
+    controller.give_target_compass()
 
     return player
 

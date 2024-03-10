@@ -165,6 +165,7 @@ class Killer_Qeen(Common_func):
                 self.controller.set_bonus_bossbar_visible(self.name, False)
                 self.controller.set_bonus_bossbar_name(self.name, f'{self.name}:追加報酬+1個獲得まで')
                 self.controller.reset_bonus_bossbar(self.name)
+                self.controller.new_target_player = ['ターゲット不明']
                 self.controller.false_ticketitem_get_frag() # 一旦下げる。誰かが次のチケットアイテムを手に入れているならすぐにフラグが立つはず。
                 self.controller.add_checkpoint('Killer_Qeen', self.pass_point) # jsonファイルにチェックポイント情報更新
                 if self.pass_point+1 < 4:
@@ -188,7 +189,7 @@ class Killer_Qeen(Common_func):
         self.controller.create_ticket_compass(self.name, self.pass_point, self.ticket_item, self.point_pos)
 
     def create_target_compass(self):
-        self.controller.create_target_compass([self.name])
+        self.controller.create_target_compass()
 
     def cancel_stand(self):
         self.bomb_pos = []  # 記録された座標をクリア

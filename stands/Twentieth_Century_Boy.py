@@ -106,13 +106,12 @@ class Twentieth_Century_Boy(Common_func):
                     self.mcr.command(f'playsound minecraft:ui.toast.challenge_complete master @a ~ ~ ~ 1 1 1')
                     self.mcr.command(f'tag @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] add active')# チェックポイントアクティブ化処理追加
                     self.mcr.command(f'bossbar set minecraft:ticket visible true')
-                    self.controller.gift_reward(f'No{self.pass_point+1}', self.bonus_cnt)
+                    self.controller.gift_reward(self.name, f'No{self.pass_point+1}', self.bonus_cnt)
                     self.controller.elapsed_time = 0
                     self.controller.reset_bossbar("ticket")     # ticketのbossbarをリセット。
                     self.controller.progress += 1   # ゲームの進捗を更新。
                     self.controller.prepare = False # チェックポイント準備状態を解除
                     self.controller.reset_time()    # 既に一秒数えられている場合があるのでリセット
-                    self.controller.false_ticketitem_get_frag() # 一旦下げる。誰かが次のチケットアイテムを手に入れているならすぐにフラグが立つはず。
                     self.ticket_target = False      # 次のチェックポイントのチケットアイテムへ更新するため一旦所持していない状態にする。
 
             # 既にアクティブ化されているなら自分のチェックポイントを加算。
@@ -125,6 +124,7 @@ class Twentieth_Century_Boy(Common_func):
                 self.controller.set_bonus_bossbar_visible(self.name, False)
                 self.controller.set_bonus_bossbar_name(self.name, f'{self.name}:追加報酬+1個獲得まで')
                 self.controller.reset_bonus_bossbar(self.name)
+                self.controller.new_target_player = ['ターゲット不明']
                 self.controller.false_ticketitem_get_frag() # 一旦下げる。誰かが次のチケットアイテムを手に入れているならすぐにフラグが立つはず。
                 self.controller.add_checkpoint('Twentieth_Century_Boy', self.pass_point) # jsonファイルにチェックポイント情報更新
                 if self.pass_point+1 < 4:
@@ -148,7 +148,7 @@ class Twentieth_Century_Boy(Common_func):
         self.controller.create_ticket_compass(self.name, self.pass_point, self.ticket_item, self.point_pos)
 
     def create_target_compass(self):
-        self.controller.create_target_compass([self.name])
+        self.controller.create_target_compass()
 
     def cancel_stand(self):
         self.run_stand = False

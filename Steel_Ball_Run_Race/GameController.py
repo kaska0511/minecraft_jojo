@@ -17,6 +17,11 @@ class GameController:
         self.someone_get_ticket = False
         self.run_The_World = False      # ザ・ワールド発動検知
 
+        self.old_target_player = []
+        self.new_target_player = ['ターゲット不明']
+        self.target_dimention = 'the_end'
+        self.target_pos = [0, 0, 0]
+
     def start(self):
         self.start_time = time.time()
 
@@ -246,10 +251,10 @@ class GameController:
         id = id.lower()
         self.mcr.command(f'bossbar set minecraft:{id} value 0')
 
-    def give_target_compass(self, player):
+    def give_target_compass(self):
         #pos = []
         # kqeen.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket"
-        if player != []:
+        if self.new_target_player != []:
             #! ゲーム進捗状況に合わせてplayerをsortすべき
             self.true_ticketitem_get_frag()       #  チケットアイテムが誰かがgetしているならフラグを立てる。
             # チケットアイテムを手に入れたり失ったりするのを立ち上がり立下りで検知しTrue/False
@@ -258,18 +263,29 @@ class GameController:
                 self.true_someone_get_ticket()
             elif self.get_old_flag() == True:     # Trueの場合は既にフラグを立ち上げた状態なのでsomeone_get_ticketを下げる。
                 self.false_someone_get_ticket()
-            # 10秒ごとにgiveする。
-            if self.check_10s_ticket():     # 
-                self.create_target_compass(player)
         else:   # まだチケットアイテムを持っている人がいない。
             if self.get_old_flag() == True:
                 self.false_old_flag()
                 self.false_someone_get_ticket()
 
-    def create_target_compass(self, name):
-        dim = self.target_dim(name[0])
-        pos = self.get_pos(name[0])
-        nbt = self.crate_target_compass_nbt(name, dim, pos)
+        #! ゲーム進捗状況に合わせてplayerをsortすべき
+        if self.old_target_player != self.new_target_player:
+            self.create_target_compass()
+
+        else:
+            # 10秒ごとにgiveする。
+            if self.check_10s_ticket():
+                self.create_target_compass()
+
+    def create_target_compass(self):
+        if self.new_target_player == ['ターゲット不明']:
+            self.target_dimention = 'the_end'
+            self.target_pos = [0, 0, 0]
+        else:
+            self.target_dimention = self.target_dim(self.new_target_player[0])
+            self.target_pos = self.get_pos(self.new_target_player[0])
+        self.old_target_player = self.new_target_player
+        nbt = self.crate_target_compass_nbt(self.new_target_player, self.target_dimention, self.target_pos)
         self.mcr.command('clear @a compass{Tags:target} 1')
         self.mcr.command('give @a compass{'+nbt+'}')
 
@@ -450,7 +466,7 @@ class GameController:
             self.mcr.command(f'execute as @e[type=item] at @s run tp @e[tag={self.name},tag=death,distance=..7,limit=1]')   # 召喚したアマスタを中心に半径7ブロック以内のアイテムをアマスタに集める
             self.mcr.command(f'execute as @e[type=item] at @s if entity @e[tag={self.name},tag=death,distance=..1] unless data entity @s Item.tag.Tags run data modify entity @s Item.tag.Tags set from entity {self.name} UUID')    #実行者をitemに移し、アイテム自身がアマスタの半径1ブロック以内にいるならタグを付与
             self.mcr.command(f'kill @e[tag={self.name},tag=death]')
-        else:   # プレイヤーが見つからない or　プレイヤーが死んでいないなら
+        else:   # プレイヤーが見つからない or プレイヤーが死んでいないなら
             return
         """
 
