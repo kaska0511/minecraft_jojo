@@ -186,7 +186,7 @@ class Catch_The_Rainbow(Common_func):
                     # 一位通過者
                     self.mcr.command(f'playsound minecraft:ui.toast.challenge_complete master @a[name=!{self.name}] ~ ~ ~ 1 1 1')
                     self.mcr.command(f'tag @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] add active')# チェックポイントアクティブ化処理追加
-                    self.mcr.command(f'bossbar set minecraft:ticket visible true')
+                    #self.mcr.command(f'bossbar set minecraft:ticket visible true')    #!! 冗長
                     self.controller.gift_reward(self.name, f'No{self.pass_point+1}', self.bonus_cnt)
                     self.controller.elapsed_time = 0
                     self.controller.reset_bossbar("ticket")     # ticketのbossbarをリセット。
@@ -198,12 +198,12 @@ class Catch_The_Rainbow(Common_func):
             # 既にアクティブ化されているなら自分のチェックポイントを加算。
             # 通過者共通処理。
             if self.controller.check_active(f'No{self.pass_point+1}'):
-                self.mcr.command(f'playsound minecraft:ui.toast.challenge_complete master @s ~ ~ ~ 1 1 1')
+                self.mcr.command(f'execute as {self.name} run playsound minecraft:ui.toast.challenge_complete master @s ~ ~ ~ 1 1 1')
                 self.bonus_start_time = time.time()
                 self.bonus_time = None
                 self.bonus_cnt = 0
                 self.mcr.command(f'bossbar set minecraft:ticket visible true')   # 画面から不可視にしていたticketゲージを再可視化
-                self.controller.set_bonus_bossbar_visible(self.name, False)
+                self.controller.set_bonus_bossbar_visible(self.name, False)     #! 全員分のゲージを見えなくする必要がある。
                 self.controller.set_bonus_bossbar_name(self.name, f'{self.name}:追加報酬+1個獲得まで')
                 self.controller.reset_bonus_bossbar(self.name)
                 self.controller.new_target_player = ['ターゲット不明']

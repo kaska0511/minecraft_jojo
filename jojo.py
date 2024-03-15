@@ -191,13 +191,21 @@ def stand_lost_check(world,tusk,kqeen,rain,boy):
 def set_commandblock(world,tusk,kqeen,rain,boy):
     mcr.command(f'forceload add 0 0 16 16')
     command = f'execute as {world.name} at @s run tp @e[tag=DIOinter,limit=1] ^ ^ ^1'
+
     mcr.command(f'setblock 0 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
     command = f'execute as {tusk.name} at @s run tp @e[tag=tuskinter,limit=1] ^ ^ ^1'
     mcr.command(f'setblock 1 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+    command = f'execute as @e[tag=TuskAct4,limit=1] at @s run tp @e[tag=TuskAct4,limit=1] ^ ^ ^1'
+    mcr.command(f'setblock 1 -64 1 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+
     command = f'execute as {kqeen.name} at @s run tp @e[tag=kqeeninter,limit=1] ^ ^ ^1'
     mcr.command(f'setblock 2 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+    command = f'execute as @e[tag=air_bomb] at @s run tp ^ ^ ^0.5'
+    mcr.command(f'setblock 2 -64 1 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+
     command = f'execute as {rain.name} at @s run tp @e[tag=raininter,limit=1] ^ ^ ^1'
     mcr.command(f'setblock 3 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+
     command = f'execute as {boy.name} at @s run tp @e[tag=boyinter,limit=1] ^ ^ ^1'
     mcr.command(f'setblock 4 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
 
@@ -227,6 +235,7 @@ def find_target(controller,world,tusk,kqeen,rain,boy):
     return player
 
 def make_bonus_bar(controller,world,tusk,kqeen,rain,boy):
+    #! GameController移管予定
     # ボーナスバーは事前に作る。
     controller.add_bonus_bossbar(world.name, f"{world.name}:追加報酬+1個獲得まで")
     controller.add_bonus_bossbar(tusk.name, f"{tusk.name}:追加報酬+1個獲得まで")
@@ -245,6 +254,7 @@ def make_bonus_bar(controller,world,tusk,kqeen,rain,boy):
 
 
 def indicate_bonus_bossbar(booler,controller,world,tusk,kqeen,rain,boy):
+    #! GameController移管予定
     # 作った直後は不可視
     controller.set_bonus_bossbar_visible(world.name, booler)
     controller.set_bonus_bossbar_visible(tusk.name, booler)
@@ -310,10 +320,10 @@ def main(mcr):
 
         # プレイヤーが入ってきたときuuidを設定しなくてはならない。
         set_uuid(world,tusk,kqeen,rain,boy)
-        
+
         # 能力者が死んでいたり、ログアウトしていたりしたら能力を解除
         death_or_logout_check(world,tusk,kqeen,rain,boy)
-        
+
         # スタンドアイテムを付与。死亡時やスタンドアイテムをなくした場合自動で与えられる。
         stand_lost_check(world,tusk,kqeen,rain,boy)
 

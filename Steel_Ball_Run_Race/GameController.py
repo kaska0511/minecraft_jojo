@@ -22,6 +22,8 @@ class GameController:
         self.target_dimention = 'the_end'
         self.target_pos = [0, 0, 0]
 
+        self.jpn_item = self.item_translation()
+
     def start(self):
         self.start_time = time.time()
 
@@ -156,18 +158,35 @@ class GameController:
         display_name = "display:{Name:'[{" + '"text":"'+Custom_name[0]+'"}]' + "'"
         if len(Custom_name) >= 2:   # チケットアイテムを持っているプレイヤーが2人以上
             for i in range(1, len(Custom_name)):    # 要素1以上は所持者の候補なのでLore（説明欄）とする。
-                display_name += ",Lore:['[{" + '"text":"'+Custom_name[i]+'"}]' + "'"
+                display_name += ",Lore:['[{" + '"text":"'+Custom_name[i]+'"}]' + "']"
 
         nbt = Tags + Enchantments + LodestoneDimension + LodestoneTracked + LodestonePos + display_name + "}"
 
         #nbt = make_commpass_nbt(kqeen.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket")
         return nbt
 
+    def item_translation(self):
+        Eng_Jpn_dictionary = {'rotten_flesh': '腐った肉', 'bone': '骨', 'string': '糸', 'gunpowder': '火薬', 'bow': '弓', 'crossbow': 'クロスボウ', 'arrow': '矢(効果なし)', \
+                        'sugar_cane': 'サトウキビ', 'wheat': '小麦', 'hay_block': '干草の俵', 'egg': '卵', 'shears': 'ハサミ', 'flint_and_steel': '火打石と打ち金', \
+                        'iron_helmet': '鉄のヘルメット', 'iron_chestplate': '鉄のチェストプレート', 'iron_ingot': '鉄インゴット', \
+                        'copper_ingot': '銅インゴット', 'lapis_lazuli': 'ラピスラズリ', 'redstone': 'レッドストーンダスト', 'lava_bucket': '', 'magma_block': '溶岩入りバケツ', \
+                        'deepslate': '深層岩', 'minecart': 'トロッコ', 'azalea': 'ツツジ', 'flowering_azalea': '開花したツツジ', 'spore_blossom': '胞子の花', \
+                        'shroomlight': 'シュルームライト', 'soul_sand': 'ソウルサンド', 'magma_cream': 'マグマクリーム', 'quartz': 'ネザークォーツ', 'ghast_tear': 'ガストの涙', 'golden_apple': '金のリンゴ', \
+                        'golden_carrot': '金のニンジン', 'golden_leggings': '金のレギンス', 'golden_boots': '金のブーツ', 'clock': '時計', 'glowstone_dust': 'グロウストーンダスト', 'bone_block': '骨ブロック', \
+                        'diamond': 'ダイヤモンド', 'crying_obsidian': '泣く黒曜石', 'ender_pearl': 'エンダーパール', 'slime_ball': 'スライムボール', 'amethyst_shard': 'アメジストの欠片'}
 
-    def crate_ticket_compass_nbt(self, Custom_name="チケットアイテム", dimension="overworld", pos = [0, 0],tag = "ticket"):
+        with open('./json_list/ticket_list.json') as f:
+            df = json.load(f)
+
+        for item in list(df.keys()):
+            df[item] = Eng_Jpn_dictionary[item]
+
+        return df
+
+    def crate_ticket_compass_nbt(self, pass_point, Custom_name="チケットアイテム", dimension="overworld", pos = [0, 0],tag = "ticket"):
         # 個別アイテム
         # チェックポイント情報、チケットアイテム情報
-        #print(self.get_ticketitem_get_frag())
+        print(self.get_ticketitem_get_frag())
         if self.get_ticketitem_get_frag() == False:     # チケットアイテムを誰も手に入れていない場合
         #if self.get_progress() == 0 or self.get_ticketitem_get_frag() == False:  #ゲーム進捗が0の場合、又はチケットアイテムを誰も手に入れていない場合
             dimension = 'the_end'
@@ -177,12 +196,9 @@ class GameController:
         LodestoneDimension = f'LodestoneDimension:"minecraft:{dimension}", '
         LodestoneTracked = 'LodestoneTracked: 0b, '
         LodestonePos = f'LodestonePos: [I; {pos[0]}, 64, {pos[1]}], '
-        display_name = "display:{Name:'[{" + '"text":"'+Custom_name[0]+'×'+str(Custom_name[1])+'"}]' + "'"
-        '''
-        if len(Custom_name) >= 2:   # チケットアイテムを持っているプレイヤーが2人以上
-            for i in range(1, len(Custom_name)):    # 要素1以上は所持者の候補なのでLore（説明欄）とする。
-                display_name += ",Lore:['[{" + '"text":"'+Custom_name[i]+'"}]' + "'"
-        '''
+        #display_name = "display:{Name:'[{" + '"text":"集めるアイテム:'+Custom_name[0]+'×'+str(Custom_name[1])+'"}]' + "'"
+        display_name = "display:{Name:'[{" + '"text":"集めるアイテム:'+self.jpn_item[Custom_name[0]]+'×'+str(Custom_name[1])+'"}]' + "'"
+        display_name += ",Lore:['[{" + '"text":"次の目的地:checkpoint'+str(pass_point+1)+'"}]' + "']"
 
         nbt = Tags + Enchantments + LodestoneDimension + LodestoneTracked + LodestonePos + display_name + "}"
 
@@ -254,7 +270,7 @@ class GameController:
     def give_target_compass(self):
         #pos = []
         # kqeen.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket"
-        if self.new_target_player != []:
+        if self.new_target_player != ['ターゲット不明']:
             #! ゲーム進捗状況に合わせてplayerをsortすべき
             self.true_ticketitem_get_frag()       #  チケットアイテムが誰かがgetしているならフラグを立てる。
             # チケットアイテムを手に入れたり失ったりするのを立ち上がり立下りで検知しTrue/False
@@ -291,7 +307,7 @@ class GameController:
 
     def create_ticket_compass(self, name, pass_point, ticket_item, point_pos):
         dim = self.get_dimention(pass_point+1)
-        nbt = self.crate_ticket_compass_nbt(ticket_item, dim, point_pos)
+        nbt = self.crate_ticket_compass_nbt(pass_point, ticket_item, dim, point_pos)
         self.mcr.command('clear ' + name + ' compass{Tags:ticket} 1')
         self.mcr.command('give ' + name + ' compass{'+nbt+'}')
 
