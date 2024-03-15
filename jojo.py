@@ -234,33 +234,6 @@ def find_target(controller,world,tusk,kqeen,rain,boy):
 
     return player
 
-def make_bonus_bar(controller,world,tusk,kqeen,rain,boy):
-    #! GameController移管予定
-    # ボーナスバーは事前に作る。
-    controller.add_bonus_bossbar(world.name, f"{world.name}:追加報酬+1個獲得まで")
-    controller.add_bonus_bossbar(tusk.name, f"{tusk.name}:追加報酬+1個獲得まで")
-    controller.add_bonus_bossbar(kqeen.name, f"{kqeen.name}:追加報酬+1個獲得まで")
-    controller.add_bonus_bossbar(rain.name, f"{rain.name}:追加報酬+1個獲得まで")
-    controller.add_bonus_bossbar(boy.name, f"{boy.name}:追加報酬+1個獲得まで")
-
-    controller.set_bonus_bossbar(world.name)
-    controller.set_bonus_bossbar(tusk.name)
-    controller.set_bonus_bossbar(kqeen.name)
-    controller.set_bonus_bossbar(rain.name)
-    controller.set_bonus_bossbar(boy.name)
-
-    # 作った直後は不可視
-    indicate_bonus_bossbar(False,controller,world,tusk,kqeen,rain,boy)
-
-
-def indicate_bonus_bossbar(booler,controller,world,tusk,kqeen,rain,boy):
-    #! GameController移管予定
-    # 作った直後は不可視
-    controller.set_bonus_bossbar_visible(world.name, booler)
-    controller.set_bonus_bossbar_visible(tusk.name, booler)
-    controller.set_bonus_bossbar_visible(kqeen.name, booler)
-    controller.set_bonus_bossbar_visible(rain.name, booler)
-    controller.set_bonus_bossbar_visible(boy.name, booler)
 
 def main(mcr):
     mcr.command("gamerule sendCommandFeedback false")
@@ -302,7 +275,8 @@ def main(mcr):
 
     set_commandblock(world,tusk,kqeen,rain,boy)
 
-    make_bonus_bar(controller,world,tusk,kqeen,rain,boy)
+    controller.participant = (world.name,tusk.name,kqeen.name,rain.name,boy.name)
+    controller.make_bonus_bar()
 
     controller.add_bossbar("ticket", "チェックポイント解放まで", "blue", 300)
     controller.set_bonus_bossbar("ticket")

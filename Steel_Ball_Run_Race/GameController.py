@@ -16,7 +16,7 @@ class GameController:
         self.old_flag = False
         self.someone_get_ticket = False
         self.run_The_World = False      # ザ・ワールド発動検知
-
+        self.participant = None
         self.old_target_player = []
         self.new_target_player = ['ターゲット不明']
         self.target_dimention = 'the_end'
@@ -186,7 +186,6 @@ class GameController:
     def crate_ticket_compass_nbt(self, pass_point, Custom_name="チケットアイテム", dimension="overworld", pos = [0, 0],tag = "ticket"):
         # 個別アイテム
         # チェックポイント情報、チケットアイテム情報
-        print(self.get_ticketitem_get_frag())
         if self.get_ticketitem_get_frag() == False:     # チケットアイテムを誰も手に入れていない場合
         #if self.get_progress() == 0 or self.get_ticketitem_get_frag() == False:  #ゲーム進捗が0の場合、又はチケットアイテムを誰も手に入れていない場合
             dimension = 'the_end'
@@ -267,6 +266,31 @@ class GameController:
         id = id.lower()
         self.mcr.command(f'bossbar set minecraft:{id} value 0')
 
+    def make_bonus_bar(self):
+        # ボーナスバーは事前に作る。
+        for i in range(len(self.participant)):
+            self.add_bonus_bossbar(self.participant[i], f"{self.participant[i]}:追加報酬+1個獲得まで")
+
+        for i in range(len(self.participant)):
+            self.set_bonus_bossbar(self.participant[i])
+
+        # 作った直後は不可視
+        self.indicate_bonus_bossbar(False)
+
+    def indicate_bonus_bossbar(self, booler):
+        # 作った直後は不可視
+        for i in range(len(self.participant)):
+            self.set_bonus_bossbar_visible(self.participant[i], booler)
+
+    def reset_all_bonus_bossbar(self):
+        self.indicate_bonus_bossbar(False)
+
+        for i in range(len(self.participant)):
+            self.set_bonus_bossbar_name(self.participant[i], f'{self.participant[i]}:追加報酬+1個獲得まで')
+
+        for i in range(len(self.participant)):
+            self.reset_bonus_bossbar(self.participant[i])
+
     def give_target_compass(self):
         #pos = []
         # kqeen.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket"
@@ -297,7 +321,7 @@ class GameController:
         if self.new_target_player == ['ターゲット不明']:
             self.target_dimention = 'the_end'
             self.target_pos = [0, 0, 0]
-        else:
+        elif self.get_someone_get_ticket(): # 誰もチケットアイテムを持たないならターゲットの情報を更新しない。
             self.target_dimention = self.target_dim(self.new_target_player[0])
             self.target_pos = self.get_pos(self.new_target_player[0])
         self.old_target_player = self.new_target_player
@@ -311,9 +335,6 @@ class GameController:
         self.mcr.command('clear ' + name + ' compass{Tags:ticket} 1')
         self.mcr.command('give ' + name + ' compass{'+nbt+'}')
 
-
-#! Common_func.pyから移植予定。
-#! 動作に問題がなければCommon_func.pyから削除。
     def get_pass_point(self, stand):
         '''
         スタンド名を元に最新の通過済チェックポイントを調べます。

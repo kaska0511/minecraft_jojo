@@ -95,8 +95,9 @@ class The_World(Common_func):
                     # 一位通過者
                     self.mcr.command(f'playsound minecraft:ui.toast.challenge_complete master @a[name=!{self.name}] ~ ~ ~ 1 1 1')
                     self.mcr.command(f'tag @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] add active')# チェックポイントアクティブ化処理追加
-                    #self.mcr.command(f'bossbar set minecraft:ticket visible true')    #!! 冗長
                     self.controller.gift_reward(self.name, f'No{self.pass_point+1}', self.bonus_cnt)
+                    self.mcr.command(f'bossbar set minecraft:ticket visible true')   # 画面から不可視にしていたticketゲージを再可視化
+                    self.controller.reset_all_bonus_bossbar()       # 全員分のボーナスゲージをリセット
                     self.controller.elapsed_time = 0
                     self.controller.reset_bossbar("ticket")     # ticketのbossbarをリセット。
                     self.controller.progress += 1   # ゲームの進捗を更新。
@@ -111,10 +112,6 @@ class The_World(Common_func):
                 self.bonus_start_time = time.time()
                 self.bonus_time = None
                 self.bonus_cnt = 0
-                self.mcr.command(f'bossbar set minecraft:ticket visible true')   # 画面から不可視にしていたticketゲージを再可視化
-                self.controller.set_bonus_bossbar_visible(self.name, False)     #! 全員分のゲージを見えなくする必要がある。
-                self.controller.set_bonus_bossbar_name(self.name, f'{self.name}:追加報酬+1個獲得まで')
-                self.controller.reset_bonus_bossbar(self.name)
                 self.controller.new_target_player = ['ターゲット不明']
                 self.controller.false_ticketitem_get_frag() # 一旦下げる。誰かが次のチケットアイテムを手に入れているならすぐにフラグが立つはず。
                 self.controller.add_checkpoint('The_World', self.pass_point) # jsonファイルにチェックポイント情報更新
