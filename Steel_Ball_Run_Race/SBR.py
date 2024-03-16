@@ -89,9 +89,9 @@ def set_checkpoint(mcr, x, z, tag, dimention="overworld"):
             if dimention == 'the_end':
                 time.sleep(0.2)
                 # なぜかエンドの場合は3マス埋まってしまうのでオフセット調整する。
-                # 追記。報酬用のチェストとエンドラの卵のために更に2マス（合計5マス）オフセット
-                mcr.command(f'execute as @e[tag=checkpoint,tag={tag},limit=1] at @s in {dimention} rotated 90 0 run tp ^ ^5 ^')
-                mcr.command(f'execute as @e[tag=attackinter,tag={tag},limit=1] at @s in {dimention} rotated 90 0 run tp ^ ^5 ^')
+                # 追記。エンドラの卵のために更に1マス（合計4マス）オフセット
+                mcr.command(f'execute as @e[tag=checkpoint,tag={tag},limit=1] at @s in {dimention} rotated 90 0 run tp ^ ^4 ^')
+                mcr.command(f'execute as @e[tag=attackinter,tag={tag},limit=1] at @s in {dimention} rotated 90 0 run tp ^ ^4 ^')
 
     #mcr.command(f'execute in {dimention} run forceload remove {x} {z}')
 

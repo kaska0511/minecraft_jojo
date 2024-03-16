@@ -169,7 +169,7 @@ class GameController:
         Eng_Jpn_dictionary = {'rotten_flesh': '腐った肉', 'bone': '骨', 'string': '糸', 'gunpowder': '火薬', 'bow': '弓', 'crossbow': 'クロスボウ', 'arrow': '矢(効果なし)', \
                         'sugar_cane': 'サトウキビ', 'wheat': '小麦', 'hay_block': '干草の俵', 'egg': '卵', 'shears': 'ハサミ', 'flint_and_steel': '火打石と打ち金', \
                         'iron_helmet': '鉄のヘルメット', 'iron_chestplate': '鉄のチェストプレート', 'iron_ingot': '鉄インゴット', \
-                        'copper_ingot': '銅インゴット', 'lapis_lazuli': 'ラピスラズリ', 'redstone': 'レッドストーンダスト', 'lava_bucket': '', 'magma_block': '溶岩入りバケツ', \
+                        'copper_ingot': '銅インゴット', 'lapis_lazuli': 'ラピスラズリ', 'redstone': 'レッドストーンダスト', 'lava_bucket': '溶岩入りバケツ', 'magma_block': 'マグマブロック', \
                         'deepslate': '深層岩', 'minecart': 'トロッコ', 'azalea': 'ツツジ', 'flowering_azalea': '開花したツツジ', 'spore_blossom': '胞子の花', \
                         'shroomlight': 'シュルームライト', 'soul_sand': 'ソウルサンド', 'magma_cream': 'マグマクリーム', 'quartz': 'ネザークォーツ', 'ghast_tear': 'ガストの涙', 'golden_apple': '金のリンゴ', \
                         'golden_carrot': '金のニンジン', 'golden_leggings': '金のレギンス', 'golden_boots': '金のブーツ', 'clock': '時計', 'glowstone_dust': 'グロウストーンダスト', 'bone_block': '骨ブロック', \
@@ -398,6 +398,28 @@ class GameController:
         self.mcr.command(f'tag @e[tag={number},tag=attackinter,limit=1] list')  # タグの確認。
         #! ボーナスタイムで稼いだ場合それに合わせてダイヤモンドの数を増やす。
         self.mcr.command(f'give {name} diamond {3+many}')  # タグの確認。
+
+    def summon_finalgift(self):
+        if self.check_dragonegg() and self.check_chest() == False:
+            self.mcr.command('execute in minecraft:the_end positioned 0 ~ 0 positioned over motion_blocking_no_leaves positioned ^ ^-2 ^ run setblock 0 ~ 0 chest destroy')
+            self.mcr.command('execute in minecraft:the_end positioned 0 ~ 0 positioned over motion_blocking_no_leaves positioned ^ ^-2 ^ run item replace block 0 ~ 0 container.0 with minecraft:diamond 64')
+            self.mcr.command('execute in minecraft:the_end positioned 0 ~ 0 positioned over motion_blocking_no_leaves positioned ^ ^-2 ^ run item replace block 0 ~ 0 container.1 with minecraft:netherite_ingot 32')
+            for i in range(16):
+                self.mcr.command('execute in minecraft:the_end positioned 0 ~ 0 positioned over motion_blocking_no_leaves positioned ^ ^-2 ^ run item replace block 0 ~ 0 container.'+str(i+2)+' with minecraft:enchanted_book{StoredEnchantments:[{id:mending,lvl:1}]} 1')
+
+    def check_dragonegg(self):
+        res = self.mcr.command('execute in minecraft:the_end positioned 0 ~ 0 positioned over motion_blocking_no_leaves positioned ^ ^-1 ^ if block 0 ~ 0 minecraft:dragon_egg')
+        if 'passed' in res:
+            return True
+        else:
+            return False
+
+    def check_chest(self):
+        res = self.mcr.command('execute in minecraft:the_end positioned 0 ~ 0 positioned over motion_blocking_no_leaves positioned ^ ^-2 ^ if block 0 ~ 0 minecraft:chest')
+        if 'passed' in res:
+            return True
+        else:
+            return False
 
     def check_ticket_item(self, player, item, count):
         '''

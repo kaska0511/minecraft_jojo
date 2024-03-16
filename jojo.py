@@ -338,6 +338,9 @@ def main(mcr):
 
             controller.checkpoint_particle()
 
+        if int(controller.get_progress()) >= 4:
+            controller.summon_finalgift()
+
 
 def time_check_main(mcr):
     
