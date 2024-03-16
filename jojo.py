@@ -230,6 +230,8 @@ def find_target(controller,world,tusk,kqeen,rain,boy):
 
     if player != []:
         controller.new_target_player = player
+    else:
+        controller.new_target_player = ['ターゲット不明']
     controller.give_target_compass()
 
     return player

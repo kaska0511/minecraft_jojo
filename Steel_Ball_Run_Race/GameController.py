@@ -11,7 +11,6 @@ class GameController:
         self.elapsed_time = 0
         self.prepare = False    # チェックポイントの準備状態を保持。チェックポイント5分経ったらTrue。誰かが一位通過したときにFalse。
         self.progress = None    # チケットアイテムのナンバー
-        self.checkpoint_pass_flag = False  # 
         self.ticketitem_get_frag = False
         self.old_flag = False
         self.someone_get_ticket = False
@@ -52,16 +51,7 @@ class GameController:
 
     def reset_time(self):
         self.elapsed_time = 0
-    
-    def true_checkpoint_pass_flag(self):
-        self.checkpoint_pass_flag = True
-
-    def false_checkpoint_pass_flag(self):
-        self.checkpoint_pass_flag = False
-
-    def get_checkpoint_pass_flag(self):
-        return self.checkpoint_pass_flag
-    
+    #
     def true_ticketitem_get_frag(self):
         self.ticketitem_get_frag = True
 
@@ -70,7 +60,7 @@ class GameController:
 
     def get_ticketitem_get_frag(self):
         return self.ticketitem_get_frag
-
+    #
     def true_old_flag(self):
         self.old_flag = True
 
@@ -79,7 +69,7 @@ class GameController:
 
     def get_old_flag(self):
         return self.old_flag
-
+    #
     def true_someone_get_ticket(self):
         self.someone_get_ticket = True
 
@@ -186,7 +176,7 @@ class GameController:
     def crate_ticket_compass_nbt(self, pass_point, Custom_name="チケットアイテム", dimension="overworld", pos = [0, 0],tag = "ticket"):
         # 個別アイテム
         # チェックポイント情報、チケットアイテム情報
-        if self.get_ticketitem_get_frag() == False:     # チケットアイテムを誰も手に入れていない場合
+        if self.get_someone_get_ticket() == False:     # チケットアイテムを誰も手に入れていない場合
         #if self.get_progress() == 0 or self.get_ticketitem_get_frag() == False:  #ゲーム進捗が0の場合、又はチケットアイテムを誰も手に入れていない場合
             dimension = 'the_end'
             pos = [0, 0]
@@ -294,9 +284,12 @@ class GameController:
     def give_target_compass(self):
         #pos = []
         # kqeen.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket"
+        print(self.get_someone_get_ticket())
         if self.new_target_player != ['ターゲット不明']:
             #! ゲーム進捗状況に合わせてplayerをsortすべき
-            self.true_ticketitem_get_frag()       #  チケットアイテムが誰かがgetしているならフラグを立てる。
+            # チケットアイテムが誰かがgetしているならフラグを立てる。
+            self.true_ticketitem_get_frag()
+            #self.true_someone_get_ticket()
             # チケットアイテムを手に入れたり失ったりするのを立ち上がり立下りで検知しTrue/False
             if self.get_old_flag() == False:      # Falseということは初回
                 self.true_old_flag()
@@ -304,9 +297,9 @@ class GameController:
             elif self.get_old_flag() == True:     # Trueの場合は既にフラグを立ち上げた状態なのでsomeone_get_ticketを下げる。
                 self.false_someone_get_ticket()
         else:   # まだチケットアイテムを持っている人がいない。
+            self.false_ticketitem_get_frag()
             if self.get_old_flag() == True:
                 self.false_old_flag()
-                self.false_someone_get_ticket()
 
         #! ゲーム進捗状況に合わせてplayerをsortすべき
         if self.old_target_player != self.new_target_player:
@@ -318,12 +311,12 @@ class GameController:
                 self.create_target_compass()
 
     def create_target_compass(self):
-        if self.new_target_player == ['ターゲット不明']:
-            self.target_dimention = 'the_end'
-            self.target_pos = [0, 0, 0]
-        elif self.get_someone_get_ticket(): # 誰もチケットアイテムを持たないならターゲットの情報を更新しない。
+        if self.get_ticketitem_get_frag():
             self.target_dimention = self.target_dim(self.new_target_player[0])
             self.target_pos = self.get_pos(self.new_target_player[0])
+        elif self.get_someone_get_ticket(): # 誰もチケットアイテムを持たないならターゲットの情報を更新しない。
+            self.target_dimention = 'the_end'
+            self.target_pos = [0, 0, 0]
         self.old_target_player = self.new_target_player
         nbt = self.crate_target_compass_nbt(self.new_target_player, self.target_dimention, self.target_pos)
         self.mcr.command('clear @a compass{Tags:target} 1')
