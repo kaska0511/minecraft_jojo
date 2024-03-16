@@ -9,6 +9,7 @@ class GameController:
         self.start_time = 0
         self.ticket_start_time = 0
         self.elapsed_time = 0
+        self.compass_prepare = False    # コンパス更新用フラグ
         self.prepare = False    # チェックポイントの準備状態を保持。チェックポイント5分経ったらTrue。誰かが一位通過したときにFalse。
         self.progress = None    # チケットアイテムのナンバー
         self.ticketitem_get_frag = False
@@ -176,7 +177,7 @@ class GameController:
     def crate_ticket_compass_nbt(self, pass_point, Custom_name="チケットアイテム", dimension="overworld", pos = [0, 0],tag = "ticket"):
         # 個別アイテム
         # チェックポイント情報、チケットアイテム情報
-        if self.get_someone_get_ticket() == False:     # チケットアイテムを誰も手に入れていない場合
+        if self.compass_prepare == False:     # チケットアイテムを誰も手に入れていない場合
         #if self.get_progress() == 0 or self.get_ticketitem_get_frag() == False:  #ゲーム進捗が0の場合、又はチケットアイテムを誰も手に入れていない場合
             dimension = 'the_end'
             pos = [0, 0]
@@ -284,8 +285,9 @@ class GameController:
     def give_target_compass(self):
         #pos = []
         # kqeen.name,"チケットアイテムを所持するプレイヤー", "overworld", [0,0,0], "ticket"
-        print(self.get_someone_get_ticket())
+        # 誰かがチケットアイテムを獲得
         if self.new_target_player != ['ターゲット不明']:
+            self.compass_prepare = True
             #! ゲーム進捗状況に合わせてplayerをsortすべき
             # チケットアイテムが誰かがgetしているならフラグを立てる。
             self.true_ticketitem_get_frag()
@@ -296,15 +298,17 @@ class GameController:
                 self.true_someone_get_ticket()
             elif self.get_old_flag() == True:     # Trueの場合は既にフラグを立ち上げた状態なのでsomeone_get_ticketを下げる。
                 self.false_someone_get_ticket()
+
+        # チケットアイテムを失う（死ぬ、投げ捨てる、チェストにしまう）
         else:   # まだチケットアイテムを持っている人がいない。
             self.false_ticketitem_get_frag()
             if self.get_old_flag() == True:
                 self.false_old_flag()
 
-        #! ゲーム進捗状況に合わせてplayerをsortすべき
+        #! チケットアイテムを保持者が変わっているか
         if self.old_target_player != self.new_target_player:
             self.create_target_compass()
-
+        # 同一プレイヤーがチケットアイテムを保持
         else:
             # 10秒ごとにgiveする。
             if self.check_10s_ticket():
@@ -314,7 +318,7 @@ class GameController:
         if self.get_ticketitem_get_frag():
             self.target_dimention = self.target_dim(self.new_target_player[0])
             self.target_pos = self.get_pos(self.new_target_player[0])
-        elif self.get_someone_get_ticket(): # 誰もチケットアイテムを持たないならターゲットの情報を更新しない。
+        elif self.compass_prepare == False: # 誰もチケットアイテムを持たないならターゲットの情報を更新しない。
             self.target_dimention = 'the_end'
             self.target_pos = [0, 0, 0]
         self.old_target_player = self.new_target_player

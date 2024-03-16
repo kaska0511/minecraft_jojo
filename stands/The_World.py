@@ -101,6 +101,7 @@ class The_World(Common_func):
                     self.controller.elapsed_time = 0
                     self.controller.reset_bossbar("ticket")     # ticketのbossbarをリセット。
                     self.controller.progress += 1   # ゲームの進捗を更新。
+                    self.controller.compass_prepare = False
                     self.controller.prepare = False # チェックポイント準備状態を解除
                     self.controller.reset_time()    # 既に一秒数えられている場合があるのでリセット
                     self.ticket_target = False      # 次のチェックポイントのチケットアイテムへ更新するため一旦所持していない状態にする。
