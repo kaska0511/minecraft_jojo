@@ -203,7 +203,7 @@ def set_commandblock(world,tusk,kqeen,rain,boy):
     mcr.command(f'setblock 0 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
     command = f'execute as {tusk.name} at @s run tp @e[tag=tuskinter,limit=1] ^ ^ ^1'
     mcr.command(f'setblock 1 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
-    command = f'execute as @e[tag=TuskAct4,limit=1] at @s run tp @e[tag=TuskAct4,limit=1] ^ ^ ^1'
+    command = f'execute as @e[tag=TuskAct4,limit=1] at @s run tp @e[tag=TuskAct4,limit=1] ^ ^ ^0.8'
     mcr.command(f'setblock 1 -64 1 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
 
     command = f'execute as {kqeen.name} at @s run tp @e[tag=kqeeninter,limit=1] ^ ^ ^1'
