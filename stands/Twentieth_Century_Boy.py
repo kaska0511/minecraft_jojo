@@ -127,7 +127,7 @@ class Twentieth_Century_Boy(Common_func):
                 self.controller.false_ticketitem_get_frag() # 一旦下げる。誰かが次のチケットアイテムを手に入れているならすぐにフラグが立つはず。
                 self.controller.add_checkpoint('Twentieth_Century_Boy', self.pass_point) # jsonファイルにチェックポイント情報更新
                 if self.pass_point+1 < 4:
-                    self.mcr.command(f'execute as {self.name} at @s positioned over motion_blocking_no_leaves run setworldspawn {self.point_pos[0]} ~ {self.point_pos[1]}')
+                    self.mcr.command(f'execute as {self.name} at @s positioned over motion_blocking_no_leaves run spawnpoint {self.name} {self.point_pos[0]} ~ {self.point_pos[1]}')
                 self.pass_point += 1                                # ソースコード内チェックポイント情報更新
                 self.point_pos = self.controller.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
                 self.ticket_item = self.controller.get_ticket_info(self.controller.progress)
