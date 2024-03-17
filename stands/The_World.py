@@ -173,7 +173,7 @@ class The_World(Common_func):
 
 
     def start_time(self):
-
+        self.mcr.command(f'execute as {self.name} at @s run playsound minecraft:block.bell.resonate master @a ~ ~ ~ 1 1')
         self.mcr.command(f'effect give @a minecraft:blindness 1 1 true')
         self.mcr.command(f'effect clear {self.name} minecraft:strength')
 
