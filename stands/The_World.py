@@ -151,7 +151,7 @@ class The_World(Common_func):
         self.mcr.command(f'execute as {self.name} at @s run playsound minecraft:block.bell.resonate master @a ~ ~ ~ 1 1')
         self.mcr.command(f'execute as {self.name} at @s run playsound minecraft:entity.bee.death master @a ~ ~ ~ 4 0')
         self.mcr.command(f'effect give @a minecraft:blindness 1 1 true')  # 能力演出
-        self.mcr.command(f'effect give {self.name} minecraft:strength {self.timer} 12 true') # ピグリンブルートを二発で倒せるレベルのパワーを付与。
+        self.mcr.command(f'effect give {self.name} minecraft:strength infinite 12 true') # ピグリンブルートを二発で倒せるレベルのパワーを付与。
 
         self.stop_player_effect_list()
 
@@ -175,6 +175,7 @@ class The_World(Common_func):
     def start_time(self):
 
         self.mcr.command(f'effect give @a minecraft:blindness 1 1 true')
+        self.mcr.command(f'effect clear {self.name} minecraft:strength')
 
         self.mcr.command(f'tick unfreeze')
 
@@ -208,7 +209,7 @@ class The_World(Common_func):
     def count_down(self):
         # 時間停止中のカウントダウン。
         elapsed_time = int(time.time() - self.standard_time)
-        if elapsed_time > 1 and self.timer > 0:    # 一秒経過・・・
+        if elapsed_time >= 1 and self.timer > 0:    # 一秒経過・・・
             self.timer -= 1     # 止められる時間をカウントダウン
             self.mcr.command(f'execute as {self.name} at @s run playsound minecraft:item.lodestone_compass.lock master @a ~ ~ ~ 1 2')
             self.standard_time = time.time()    # 基準時間を更新

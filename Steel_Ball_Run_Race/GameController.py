@@ -9,7 +9,7 @@ class GameController:
         self.start_time = 0
         self.ticket_start_time = 0
         self.elapsed_time = 0
-        self.compass_prepare = False    # コンパス更新用フラグ
+        self.compass_prepare = False    # コンパス更新用フラグ。このフラグがFalseの時チケット&ターゲットコンパスの針は狂う。
         self.prepare = False    # チェックポイントの準備状態を保持。チェックポイント5分経ったらTrue。誰かが一位通過したときにFalse。
         self.progress = None    # チケットアイテムのナンバー
         self.ticketitem_get_frag = False
