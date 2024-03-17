@@ -177,7 +177,11 @@ class GameController:
     def crate_ticket_compass_nbt(self, pass_point, Custom_name="チケットアイテム", dimension="overworld", pos = [0, 0],tag = "ticket"):
         # 個別アイテム
         # チェックポイント情報、チケットアイテム情報
-        if self.compass_prepare == False:     # チケットアイテムを誰も手に入れていない場合
+        if self.check_active(f'No{pass_point+1}'):
+            # 次目指すべきチェックポイントが既にアクティブなら座標情報を公開する。
+            # つまりelifの内部に入れない。
+            pass
+        elif self.compass_prepare == False:     # チケットアイテムを誰も手に入れていない場合
         #if self.get_progress() == 0 or self.get_ticketitem_get_frag() == False:  #ゲーム進捗が0の場合、又はチケットアイテムを誰も手に入れていない場合
             dimension = 'the_end'
             pos = [0, 0]
