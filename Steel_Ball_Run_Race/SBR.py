@@ -67,7 +67,7 @@ def set_checkpoint(mcr, x, z, tag, dimention="overworld"):
         time.sleep(2) #チャンクロード時間
         if ap0 == 'No entity was found':    # まだチェックポイントとしての防具立てが召喚されていないなら
             mcr.command(f'execute in {dimention} run summon armor_stand {x} {y} {z}  \
-                    {{Invisible:1b,Invulnerable:1b,PersistenceRequired:1b,NoGravity:1b,Tags:["checkpoint","{tag}"]}}')
+                    {{CustomName:"checkpoint{tag[2]}",CustomNameVisible:1b,Invisible:1b,Invulnerable:1b,PersistenceRequired:1b,NoGravity:1b,Tags:["checkpoint","{tag}"]}}')
         for _ in range(40):
             res = mcr.command(f'execute as @e[tag=checkpoint,tag={tag},limit=1] at @s in {dimention} if block ^ ^-1 ^ nether_bricks')
             if res == '':
@@ -82,7 +82,7 @@ def set_checkpoint(mcr, x, z, tag, dimention="overworld"):
         time.sleep(0.2) #チャンクロード時間
         if ap0 == 'No entity was found':    # まだチェックポイントとしての防具立てが召喚されていないなら
             mcr.command(f'execute in {dimention} positioned {x} ~ {z} positioned over motion_blocking_no_leaves run summon armor_stand ~ ~ ~ \
-                        {{Invisible:1b,Invulnerable:1b,PersistenceRequired:1b,NoGravity:1b,Tags:["checkpoint","{tag}"]}}')
+                        {{CustomName:"checkpoint{tag[2]}",CustomNameVisible:1b,Invisible:1b,Invulnerable:1b,PersistenceRequired:1b,NoGravity:1b,Tags:["checkpoint","{tag}"]}}')
         if ap1 == 'No entity was found':    # まだチェックポイントとしてのインタラクションが召喚されていないなら
             # オーバーワールド、エンド共通処理
             mcr.command(f'execute in {dimention} positioned {x} ~ {z} positioned over motion_blocking_no_leaves run summon interaction ~ ~ ~ {{Tags:["attackinter","{tag}"],height:2,width:1}}')
