@@ -164,16 +164,22 @@ def stand_lost_check(world,tusk,kqeen,rain,boy):
     item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ")
 
     if not world.bool_have_a_stand('DIO') and world.name != '1dummy':
+        mcr.command('kill @e[tag=DIOinter]')
+        mcr.command('summon interaction 0 -64 0 {Tags:["DIOinter"],height:2,width:1}')
         mcr.command('give ' + world.name + " clock{Tags:DIO,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[0] + '"}]'+"'}}")
         world.create_ticket_compass()
         world.create_target_compass()
     if not tusk.bool_have_a_stand('Saint') and tusk.name != '1dummy':
+        mcr.command('kill @e[tag=tuskinter]')
+        mcr.command('summon interaction 0 -64 0 {Tags:["tuskinter"],height:2,width:1}')
         mcr.command('give ' + tusk.name + ' saddle')
         mcr.command('give ' + tusk.name + ' lead')
         mcr.command('give ' + tusk.name + " bone{Tags:Saint,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[1] + '"}]'+"'}}")
         tusk.create_ticket_compass()
         tusk.create_target_compass()
     if not kqeen.bool_have_a_stand('Killer') and kqeen.name != '1dummy':   # 全て失わないと再取得できないので注意
+        mcr.command('kill @e[tag=kqeeninter]')
+        mcr.command('summon interaction 0 -64 0 {Tags:["kqeeninter"],height:2,width:1}')
         mcr.command('give ' + kqeen.name + " gunpowder{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][0] + '"}]'+"'}}")
         mcr.command('give ' + kqeen.name + " flint{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][1] + '"}]'+"'}}")
         mcr.command('give ' + kqeen.name + " fire_charge{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][2] + '"}]'+"'}}")
@@ -184,6 +190,8 @@ def stand_lost_check(world,tusk,kqeen,rain,boy):
         rain.create_ticket_compass()
         rain.create_target_compass()
     if not boy.bool_have_a_stand('Boy') and boy.name != '1dummy':
+        mcr.command('kill @e[tag=boyinter]')
+        mcr.command('summon interaction 0 -64 0 {Tags:["boyinter"],height:2,width:1}')
         mcr.command('give ' + boy.name + " snowball{Tags:Boy,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[4] + '"}]'+"'}}")
         boy.create_ticket_compass()
         boy.create_target_compass()
