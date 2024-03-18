@@ -141,13 +141,13 @@ class Killer_Qeen(Common_func):
 
             if not self.controller.check_active(f'No{self.pass_point+1}') and self.controller.prepare:
                 # そのチェックポイントは誰も通過していないため、一位として扱っていいかチェックする。
-                #! チケットアイテム情報を取得する。処理追加。
                 if self.controller.check_ticket_item(self.name, self.ticket_item[0], self.ticket_item[1]):
                     # 一位通過者
                     self.mcr.command(f'playsound minecraft:ui.toast.challenge_complete master @a[name=!{self.name}] ~ ~ ~ 1 1 1')
                     self.mcr.command(f'tag @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] add active')# チェックポイントアクティブ化処理追加
                     self.controller.gift_reward(self.name, f'No{self.pass_point+1}', self.bonus_cnt)
                     self.mcr.command(f'bossbar set minecraft:ticket visible true')   # 画面から不可視にしていたticketゲージを再可視化
+                    self.controller.ticket_update_flag = True
                     self.controller.reset_all_bonus_bossbar()       # 全員分のボーナスゲージをリセット
                     self.controller.elapsed_time = 0
                     self.controller.reset_bossbar("ticket")     # ticketのbossbarをリセット。
@@ -308,7 +308,7 @@ class Killer_Qeen(Common_func):
             self.mcr.command(f'execute as @e[tag=SHA_searcher,limit=1] at @s run tp ^ ^ ^1')
             for target in target_list:
                 if target == 'burning_entity' or target == 'entity':
-                    #y = round(9/60*i + 1)   #! 要検討
+                    #y = round(9/60*i + 1)   # 要検討
                     target_uuid = self.mcr.command(f'execute as @e[tag=SHA_searcher,limit=1] at @s run data get entity @e[name=!{self.name},tag=!SHA,tag=!SHA_searcher,tag=!SHA_owner,type=player,limit=1,distance=..{i},sort=nearest] UUID')
                     target_mob_uuid = self.mcr.command(f'execute as @e[tag=SHA_searcher,limit=1] at @s run data get entity @e[name=!{self.name},tag=!SHA,tag=!SHA_searcher,tag=!SHA_owner,type=!item,limit=1,distance=..{i},sort=nearest] UUID')
 

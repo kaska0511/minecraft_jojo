@@ -244,6 +244,12 @@ def find_target(controller,world,tusk,kqeen,rain,boy):
 
     return player
 
+def update_all_ticketcompass(world,tusk,kqeen,rain,boy):
+    world.create_ticket_compass()
+    tusk.create_ticket_compass()
+    kqeen.create_ticket_compass()
+    rain.create_ticket_compass()
+    boy.create_ticket_compass()
 
 def main(mcr):
     mcr.command("gamerule sendCommandFeedback false")
@@ -293,9 +299,6 @@ def main(mcr):
     controller.set_bonus_bossbar_visible("ticket", True)
 
     while True:
-        #mcr.command('give KASKA0511 compass{LodestoneDimension:"minecraft:overworld", LodestoneTracked: 0b, LodestonePos: [I; -223, 88, -144],display:{Name:'[{"text":"宇良"}]'}}')
-        #mcr.command('clear @a compass{Tags:test} 1')
-        #mcr.command('give KASKA0511 compass{Tags:test,LodestoneDimension:"minecraft:overworld", LodestoneTracked: 0b, LodestonePos: [I; '+str(random.randint(0,100))+', 88, -144]}')
         # スタンド能力を付与。
         gift_stand()
 
@@ -351,9 +354,13 @@ def main(mcr):
         if int(controller.get_progress()) >= 4:
             controller.summon_finalgift()
 
+        if controller.ticket_update_flag:
+            controller.ticket_update_flag = False
+            update_all_ticketcompass(world,tusk,kqeen,rain,boy)
+
 
 def time_check_main(mcr):
-    
+    ## test用関数。主に時間計測に使用します。
     world = The_World(name="KASKA0511", pos="[0,0,0]", timer=5)    # 初回5秒
     mcr.command('give KASKA0511 clock{Tags:DIO}')
     mcr.command('summon interaction 0 -64 0 {Tags:["DIOinter"],height:2}')

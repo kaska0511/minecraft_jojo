@@ -12,6 +12,7 @@ class GameController:
         self.compass_prepare = False    # コンパス更新用フラグ。このフラグがFalseの時チケット&ターゲットコンパスの針は狂う。
         self.prepare = False    # チェックポイントの準備状態を保持。チェックポイント5分経ったらTrue。誰かが一位通過したときにFalse。
         self.progress = None    # チケットアイテムのナンバー
+        self.ticket_update_flag = False
         self.ticketitem_get_frag = False
         self.old_flag = False
         self.someone_get_ticket = False
@@ -295,7 +296,6 @@ class GameController:
             #! ゲーム進捗状況に合わせてplayerをsortすべき
             # チケットアイテムが誰かがgetしているならフラグを立てる。
             self.true_ticketitem_get_frag()
-            #self.true_someone_get_ticket()
             # チケットアイテムを手に入れたり失ったりするのを立ち上がり立下りで検知しTrue/False
             if self.get_old_flag() == False:      # Falseということは初回
                 self.true_old_flag()
@@ -446,7 +446,6 @@ class GameController:
         else:
             split_data = re.split(r' ', res)
             if int(split_data[1]) >= count:
-                #! 更に全て自分で集めたものなのか検知が必要。
                 return True
 
     def get_point_pos(self, checkpoint):
