@@ -101,7 +101,6 @@ class The_World(Common_func):
                     self.controller.elapsed_time = 0
                     self.controller.reset_bossbar("ticket")     # ticketのbossbarをリセット。
                     self.controller.progress += 1   # ゲームの進捗を更新。
-                    self.controller.compass_prepare = False
                     self.controller.prepare = False # チェックポイント準備状態を解除
                     self.controller.reset_time()    # 既に一秒数えられている場合があるのでリセット
                     self.ticket_target = False      # 次のチェックポイントのチケットアイテムへ更新するため一旦所持していない状態にする。
@@ -121,7 +120,7 @@ class The_World(Common_func):
                 self.pass_point += 1                                # ソースコード内チェックポイント情報更新
                 self.point_pos = self.controller.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
                 self.ticket_item = self.controller.get_ticket_info(self.controller.progress)
-                #print(self.point_pos, self.ticket_item)
+                self.controller.compass_prepare = False
                 self.create_ticket_compass()
 
         #! チケットアイテムはゲーム全体の進行状態に依存するため
@@ -131,6 +130,7 @@ class The_World(Common_func):
         # 誰かがチケットアイテムを手に入れたのでチケットコンパスを更新させる。
         #? しかしこのままだと随時更新されてしまう。気がする。。。
         if self.controller.get_someone_get_ticket():
+            print("stand_world")
             self.create_ticket_compass()
 
     def create_ticket_compass(self):

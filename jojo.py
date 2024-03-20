@@ -321,6 +321,8 @@ def main(mcr):
             controller.set_bossbar_value("ticket", controller.elapsed_time)
         #indicate_bonus_bossbar(True,controller,world,tusk,kqeen,rain,boy)
 
+        target = find_target(controller,world,tusk,kqeen,rain,boy)
+
         # 能力管理。ここで能力を発動させる。
         # スタンドを追加したらここにスタンド名.loop()を追加するイメージ。
         # 時を止めているときに能力が止まるタイプのスタンドの場合はifの中に、止まらない場合はifの外に配置する。
@@ -336,7 +338,7 @@ def main(mcr):
             mcr.command(f'data modify block 3 -64 0 auto set value 0')
             mcr.command(f'data modify block 4 -64 0 auto set value 0')
 
-        target = find_target(controller,world,tusk,kqeen,rain,boy)
+
 
         # ザ・ワールドが発動中は基準値の更新を止める。＝時間計測が一時的に止める。
         # targetによりチケットアイテム所持者がいれば5分計測が始まる。
