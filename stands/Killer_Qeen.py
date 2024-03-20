@@ -143,35 +143,19 @@ class Killer_Qeen(Common_func):
                 # そのチェックポイントは誰も通過していないため、一位として扱っていいかチェックする。
                 if self.controller.check_ticket_item(self.name, self.ticket_item[0], self.ticket_item[1]):
                     # 一位通過者
-                    self.mcr.command(f'playsound minecraft:ui.toast.challenge_complete master @a[name=!{self.name}] ~ ~ ~ 1 1 1')
-                    self.mcr.command(f'tag @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] add active')# チェックポイントアクティブ化処理追加
-                    self.controller.gift_reward(self.name, f'No{self.pass_point+1}', self.bonus_cnt)
-                    self.mcr.command(f'bossbar set minecraft:ticket visible true')   # 画面から不可視にしていたticketゲージを再可視化
-                    self.controller.ticket_update_flag = True
-                    self.controller.reset_all_bonus_bossbar()       # 全員分のボーナスゲージをリセット
-                    self.controller.elapsed_time = 0
-                    self.controller.reset_bossbar("ticket")     # ticketのbossbarをリセット。
-                    self.controller.progress += 1   # ゲームの進捗を更新。
-                    self.controller.prepare = False # チェックポイント準備状態を解除
-                    self.controller.reset_time()    # 既に一秒数えられている場合があるのでリセット
+                    self.controller.first_place_pass_process(self.name, self.pass_point, self.bonus_cnt)
                     self.ticket_target = False      # 次のチェックポイントのチケットアイテムへ更新するため一旦所持していない状態にする。
 
             # 既にアクティブ化されているなら自分のチェックポイントを加算。
             # 通過者共通処理。
             if self.controller.check_active(f'No{self.pass_point+1}'):
-                self.mcr.command(f'execute as {self.name} run playsound minecraft:ui.toast.challenge_complete master @s ~ ~ ~ 1 1 1')
+                self.controller.second_place_pass_process(self.name, 'Killer_Qeen', self.pass_point, self.point_pos)
                 self.bonus_start_time = time.time()
                 self.bonus_time = None
                 self.bonus_cnt = 0
-                self.controller.new_target_player = ['ターゲット不明']
-                self.controller.false_ticketitem_get_frag() # 一旦下げる。誰かが次のチケットアイテムを手に入れているならすぐにフラグが立つはず。
-                self.controller.add_checkpoint('Killer_Qeen', self.pass_point) # jsonファイルにチェックポイント情報更新
-                if self.pass_point+1 < 4:
-                    self.mcr.command(f'execute as {self.name} at @s positioned over motion_blocking_no_leaves run spawnpoint {self.name} {self.point_pos[0]} ~ {self.point_pos[1]}')
                 self.pass_point += 1                                # ソースコード内チェックポイント情報更新
                 self.point_pos = self.controller.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
                 self.ticket_item = self.controller.get_ticket_info(self.controller.progress)
-                self.controller.compass_prepare = False
                 self.create_ticket_compass()
 
         #! チケットアイテムはゲーム全体の進行状態に依存するため

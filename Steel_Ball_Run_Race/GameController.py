@@ -498,6 +498,31 @@ class GameController:
         else:
             return False
 
+    def first_place_pass_process(self, name, pass_point, bonus_cnt):
+        # 一位通過者
+        self.mcr.command(f'playsound minecraft:ui.toast.challenge_complete master @a[name=!{name}] ~ ~ ~ 1 1 1')
+        self.mcr.command(f'tag @e[tag=No{pass_point+1},tag=attackinter,limit=1] add active')# チェックポイントアクティブ化処理追加
+        self.mcr.command(f'bossbar set minecraft:ticket visible true')   # 画面から不可視にしていたticketゲージを再可視化
+        self.gift_reward(name, f'No{pass_point+1}', bonus_cnt)
+        self.reset_all_bonus_bossbar()       # 全員分のボーナスゲージをリセット
+        self.reset_bossbar("ticket")     # ticketのbossbarをリセット。
+        self.elapsed_time = 0
+        self.progress += 1   # ゲームの進捗を更新。
+        self.ticket_update_flag = True
+        self.prepare = False # チェックポイント準備状態を解除
+        self.reset_time()    # 既に一秒数えられている場合があるのでリセット
+
+    def second_place_pass_process(self, name, stand_name, pass_point, point_pos):
+        # 既にアクティブ化されているなら自分のチェックポイントを加算。
+        # 通過者共通処理。
+        self.mcr.command(f'execute as {name} run playsound minecraft:ui.toast.challenge_complete master @s ~ ~ ~ 1 1 1')
+        self.new_target_player = ['ターゲット不明']
+        self.false_ticketitem_get_frag() # 一旦下げる。誰かが次のチケットアイテムを手に入れているならすぐにフラグが立つはず。
+        self.add_checkpoint(stand_name, pass_point) # jsonファイルにチェックポイント情報更新
+        if pass_point+1 < 4:
+            self.mcr.command(f'execute as {name} at @s positioned over motion_blocking_no_leaves run spawnpoint {name} {point_pos[0]} ~ {point_pos[1]}')
+        self.compass_prepare = False
+
     def assign_throwitem_tag(self):
         '''
         投げられたアイテムに対して投げたプレイヤー自身のUUIDをtagとして設定します。\n
