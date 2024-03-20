@@ -51,11 +51,13 @@ class Common_func:
         else:
             return True
 
-    def bool_have_a_stand(self, tag):
+    def bool_have_a_stand(self, *items, tag):
         '''
         自分がスタンド能力を表すアイテムを持っているかチェックします。
 
         Parameter
+            item : str
+                スタンドアイテムを表すitem名
             tag : str
                 スタンドアイテムが持つtag名
 
@@ -66,17 +68,17 @@ class Common_func:
         '''
         # runの後は何でもよかった。メインは「nbt=」の部分で特定のタグ名を持つアイテムを所持しているならrunの後が実行される。
         # 持っていないなら空文字が返される。
+        search_target = ('container.*', 'player.cursor', 'weapon.*', 'armor.*')
         if self.get_player_Death() == False or not self.get_logout():
-            standres = self.mcr.command('execute as @a[name=' + self.name + ',nbt={Inventory:[{tag:{Tags:"' + tag + '"}}]}] run data get entity ' + self.name + ' Pos')
-            return True if standres != '' else False
+            for target in search_target:
+                for item in items:
+                    standres = self.mcr.command('execute if items entity ' +self.name+ ' ' +target+ ' minecraft:' +item+ '{Tags:"' +tag+ '"}')
+                    if 'passed' in standres:
+                        return True
+            else:   # いづれにもhitしなかった場合
+                return False
         else:
             return True
-        """
-        if standres != '':
-            return True
-        else:
-            return False
-        """
 
     def get_player_Death(self):
         '''
@@ -226,7 +228,7 @@ class Common_func:
         '''
         reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
         id_rec = self.mcr.command(f'data get entity {self.name} SelectedItem.id')
-        tag_rec = self.mcr.command(f'data get entity {self.name} SelectedItem.tag.Tags')     # tag取得はこれがいいかも
+        tag_rec = self.mcr.command(f'data get entity {self.name} SelectedItem.components.minecraft:custom_data.Tags')     # tag取得はこれがいいかも
         
         split_id = re.split(r' ', id_rec)
         split_tag = re.split(r' ', tag_rec)
@@ -377,7 +379,7 @@ class Common_func:
         '''
         reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
         id = self.mcr.command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].id')
-        tag = self.mcr.command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].tag.Tags')
+        tag = self.mcr.command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].components.minecraft:custom_data.Tags')
 
         split_id = re.split(r' ', id)
         split_tag = re.split(r' ', tag)
