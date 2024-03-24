@@ -147,7 +147,7 @@ class GameController:
         LodestoneDimension = f'LodestoneDimension:"minecraft:{dimension}", '
         LodestoneTracked = 'LodestoneTracked: 0b, '
         LodestonePos = f'LodestonePos: [I; {pos[0]}, {pos[1]}, {pos[2]}], '
-        display_name = "display:{Name:'[{" + '"text":"'+Custom_name[0]+'"}]' + "'"
+        display_name = "display:{Name:'[{" + '"text":"アイテム保持者:'+Custom_name[0]+'"}]' + "'"
         if len(Custom_name) >= 2:   # チケットアイテムを持っているプレイヤーが2人以上
             for i in range(1, len(Custom_name)):    # 要素1以上は所持者の候補なのでLore（説明欄）とする。
                 display_name += ",Lore:['[{" + '"text":"'+Custom_name[i]+'"}]' + "']"
@@ -187,6 +187,7 @@ class GameController:
             dimension = 'the_end'
             pos = [0, 0]
 
+        jpn_dims = {'overworld':'オーバーワールド', 'the_nether':'ネザー', 'the_end':'エンド'}
         Tags = f'Tags:{tag}, '
         Enchantments = 'Enchantments:[{}], '
         LodestoneDimension = f'LodestoneDimension:"minecraft:{dimension}", '
@@ -194,6 +195,7 @@ class GameController:
         LodestonePos = f'LodestonePos: [I; {pos[0]}, 64, {pos[1]}], '
         display_name = "display:{Name:'[{" + '"text":"集めるアイテム:'+self.jpn_item[Custom_name[0]]+'×'+str(Custom_name[1])+'"}]' + "'"
         display_name += ",Lore:['[{" + '"text":"次の目的地:checkpoint'+str(pass_point+1)+'"}]' + "']"
+        #display_name += ",Lore:['[{" + '"text":"次元:'+jpn_dims[dimension]+'"}]' + "']"    # コンパスを狂わせる際エンドを指定するので今はコメントアウトする。
 
         nbt = Tags + Enchantments + LodestoneDimension + LodestoneTracked + LodestonePos + display_name + "}"
 
