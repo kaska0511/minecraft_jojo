@@ -218,7 +218,7 @@ class Killer_Qeen(Common_func):
         edit_pos = []
         res = self.mcr.command(f'data get entity @e[tag={tag},limit=1] Pos')
         split_str = re.split(r' ', res)
-        pos = None if split_str[0] == 'Found' else re.sub(reg, '', res).strip('"')
+        pos = None if split_str[0] == 'No' else re.sub(reg, '', res).strip('"')
         if pos != None:
             res = re.sub(reg, '', res).strip("[d]")
             res = re.split('d, ', res)
