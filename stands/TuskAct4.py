@@ -144,7 +144,7 @@ class TuskAct4(Common_func):
         if self.summon_flag == False and self.target:
             self.mcr.command(f'execute as {self.name} at @s run playsound minecraft:block.beacon.activate master @a ~ ~ ~ 4 2')
             # アマスタを召喚。見えない、無敵、ちょっと小さい。
-            self.mcr.command(f'execute as {self.name} at @s anchored feet run summon minecraft:armor_stand ^ ^ ^1 {{Attributes:[{{Name:"generic.scale",Base:0.0625}}],Invisible:1,Invulnerable:1,Small:1,NoGravity:1,Tags:["TuskAct4"]}}')
+            self.mcr.command(f'execute as {self.name} at @s anchored feet run summon minecraft:armor_stand ^ ^ ^1 {{Attributes:[{{Name:"generic.scale",Base:0.4}}],Invisible:1,Invulnerable:1,Small:1,NoGravity:1,Tags:["TuskAct4"]}}')
             self.summon_flag = True
 
         # 追いかけるタスクact4
