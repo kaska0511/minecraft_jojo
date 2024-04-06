@@ -13,6 +13,7 @@ from stands.TuskAct4 import TuskAct4
 from stands.Killer_Qeen import Killer_Qeen
 from stands.Catch_The_Rainbow import Catch_The_Rainbow
 from stands.Twentieth_Century_Boy import Twentieth_Century_Boy
+from stands.Little_Feat import Little_Feat
 
 # server.propertiesのcommandblockを許可する必要がありそう。
 
@@ -47,7 +48,7 @@ def json_make():
     基本的に一度しか実行されない。
     スタンド能力を新たに追加するときは注意が必要。
     '''
-    first = {"The_World": "1dummy", "TuskAct4": "1dummy", "Killer_Qeen": "1dummy", "Catch_The_Rainbow": "1dummy", "Twentieth_Century_Boy": "1dummy"}
+    first = {"The_World": "1dummy", "TuskAct4": "1dummy", "Killer_Qeen": "1dummy", "Catch_The_Rainbow": "1dummy", "Twentieth_Century_Boy": "1dummy", "Little_Feat": "1dummy"}
     with open('./json_list/stand_list.json', 'w', encoding='utf-8') as f:
         json.dump(first, f, ensure_ascii=False)
 
@@ -120,7 +121,7 @@ def checkpoint_prepare():
         make_checkpointrecoder_json()
 
 
-def name_registration(world,tusk,kqeen,rain,boy):
+def name_registration(world,tusk,kqeen,rain,boy,feat):
     stand_list = open_json('./json_list/stand_list.json')
     world.name = stand_list["The_World"]   #DnD_sk
     #world.name = "KASKA0511"
@@ -131,9 +132,10 @@ def name_registration(world,tusk,kqeen,rain,boy):
     #rain.name = "KASKA0511"
     boy.name = stand_list["Twentieth_Century_Boy"]
     #boy.name = "KASKA0511"
+    feat.name = stand_list["Little_Feat"]
 
 
-def set_uuid(world,tusk,kqeen,rain,boy):
+def set_uuid(world,tusk,kqeen,rain,boy,feat):
     if world.name != "1dummy":
         world.uuid = world.get_uuid()
     if tusk.name != "1dummy":
@@ -145,9 +147,11 @@ def set_uuid(world,tusk,kqeen,rain,boy):
         rain.uuid = rain.get_uuid()
     if boy.name != "1dummy":
         boy.uuid = boy.get_uuid()
+    if feat.name != "1dummy":
+        feat.uuid = feat.get_uuid()
 
 
-def death_or_logout_check(world,tusk,kqeen,rain,boy):
+def death_or_logout_check(world,tusk,kqeen,rain,boy,feat):
     if (world.get_logout() or world.get_player_Death()) and world.run_stand:
         world.cancel_stand()
     if (tusk.get_logout() or tusk.get_player_Death()) and tusk.run_stand:
@@ -158,10 +162,12 @@ def death_or_logout_check(world,tusk,kqeen,rain,boy):
         rain.cancel_stand()
     if (boy.get_logout() or boy.get_player_Death()) and boy.run_stand:
         boy.cancel_stand()
+    if (feat.get_logout() or feat.get_player_Death()) and feat.run_stand:
+        feat.cancel_stand()
 
 
-def stand_lost_check(world,tusk,kqeen,rain,boy):
-    item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ")
+def stand_lost_check(world,tusk,kqeen,rain,boy,feat):
+    item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート")
 
     if not world.bool_have_a_stand('DIO') and world.name != '1dummy':
         mcr.command('kill @e[tag=DIOinter]')
@@ -195,8 +201,14 @@ def stand_lost_check(world,tusk,kqeen,rain,boy):
         mcr.command('give ' + boy.name + " snowball{Tags:Boy,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[4] + '"}]'+"'}}")
         boy.create_ticket_compass()
         boy.create_target_compass()
+    if not feat.bool_have_a_stand('Feat') and feat.name != '1dummy':
+        mcr.command('kill @e[tag=featinter]')
+        mcr.command('summon interaction 0 -64 0 {Tags:["featinter"],height:2,width:1}')
+        mcr.command('give ' + feat.name + " music_disc_13{Tags:Feat,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[5] + '"}]'+"'}}")
+        feat.create_ticket_compass()
+        feat.create_target_compass()
 
-def set_commandblock(world,tusk,kqeen,rain,boy):
+def set_commandblock(world,tusk,kqeen,rain,boy,feat):
     mcr.command(f'forceload add 0 0 16 16')
     command = f'execute as {world.name} at @s run tp @e[tag=DIOinter,limit=1] ^ ^ ^1'
 
@@ -217,7 +229,10 @@ def set_commandblock(world,tusk,kqeen,rain,boy):
     command = f'execute as {boy.name} at @s run tp @e[tag=boyinter,limit=1] ^ ^ ^1'
     mcr.command(f'setblock 4 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
 
-def find_target(controller,world,tusk,kqeen,rain,boy):
+    command = f'execute as {feat.name} at @s run tp @e[tag=featinter,limit=1] ^ ^ ^1'
+    mcr.command(f'setblock 5 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+
+def find_target(controller,world,tusk,kqeen,rain,boy,feat):
     player = []
 
     if world.ticket_target:
@@ -235,6 +250,8 @@ def find_target(controller,world,tusk,kqeen,rain,boy):
     if boy.ticket_target:
         #print("boy",boy.ticket_item)
         player.append(boy.name)
+    if feat.ticket_target:
+        player.append(feat.name)
 
     if player != []:
         controller.new_target_player = player
@@ -244,12 +261,13 @@ def find_target(controller,world,tusk,kqeen,rain,boy):
 
     return player
 
-def update_all_ticketcompass(world,tusk,kqeen,rain,boy):
+def update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat):
     world.create_ticket_compass()
     tusk.create_ticket_compass()
     kqeen.create_ticket_compass()
     rain.create_ticket_compass()
     boy.create_ticket_compass()
+    feat.create_ticket_compass()
 
 def main(mcr):
     mcr.command("gamerule sendCommandFeedback false")
@@ -286,12 +304,16 @@ def main(mcr):
     mcr.command('kill @e[tag=boyinter]')
     mcr.command('summon interaction 0 -64 0 {Tags:["boyinter"],height:2,width:1}')
 
+    feat = Little_Feat(name=stand_list["Little_Feat"], mcr=mcr, controller=controller)
+    mcr.command('kill @e[tag=featinter]')
+    mcr.command('summon interaction 0 -64 0 {Tags:["featinter"],height:2,width:1}')
+
     controller.start()
     controller.ticket_start()
 
     set_commandblock(world,tusk,kqeen,rain,boy)
 
-    controller.participant = (world.name,tusk.name,kqeen.name,rain.name,boy.name)
+    controller.participant = (world.name,tusk.name,kqeen.name,rain.name,boy.name,feat.name)
     controller.make_bonus_bar()
 
     controller.add_bossbar("ticket", "チェックポイント解放まで", "blue", 300)
@@ -303,16 +325,16 @@ def main(mcr):
         gift_stand()
 
         # スタンド使いの名前を登録する。
-        name_registration(world,tusk,kqeen,rain,boy)
+        name_registration(world,tusk,kqeen,rain,boy,feat)
 
         # プレイヤーが入ってきたときuuidを設定しなくてはならない。
-        set_uuid(world,tusk,kqeen,rain,boy)
+        set_uuid(world,tusk,kqeen,rain,boy,feat)
 
         # 能力者が死んでいたり、ログアウトしていたりしたら能力を解除
-        death_or_logout_check(world,tusk,kqeen,rain,boy)
+        death_or_logout_check(world,tusk,kqeen,rain,boy,feat)
 
         # スタンドアイテムを付与。死亡時やスタンドアイテムをなくした場合自動で与えられる。
-        stand_lost_check(world,tusk,kqeen,rain,boy)
+        stand_lost_check(world,tusk,kqeen,rain,boy,feat)
 
         # 作成したbossbarを見られるようにする。一度ワールドを離れたプレイヤーはこれを実行しないとみることができないのでwhile内で実行する。
         if not controller.prepare:
@@ -321,7 +343,7 @@ def main(mcr):
             controller.set_bossbar_value("ticket", controller.elapsed_time)
         #indicate_bonus_bossbar(True,controller,world,tusk,kqeen,rain,boy)
 
-        target = find_target(controller,world,tusk,kqeen,rain,boy)
+        target = find_target(controller,world,tusk,kqeen,rain,boy,feat)
 
         # 能力管理。ここで能力を発動させる。
         # スタンドを追加したらここにスタンド名.loop()を追加するイメージ。
@@ -333,11 +355,12 @@ def main(mcr):
             kqeen.loop()
             rain.loop()
             boy.loop()
+            feat.loop()
         else:   # ザ・ワールドが起動していたら
             mcr.command(f'data modify block 2 -64 0 auto set value 0')
             mcr.command(f'data modify block 3 -64 0 auto set value 0')
             mcr.command(f'data modify block 4 -64 0 auto set value 0')
-
+            mcr.command(f'data modify block 5 -64 0 auto set value 0')
 
 
         # ザ・ワールドが発動中は基準値の更新を止める。＝時間計測が一時的に止める。
@@ -358,90 +381,7 @@ def main(mcr):
 
         if controller.ticket_update_flag:
             controller.ticket_update_flag = False
-            update_all_ticketcompass(world,tusk,kqeen,rain,boy)
-
-
-def time_check_main(mcr):
-    ## test用関数。主に時間計測に使用します。
-    world = The_World(name="KASKA0511", pos="[0,0,0]", timer=5)    # 初回5秒
-    mcr.command('give KASKA0511 clock{Tags:DIO}')
-    mcr.command('summon interaction 0 -64 0 {Tags:["DIOinter"],height:2}')
-
-
-    tusk = TuskAct4(name="KASKA0511")
-    mcr.command('give KASKA0511 bone{Tags:Saint}')
-    mcr.command('summon interaction 0 -64 0 {Tags:["tuskinter"],height:2}')
-
-
-    kqeen = Killer_Qeen(name="KASKA0511")
-    mcr.command('give KASKA0511 gunpowder{Tags:Killer}')
-    mcr.command('give KASKA0511 flint{Tags:Killer}')
-    mcr.command('give KASKA0511 fire_charge{Tags:Killer}')
-    mcr.command('summon interaction 0 -64 0 {Tags:["kqeeninter"],height:2}')
-
-
-    rain = Catch_The_Rainbow(name="KASKA0511")
-    rain.set_scoreboard()
-    rain.summon_amedas()
-    rain.mask_air()
-    mcr.command('give KASKA0511 skeleton_skull{Tags:Rain}')
-    
-
-    boy = Twentieth_Century_Boy(name="KASKA0511")
-    mcr.command('give KASKA0511 snowball{Tags:Boy}')
-    mcr.command('summon interaction 0 -64 0 {Tags:["boyinter"],height:2}')
-
-
-    while True:
-        # プレイヤーが入ってきたときuuidを設定しなくてはならない。
-        world.uuid = world.get_uuid()
-        tusk.uuid = tusk.get_uuid()
-        kqeen.uuid = kqeen.get_uuid()
-        rain.uuid = rain.get_uuid()
-        boy.uuid = boy.get_uuid()
-        
-        # 能力者が死んでいたり、ログアウトしていたりしたら能力を解除
-        """
-        if world.get_logout() or world.get_player_Death():
-            world.cancel_stand()
-        if tusk.get_logout() or tusk.get_player_Death():
-            tusk.cancel_stand()
-        if kqeen.get_logout() or kqeen.get_player_Death():
-            kqeen.cancel_stand()
-        if rain.get_logout() or rain.get_player_Death():
-            rain.cancel_stand()
-        if boy.get_logout() or boy.get_player_Death():
-            boy.cancel_stand()
-        """
-        # 能力管理。ここで能力を発動させる。
-        print("start!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        start = time.time()
-        world.loop()
-        end = time.time()
-        print(f'world:{end - start}')
-
-        start = time.time()
-        tusk.loop()
-        end = time.time()
-        print(f'tusk:{end - start}')
-
-        if not world.run_stand:
-            start = time.time()
-            kqeen.loop()
-            end = time.time()
-            print(f'qeen:{end - start}')
-
-            """
-            start = time.time()
-            rain.loop()
-            end = time.time()
-            print(f'rain:{end - start}')
-            """
-
-            start = time.time()
-            boy.loop()
-            end = time.time()
-            print(f'20th:{end - start}')
+            update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat)
 
 
 if __name__ == '__main__':
