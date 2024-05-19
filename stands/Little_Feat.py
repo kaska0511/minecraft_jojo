@@ -11,6 +11,7 @@ class Little_Feat(Common_func):
         self.uuid = self.get_uuid()
         self.run_stand = run_stand
         self.target_uuid = None
+        self.ticket_target = False
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():

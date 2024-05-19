@@ -272,9 +272,9 @@ def update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat):
 def main(mcr):
     mcr.command("gamerule sendCommandFeedback false")
 
-    checkpoint_prepare()
+    #checkpoint_prepare()
 
-    gift_stand()
+    #gift_stand()
 
     stand_list = open_json('./json_list/stand_list.json')
     
@@ -311,7 +311,7 @@ def main(mcr):
     controller.start()
     controller.ticket_start()
 
-    set_commandblock(world,tusk,kqeen,rain,boy)
+    set_commandblock(world,tusk,kqeen,rain,boy,feat)
 
     controller.participant = (world.name,tusk.name,kqeen.name,rain.name,boy.name,feat.name)
     controller.make_bonus_bar()
@@ -385,12 +385,12 @@ def main(mcr):
 
 
 if __name__ == '__main__':
-    is_dir = os.path.isdir('./json_list')
-    if not is_dir:
-        json_dir_make()
-    is_file = os.path.isfile('./json_list/stand_list.json')
-    if not is_file:
-        json_make()
-    password, rport = read_rconinfo()
-    with MCRcon('127.0.0.1', password, rport) as mcr:
-        main(mcr)
+    # is_dir = os.path.isdir('./json_list')
+    # if not is_dir:
+    #     json_dir_make()
+    # is_file = os.path.isfile('./json_list/stand_list.json')
+    # if not is_file:
+    #     json_make()
+    # password, rport = read_rconinfo()
+     with MCRcon('127.0.0.1', password, rport) as mcr:
+         main(mcr)
