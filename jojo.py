@@ -1,3 +1,4 @@
+from pickle import FALSE
 import re
 import random
 import time
@@ -17,27 +18,44 @@ from stands.Little_Feat import Little_Feat
 
 # server.propertiesのcommandblockを許可する必要がありそう。
 
-def read_rconinfo():
+def get_rcon_info(is_server):
     '''
-    server.propertiesからrconのパスワードとポート番号を取得します。
+    rconのipアドレスとポート番号とパスワードを取得します。
+    サーバ側かクライアント側によって取得元のファイルが異なります。
 
     Parameter
-        なし
+        is_server : bool
 
     Returns
-        rpassword : str
-            rconのパスワードです。
+        rip : str
+            rconのipアドレスです。
         rport : int
             rconのポート番号です。
+        rpassword : str
+            rconのパスワードです。
     '''
-    with open('server.properties') as f:
-        a = [s.strip() for s in f.readlines()]
-        for i in a:
-            if None != re.search(r'^rcon.password=', i):
-                rpassword = re.sub(r'^rcon.password=', '', i)
-            if None != re.search(r'^rcon.port=', i):
-                rport = int(re.sub(r'rcon.port=', '', i))
-    return rpassword, rport
+
+    #サーバ側の場合
+    if is_server:
+        str_file = 'server.properties'
+        rip = '127.0.0.1'
+        with open(str_file) as file:
+            content = [contsnts.strip() for contsnts in file.readlines()]
+            for i in content:
+                if None != re.search(r'^rcon.password=', i):
+                    rpassword = re.sub(r'^rcon.password=', '', i)
+                if None != re.search(r'^rcon.port=', i):
+                    rport = int(re.sub(r'rcon.port=', '', i))
+        return rip, rport, rpassword
+
+    #クライアント側の場合
+    else:
+        str_file = 'rconserver.json'
+        contns = open_json(str_file)
+        rip = contns['sever_ip']
+        rport = int(contns['rcon_port'])
+        rpassword = contns['password']
+        return rip, rport, rpassword
 
 
 def make_dir(file_name):
@@ -404,16 +422,23 @@ def main(mcr):
 if __name__ == '__main__':
      
     str_dir = 'json_list'
-    str_file = 'stand_list.json'
-    
+    str_stand_file = 'stand_list.json'
+    str_server_file = 'server.properties'
+    is_server = False
+
     #ディレクトリの存在チェック
     if not os.path.isdir(str_dir):
         make_dir(str_dir)
-     
+    
     #ファイルの存在チェック
-    if not os.path.isfile(str_dir + '/' + str_file):
+    if not os.path.isfile(str_dir + '/' + str_stand_file):
         make_stand_list()
-         
-     #password, rport = read_rconinfo()
-     with MCRcon('127.0.0.1', password, rport) as mcr:
-         main(mcr)
+    
+    #サーバ側の判定
+    if os.path.isfile(str_server_file):
+        is_server = True
+    
+    rip, rport, rpassword = get_rcon_info(is_server)
+
+    with MCRcon(rip, rpassword, rport) as mcr:
+        main(mcr)
