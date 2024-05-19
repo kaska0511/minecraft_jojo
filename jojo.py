@@ -39,14 +39,31 @@ def read_rconinfo():
                 rport = int(re.sub(r'rcon.port=', '', i))
     return rpassword, rport
 
-def json_dir_make():
-    os.makedirs('./json_list')
 
-def json_make():
+def make_dir(file_name):
+    '''
+    指定されたフォルダを作成します。
+    
+    Parameter
+        file_name : str
+        
+    Return
+        なし
+    '''
+    os.makedirs(file_name)
+
+    
+def make_stand_list():
     '''
     stand_list.jsonを作成します。
     基本的に一度しか実行されない。
     スタンド能力を新たに追加するときは注意が必要。
+    
+    Parameter
+        なし
+        
+    Return
+        なし
     '''
     first = {"The_World": "1dummy", "TuskAct4": "1dummy", "Killer_Qeen": "1dummy", "Catch_The_Rainbow": "1dummy", "Twentieth_Century_Boy": "1dummy", "Little_Feat": "1dummy"}
     with open('./json_list/stand_list.json', 'w', encoding='utf-8') as f:
@@ -383,14 +400,20 @@ def main(mcr):
             controller.ticket_update_flag = False
             update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat)
 
-
+#初期セットアップ
 if __name__ == '__main__':
-    # is_dir = os.path.isdir('./json_list')
-    # if not is_dir:
-    #     json_dir_make()
-    # is_file = os.path.isfile('./json_list/stand_list.json')
-    # if not is_file:
-    #     json_make()
-    # password, rport = read_rconinfo()
+     
+    str_dir = 'json_list'
+    str_file = 'stand_list.json'
+    
+    #ディレクトリの存在チェック
+    if not os.path.isdir(str_dir):
+        make_dir(str_dir)
+     
+    #ファイルの存在チェック
+    if not os.path.isfile(str_dir + '/' + str_file):
+        make_stand_list()
+         
+     #password, rport = read_rconinfo()
      with MCRcon('127.0.0.1', password, rport) as mcr:
          main(mcr)
