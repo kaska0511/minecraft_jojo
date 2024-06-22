@@ -107,6 +107,45 @@ def open_json(json_file):
     return df
 
 
+def summon_stand_user_info(mcr):
+    '''
+    スタンド能力と使用者を紐づけるアマスタを生成します。
+    外部ファイルの設定を優先とし、既に生成されている場合はスキップします。
+
+    Parameter
+        mcr : MCRcon
+            Rconのサーバ情報
+    '''
+    str_dir = 'json_list'
+    str_stand_file = 'stand_list.json'
+    entity_name = 'minecraft:armor_stand'
+    X = 0
+    Y = -74
+    Z = 0
+    invulnerable = True
+    gravity = False
+    contnts = open_json(f'{str_dir}/{str_stand_file}')
+
+    for key in contnts.keys():
+        
+        #ワールドのエンティティの情報を取得
+        resp = get_entity_data(mcr, entity_name, None, key, 'Tags')
+        
+        #ワールドのエンティティが存在しない場合
+        if resp is None:
+            #エンティティを新規で生成する
+            _ = set_entity_data(mcr, entity_name, X, Y, Z, invulnerable, gravity, resp[0], key)
+        
+        #外部ファイルとワールドのエンティティが一致しない場合  
+        elif resp != contnts.get(key):
+            #外部ファイルを踏襲
+            _ = edit_entity_tag_data(mcr, entity_name, resp[0], contnts.get(key), key)
+
+        #外部ファイルとエンティティが一致する場合
+        else:
+            pass
+
+
 def get_entity_data(mcr, types, tag, name, target=None):
     '''
     指定されたエンティティの情報を取得します。
@@ -571,4 +610,7 @@ if __name__ == '__main__':
     rip, rport, rpassword = get_rcon_info(is_server)
 
     with MCRcon(rip, rpassword, rport) as mcr:
+        if is_server:
+            #スタンド能力と使用者を紐づけるアマスタを生成
+            summon_stand_user_info(mcr) 
         main(mcr)
