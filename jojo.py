@@ -130,16 +130,16 @@ def get_entity_data(mcr, types, tag, name, target=None):
     cmd = f'/data get entity @e[limit=1,%types%%tag%%name%]%target%'
     
     #「%types%」箇所の置換
-    cmd = cmd.replace('%types%', '') if types is None else cmd.replace('%types%', f'type={types},')
+    cmd = cmd.replace(f'%types%', '') if types is None else cmd.replace(f'%types%', f'type={types},')
     
     #「%tag%」箇所の置換
-    cmd = cmd.replace('%tag%', '') if tag is None else cmd.replace('%tag%', f'tag={tag},')
+    cmd = cmd.replace(f'%tag%', '') if tag is None else cmd.replace(f'%tag%', f'tag={tag},')
 
     #「%name%」箇所の置換
-    cmd = cmd.replace('%name%', '') if name is None else cmd.replace('%name%', f'name={name}')
+    cmd = cmd.replace(f'%name%', '') if name is None else cmd.replace(f'%name%', f'name={name}')
     
     #「%target%」箇所の置換
-    cmd = cmd.replace('%target%', '') if target is None else cmd.replace('%target%', f'\u0020{target}')
+    cmd = cmd.replace(f'%target%', '') if target is None else cmd.replace(f'%target%', f'\u0020{target}')
 
     return mcr.command(cmd)
 
