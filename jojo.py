@@ -144,6 +144,62 @@ def get_entity_data(mcr, types, tag, name, target=None):
     return mcr.command(cmd)
 
 
+def set_entity_data(mcr, types, X, Y, Z, invulnerable, gravity, tag, name):
+    '''
+    指定されたエンティティを作成します。
+
+    Parameter
+        mcr : MCRcon
+            Rconのサーバ情報
+        types : str
+            検索対象のオブジェクト名
+        X : int
+            エンティティのX座標
+        Y : int
+            エンティティのY座標
+        Z : int
+            エンティティのZ座標
+        invulnerable : bool
+            エンティティの不死身属性(True：不死身、False：定命)
+        gravity : bool
+            エンティティの重力属性(True：重力、False：無重力)
+        tag : str
+            タグ情報
+        name : str
+            Name情報
+    Return
+        コマンドの実行結果
+    '''
+    #コマンドの基本構文を生成
+    cmd = f'/summon %types% %X% %Y% %Z% {{%invulnerable%%gravity%%tag%%name%}}'
+    
+    #「%types%」箇所の置換
+    cmd = cmd.replace(f'%types%', '') if types is None else cmd.replace(f'%types%', f'{types}')
+    
+    #「%X%」箇所の置換
+    cmd = cmd.replace(f'%X%', '') if X is None else cmd.replace(f'%X%', f'{X}')
+    
+    #「%Y%」箇所の置換
+    cmd = cmd.replace(f'%Y%', '') if Y is None else cmd.replace(f'%Y%', f'{Y}')
+    
+    #「%Z%」箇所の置換
+    cmd = cmd.replace(f'%Z%', '') if Z is None else cmd.replace(f'%Z%', f'{Z}')
+    
+    #「%invulnerable%」箇所の置換
+    cmd = cmd.replace(f'%invulnerable%', '') if invulnerable is None else cmd.replace(f'%invulnerable%', f'Invulnerable:1,') if invulnerable else cmd.replace(f'%invulnerable%', f'Invulnerable:0,')
+ 
+    #「%gravity%」箇所の置換
+    cmd = cmd.replace(f'%gravity%', '') if gravity is None else cmd.replace(f'%gravity%', f'NoGravity:0,') if gravity else cmd.replace(f'%gravity%', f'NoGravity:1,')
+        
+    #「%tag%」箇所の置換
+    cmd = cmd.replace(f'%tag%', '') if tag is None else cmd.replace(f'%tag%', f'Tags:[{tag}],')
+
+    #「%name%」箇所の置換
+    cmd = cmd.replace(f'%name%', '') if name is None else cmd.replace(f'%name%', f'CustomName:\'{name}\'')
+    
+    return mcr.command(cmd)
+
+
 def gift_stand():
     # stand_list.jsonを開く。
     res = open_json('./json_list/stand_list.json')
