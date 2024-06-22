@@ -107,6 +107,43 @@ def open_json(json_file):
     return df
 
 
+def get_entity_data(mcr, types, tag, name, target=None):
+    '''
+    指定されたエンティティの情報を取得します。
+
+    Parameter
+        mcr : MCRcon
+            Rconのサーバ情報
+        types : str
+            検索対象のオブジェクト名
+        tag : str
+            タグ情報
+        name : str
+            Name情報
+        target : str
+            ターゲット情報(省略可)
+
+    Return
+        targetに指定した情報。エンティティが存在しない場合はNone。
+    '''
+    #コマンドの基本構文を生成
+    cmd = f'/data get entity @e[limit=1,%types%%tag%%name%]%target%'
+    
+    #「%types%」箇所の置換
+    cmd = cmd.replace('%types%', '') if types is None else cmd.replace('%types%', f'type={types},')
+    
+    #「%tag%」箇所の置換
+    cmd = cmd.replace('%tag%', '') if tag is None else cmd.replace('%tag%', f'tag={tag},')
+
+    #「%name%」箇所の置換
+    cmd = cmd.replace('%name%', '') if name is None else cmd.replace('%name%', f'name={name}')
+    
+    #「%target%」箇所の置換
+    cmd = cmd.replace('%target%', '') if target is None else cmd.replace('%target%', f'\u0020{target}')
+
+    return mcr.command(cmd)
+
+
 def gift_stand():
     # stand_list.jsonを開く。
     res = open_json('./json_list/stand_list.json')
