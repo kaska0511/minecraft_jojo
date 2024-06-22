@@ -200,6 +200,40 @@ def set_entity_data(mcr, types, X, Y, Z, invulnerable, gravity, tag, name):
     return mcr.command(cmd)
 
 
+def edit_entity_tag_data(mcr, types, old_tag, new_tag, name):
+    '''
+    指定されたエンティティのタグ名を変更します。
+
+    Parameter
+        mcr : MCRcon
+            Rconのサーバ情報
+        types : str
+            検索対象のオブジェクト名
+        old_tag : str
+            変更前のタグ名
+        new_tag : str
+            変更後のタグ名
+        name : str
+            Name情報
+    Return
+        コマンドの実行結果(list型)
+    '''
+    #コマンドの基本構文を生成
+    cmd = f'/tag @e[limit=1,%types%%name%] %command% %tag%'    
+    
+    #「%types%」箇所の置換
+    cmd = cmd.replace(f'%types%', '') if types is None else cmd.replace(f'%types%', f'type={types},')
+
+    #「%name%」箇所の置換
+    cmd = cmd.replace(f'%name%', '') if name is None else cmd.replace(f'%name%', f'name={name}')
+    
+    #「%command%」、「%tag%」箇所を置換しコマンド実行
+    remove_resp = mcr.command(cmd.replace(f'%command%', 'remove').replace(f'%tag%', '') if old_tag is None else cmd.replace(f'%command%', 'remove').replace(f'%tag%', f'{old_tag}'))
+    addtag_resp = mcr.command(cmd.replace(f'%command%', 'add').replace(f'%tag%', '') if new_tag is None else cmd.replace(f'%command%', 'add').replace(f'%tag%', f'{new_tag}'))
+
+    return [remove_resp, addtag_resp]
+
+
 def gift_stand():
     # stand_list.jsonを開く。
     res = open_json('./json_list/stand_list.json')
