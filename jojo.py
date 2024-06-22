@@ -34,11 +34,14 @@ def get_rcon_info(is_server):
         rpassword : str
             rconのパスワードです。
     '''
-
+    #rconサーバ情報のデフォルト値を設定
+    rip = '127.0.0.1'
+    rport = 25575
+    rpassword = 'password'
+    
     #サーバ側の場合
     if is_server:
         str_file = 'server.properties'
-        rip = '127.0.0.1'
         with open(str_file) as file:
             content = [contsnts.strip() for contsnts in file.readlines()]
             for i in content:
@@ -46,7 +49,6 @@ def get_rcon_info(is_server):
                     rpassword = re.sub(r'^rcon.password=', '', i)
                 if None != re.search(r'^rcon.port=', i):
                     rport = int(re.sub(r'rcon.port=', '', i))
-        return rip, rport, rpassword
 
     #クライアント側の場合
     else:
@@ -55,7 +57,8 @@ def get_rcon_info(is_server):
         rip = contns['sever_ip']
         rport = int(contns['rcon_port'])
         rpassword = contns['password']
-        return rip, rport, rpassword
+        
+    return rip, rport, rpassword
 
 
 def make_dir(file_name):
@@ -431,7 +434,7 @@ if __name__ == '__main__':
         make_dir(str_dir)
     
     #ファイルの存在チェック
-    if not os.path.isfile(str_dir + '/' + str_stand_file):
+    if not os.path.isfile(f'{str_dir}/{str_stand_file}'):
         make_stand_list()
     
     #サーバ側の判定
