@@ -1,3 +1,4 @@
+from pickle import FALSE
 import re
 import random
 import time
@@ -17,36 +18,73 @@ from stands.Little_Feat import Little_Feat
 
 # server.propertiesのcommandblockを許可する必要がありそう。
 
-def read_rconinfo():
+def get_rcon_info(is_server):
     '''
-    server.propertiesからrconのパスワードとポート番号を取得します。
+    rconのipアドレスとポート番号とパスワードを取得します。
+    サーバ側かクライアント側によって取得元のファイルが異なります。
 
     Parameter
-        なし
+        is_server : bool
 
     Returns
-        rpassword : str
-            rconのパスワードです。
+        rip : str
+            rconのipアドレスです。
         rport : int
             rconのポート番号です。
+        rpassword : str
+            rconのパスワードです。
     '''
-    with open('server.properties') as f:
-        a = [s.strip() for s in f.readlines()]
-        for i in a:
-            if None != re.search(r'^rcon.password=', i):
-                rpassword = re.sub(r'^rcon.password=', '', i)
-            if None != re.search(r'^rcon.port=', i):
-                rport = int(re.sub(r'rcon.port=', '', i))
-    return rpassword, rport
+    #rconサーバ情報のデフォルト値を設定
+    rip = '127.0.0.1'
+    rport = 25575
+    rpassword = 'password'
+    
+    #サーバ側の場合
+    if is_server:
+        str_file = 'server.properties'
+        with open(str_file) as file:
+            content = [contsnts.strip() for contsnts in file.readlines()]
+            for i in content:
+                if None != re.search(r'^rcon.password=', i):
+                    rpassword = re.sub(r'^rcon.password=', '', i)
+                if None != re.search(r'^rcon.port=', i):
+                    rport = int(re.sub(r'rcon.port=', '', i))
 
-def json_dir_make():
-    os.makedirs('./json_list')
+    #クライアント側の場合
+    else:
+        str_file = 'rconserver.json'
+        contns = open_json(str_file)
+        rip = contns['sever_ip']
+        rport = int(contns['rcon_port'])
+        rpassword = contns['password']
+        
+    return rip, rport, rpassword
 
-def json_make():
+
+def make_dir(file_name):
+    '''
+    指定されたフォルダを作成します。
+    
+    Parameter
+        file_name : str
+        
+    Return
+        なし
+    '''
+    os.makedirs(file_name)
+
+    
+def make_stand_list():
     '''
     stand_list.jsonを作成します。
     基本的に一度しか実行されない。
     スタンド能力を新たに追加するときは注意が必要。
+    
+    Parameter
+        なし
+        
+    Return
+        なし
     '''
     first = {"The_World": "1dummy", "TuskAct4": "1dummy", "Killer_Qeen": "1dummy", "Catch_The_Rainbow": "1dummy", "Twentieth_Century_Boy": "1dummy", "Little_Feat": "1dummy"}
     with open('./json_list/stand_list.json', 'w', encoding='utf-8') as f:
@@ -272,9 +310,9 @@ def update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat):
 def main(mcr):
     mcr.command("gamerule sendCommandFeedback false")
 
-    checkpoint_prepare()
+    #checkpoint_prepare()
 
-    gift_stand()
+    #gift_stand()
 
     stand_list = open_json('./json_list/stand_list.json')
     
@@ -311,7 +349,7 @@ def main(mcr):
     controller.start()
     controller.ticket_start()
 
-    set_commandblock(world,tusk,kqeen,rain,boy)
+    set_commandblock(world,tusk,kqeen,rain,boy,feat)
 
     controller.participant = (world.name,tusk.name,kqeen.name,rain.name,boy.name,feat.name)
     controller.make_bonus_bar()
@@ -383,14 +421,27 @@ def main(mcr):
             controller.ticket_update_flag = False
             update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat)
 
-
+#初期セットアップ
 if __name__ == '__main__':
-    is_dir = os.path.isdir('./json_list')
-    if not is_dir:
-        json_dir_make()
-    is_file = os.path.isfile('./json_list/stand_list.json')
-    if not is_file:
-        json_make()
-    password, rport = read_rconinfo()
-    with MCRcon('127.0.0.1', password, rport) as mcr:
+     
+    str_dir = 'json_list'
+    str_stand_file = 'stand_list.json'
+    str_server_file = 'server.properties'
+    is_server = False
+
+    #ディレクトリの存在チェック
+    if not os.path.isdir(str_dir):
+        make_dir(str_dir)
+    
+    #ファイルの存在チェック
+    if not os.path.isfile(f'{str_dir}/{str_stand_file}'):
+        make_stand_list()
+    
+    #サーバ側の判定
+    if os.path.isfile(str_server_file):
+        is_server = True
+    
+    rip, rport, rpassword = get_rcon_info(is_server)
+
+    with MCRcon(rip, rpassword, rport) as mcr:
         main(mcr)
