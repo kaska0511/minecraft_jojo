@@ -65,11 +65,7 @@ class Extension:
         #result = 'aaaaaaaaaaaList has the following entity data: ["HSLQ12", "ARMZ1341", "16iw0lRf", "moyashi21", "KASKA0511"]HSLQ12 has .........'  # sample
         if 'List has the' in result:    # ガード処理
             lists = re.findall(r'.*List has the following entity data: \["(.+?)"\].*', result)  # (.+?)の?は非貪欲マッチ。丸括弧の中の文字列を抽出。
-            print(lists)
             name_list = re.split(r'", "', lists[0])
-            print(name_list)
-            for name in name_list:
-                print(name)
 
             return name_list
         else:
@@ -91,11 +87,7 @@ class Extension:
         #result = 'aaaaaaaaaaaStandlist has the following entity data: ["The_World", "Killer", "TuskAct4"]HSLQ12 has .........' # sample
         if 'Standlist has the' in result:    # ガード処理
             lists = re.findall(r'.*Standlist has the following entity data: \["(.+?)"\].*', result)     # (.+?)の?は非貪欲マッチ。丸括弧の中の文字列を抽出。
-            print(lists)
             stand_list = re.split(r'", "', lists[0])
-            print(stand_list)
-            for stand_name in stand_list:
-                print(stand_name)
 
             return stand_list
         else:
@@ -129,7 +121,7 @@ class Extension:
         # self.nameかself.standどちらかの情報が入っているはずなので、そこを自動で識別し、returnさせたい。
         # この関数にcommandを投げたということは「自分の名前 has the...」or「自分のスタンド名 has the...」の情報が必ずあるはず。ということ。
 
-        #result = 'KASKA0511 has the following entity data: 20ARMZ1341 has the following entity data: 1HSLQ12 has the following entity data: 5'  # sumple
+        #result = 'KASKA0511 has the following entity data: 20ARMZ1341 has the following entity data: 1HSLQ12 has the following entity data: 5'  # sample
         result = self.mcr.command(command)
 
         # 汎用性を高めるため、第二引数を省略した場合、ユーザー名かスタンド名を指定する。
@@ -138,17 +130,14 @@ class Extension:
                 wanna_info_name = self.name     # コマンドの結果にプレイヤー名が含まれるならプレイヤー名
             if f'{self.stand} has' in result:
                 wanna_info_name = self.stand    # コマンドの結果にスタンド名が含まれるならスタンド名
-
-            # dataコマンド以外で情報を取得したい場合はここより下に特別な記述が必要。
-            if 'locate ' in command:   # locateコマンド専用
-                wanna_info_name = "The nearest minecraft:"
-            # バグの元になりそうなので隠す。ただし何かしらに使えそうなので残す。
-            """
-            if 'name=' in command:    # commandのターゲットセレクタ引数からnameが指定されているならそれも併せて確認。
+            if 'name=' in command:    # commandのターゲットセレクタ引数からnameが指定されているならそれに変更。
                 name = re.findall(r'.*\[.*name=(.+?)[\]|,].*', command)
-                if name != wanna_info_name:
-                    return False    # 構文ミス。
-            """
+                wanna_info_name = name[0]
+
+        # dataコマンド以外で情報を取得したい場合はここより下に特別な記述が必要。
+        if 'locate ' in command:   # locateコマンド専用
+            wanna_info_name = "The nearest minecraft:"
+
 
         # 命令形やエンティティやエンティティのnbtが無い場合はすぐに返す処理。
         # wanna_info_nameを設定する、上の処理を経てもNoneなら、命令形やエンティティやエンティティのnbtが無い可能性がある。
@@ -159,16 +148,26 @@ class Extension:
             else:
                 return  # 命令形。まあ命令形はreturnを読む必要はないはずなので問題はなさそうだが留意。
 
-        # フィルター用の文字列を生成します。
+        # _take_out_result関数で使用するフィルター用の文字列を生成します。
         filter_str = self._make_filter_str()
 
         # コマンド実行結果の生データから特定の結果を抽出します。
+        # 例えば生データ(result)は以下のようになっており、そこからKASKA0511(wanna_info_name)の情報が欲しい場合、
+        #   KASKA0511 has the following entity data: 20ARMZ1341 has the following entity data: 1
+        # takeout_resultには以下のような結果が入ります。
+        #   KASKA0511 has the following entity data: 20
         takeout_result = self._take_out_result(result, wanna_info_name, filter_str)
         if takeout_result is None:  # 何らかの理由で情報が取得できなかった。(ガード)
             return None
 
+        # 抽出されたコマンドの実行結果から必要な情報のみに整形します。
+        # KASKA0511 has the following entity data: 20
         command_result = None
-        command_result = self.heavy_processing(wanna_info_name, takeout_result)
+        if 'locate ' in command:   # locateコマンド専用
+            command_result = self.heavy_processing_for_locate(takeout_result)
+        else:
+            # dataコマンドによるエンティティの情報が欲しい場合
+            command_result = self.heavy_processing(wanna_info_name, takeout_result)
 
         return command_result
 
@@ -228,7 +227,7 @@ class Extension:
 
         '''
         resub = re.sub(f'({filter_str})', r'\n\1', result)
-        print(resub)
+        #print(resub)
 
         line_break = resub.splitlines()
         list_b = [x for x in line_break if x != '']
@@ -240,6 +239,22 @@ class Extension:
         list2str = command_info[0]
 
         return list2str
+
+    def is_int(self, s):
+        try:
+            int(s)
+        except ValueError:
+            return False
+        else:
+            return True
+
+    def is_float(self, s):
+        try:
+            float(s)
+        except ValueError:
+            return False
+        else:
+            return True
 
     def heavy_processing(self, wanna_info_name, command_info):
         '''
@@ -261,10 +276,47 @@ class Extension:
 
         string = string.strip("'")   # 両端からシングルクォーテーション削除 例：CustomName
         string = string.strip("'")   # 両端からシングルクォーテーション削除 例：CustomName
+        #if self.is_float(string):
+        #    string = float(string)  #数字を数値(float型)へ変換。
+
         if string.find('[') != -1 and string.rfind(']') != -1:  # 角括弧があるか検索。両端にあるかまで検索したいなら-1ではなく0にする。 例：Tags
             string = string.strip('[]')         # 両端からダブルクォーテーション削除 例：Tags
             string = string.replace('"', '')    # 全文字列からダブルクォーテーションを削除 例：Tags
             string = string.replace('I; ', '')  # 「I; 」を削除 例：UUID
             string = re.split(r', ', string)    #「, 」でsplitし配列にする。
+            #string = [float(s) for s in string if self.is_float(s)] # listの中の数字を数値(float型)へ変換。
         
         return string
+
+    def heavy_processing_for_locate(self, command_info):
+        '''
+        locateコマンド専用です。\n
+        コマンド実行結果から不要な文字列を削除し、整形します。\n
+        リスト型で返します。\n
+
+        Parameter
+            command_info : str
+                コマンド実行結果。
+
+        Return
+            locate_info : list[int]
+                座標と距離の情報持ったリスト型。\n
+                [x座標, y座標, z座標, コマンド実行者からの距離]
+        '''
+        locate_info = []
+
+        #command_info = The nearest minecraft:forest is at [-144, 90, 16] (71 blocks away) #sample
+        # 上記サンプルの[-144, 90, 16]を抽出
+        coordinate = re.findall(r'The nearest minecraft:.+ is at \[(.+?)\] \([0-9]+ blocks away\)', command_info)     # (.+?)の?は非貪欲マッチ。丸括弧の中の文字列を抽出。
+        #print(coordinate)
+        coordinate2list = re.split(r', ', coordinate[0])
+        locate_info = [int(s) for s in coordinate2list if self.is_int(s)]
+        #print(locate_info)
+
+        # 上記サンプルの(71 blocks away)の71を抽出
+        distance = re.findall(r'The nearest minecraft:.+ is at \[.+?\] \(([0-9]+?) blocks away\)', command_info)     # (.+?)の?は非貪欲マッチ。丸括弧の中の文字列を抽出。
+        #print(distance)
+        if self.is_int(distance[0]):
+            locate_info.append(int(distance[0]))
+
+        return locate_info
