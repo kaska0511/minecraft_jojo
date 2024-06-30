@@ -162,18 +162,13 @@ class Extension:
         # フィルター用の文字列を生成します。
         filter_str = self._make_filter_str()
 
-        resub = re.sub(f'({filter_str})', r'\n\1', result)
-        print(resub)
-
-        line_break = resub.splitlines()
-        list_b = [x for x in line_break if x != '']
-
-        command_info = [x for x in list_b if wanna_info_name in x]  # wanna_info_nameを元に期待される返り値のみを取得する。
-        if command_info[0] == '' or command_info is None:   # 何らかの理由で情報が取得できなかった場合。(ガード)
+        # コマンド実行結果の生データから特定の結果を抽出します。
+        takeout_result = self._take_out_result(result, wanna_info_name, filter_str)
+        if takeout_result is None:  # 何らかの理由で情報が取得できなかった。(ガード)
             return None
 
         command_result = None
-        command_result = self.heavy_processing(wanna_info_name, command_info[0])
+        command_result = self.heavy_processing(wanna_info_name, takeout_result)
 
         return command_result
 
@@ -213,7 +208,40 @@ class Extension:
 
         return filter_str
 
-    def heavy_processing(wanna_info_name, command_info):
+    def _take_out_result(self, result, wanna_info_name, filter_str):
+        '''
+        コマンド実行結果の生データから特定の結果を抽出します。\n
+        注意！第三引数の filter_str は _make_filter_str の結果を使用しなくてはなりません。
+
+        Parameter
+            result : str
+                コマンド実行結果の生データ。
+            wanna_info_name : str
+                主にプレイヤー名やスタンド名などの欲しいエンティティの名前。
+            filter_str : str
+                _make_filter_strの実行結果。
+
+
+        Return
+            list2str : str
+                生データから抽出できたコマンド結果。
+
+        '''
+        resub = re.sub(f'({filter_str})', r'\n\1', result)
+        print(resub)
+
+        line_break = resub.splitlines()
+        list_b = [x for x in line_break if x != '']
+
+        command_info = [x for x in list_b if wanna_info_name in x]  # wanna_info_nameを元に期待される返り値のみを取得する。
+        if command_info[0] == '' or command_info is None:   # 何らかの理由で情報が取得できなかった場合。(ガード)
+            return None
+
+        list2str = command_info[0]
+
+        return list2str
+
+    def heavy_processing(self, wanna_info_name, command_info):
         '''
         コマンド実行結果から不要な文字列を削除し、整形します。\n
         返り値は文字列型またはリスト型で返します。\n
