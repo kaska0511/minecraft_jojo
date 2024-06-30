@@ -139,8 +139,8 @@ class Extension:
             wanna_info_name = "The nearest minecraft:"
 
 
-        # 命令形やエンティティやエンティティのnbtが無い場合はすぐに返す処理。
-        # wanna_info_nameを設定する、上の処理を経てもNoneなら、命令形やエンティティやエンティティのnbtが無い可能性がある。
+        # 命令形コマンドまたはエンティティやエンティティのnbtが無い場合はすぐに返す処理。
+        # wanna_info_nameを設定する、上の処理を経てもNoneなら、命令形コマンドまたはエンティティやエンティティのnbtが無い可能性がある。
         if wanna_info_name is None:
             # エンティティが居ない or 構文ミス。
             if 'No entity was found' in result or 'Found no elements matching' in result:
@@ -233,7 +233,7 @@ class Extension:
         list_b = [x for x in line_break if x != '']
 
         command_info = [x for x in list_b if wanna_info_name in x]  # wanna_info_nameを元に期待される返り値のみを取得する。
-        if command_info[0] == '' or command_info is None:   # 何らかの理由で情報が取得できなかった場合。(ガード)
+        if command_info == []:   # 何らかの理由で情報が取得できなかった場合。(ガード)
             return None
 
         list2str = command_info[0]
