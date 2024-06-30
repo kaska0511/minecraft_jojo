@@ -87,7 +87,7 @@ class Extension:
             stand_list : list
                 リスト型のスタンド名簿
         '''
-        result = self.mcr.command('data get entity @e[name=List,type=minecraft:armor_stand,limit=1] Tags')
+        result = self.mcr.command('data get entity @e[name=Standlist,type=minecraft:armor_stand,limit=1] Tags')
         #result = 'aaaaaaaaaaaStandlist has the following entity data: ["The_World", "Killer", "TuskAct4"]HSLQ12 has .........' # sample
         if 'Standlist has the' in result:    # ガード処理
             lists = re.findall(r'.*Standlist has the following entity data: \["(.+?)"\].*', result)     # (.+?)の?は非貪欲マッチ。丸括弧の中の文字列を抽出。
@@ -139,11 +139,16 @@ class Extension:
             if f'{self.stand} has' in result:
                 wanna_info_name = self.stand    # コマンドの結果にスタンド名が含まれるならスタンド名
 
+            # dataコマンド以外で情報を取得したい場合はここより下に特別な記述が必要。
+            if 'locate ' in command:   # locateコマンド専用
+                wanna_info_name = "The nearest minecraft:"
             # バグの元になりそうなので隠す。ただし何かしらに使えそうなので残す。
-            """if 'name=' in command:    # commandのターゲットセレクタ引数からnameが指定されているならそれも併せて確認。
+            """
+            if 'name=' in command:    # commandのターゲットセレクタ引数からnameが指定されているならそれも併せて確認。
                 name = re.findall(r'.*\[.*name=(.+?)[\]|,].*', command)
                 if name != wanna_info_name:
-                    return False    # 構文ミス。"""
+                    return False    # 構文ミス。
+            """
 
         # 命令形やエンティティやエンティティのnbtが無い場合はすぐに返す処理。
         # wanna_info_nameを設定する、上の処理を経てもNoneなら、命令形やエンティティやエンティティのnbtが無い可能性がある。
@@ -151,25 +156,11 @@ class Extension:
             # エンティティが居ない or 構文ミス。
             if 'No entity was found' in result or 'Found no elements matching' in result:
                 return None
-        else:
+            else:
                 return  # 命令形。まあ命令形はreturnを読む必要はないはずなので問題はなさそうだが留意。
 
-        filter_str = ''
-
-        name_list = self.get_joinner_list()
-        if name_list is None:   # Noneが返った時は以下の処理をしない。(ガード)
-            return None
-        for name in name_list:
-            filter_str += f'{name} has|'
-        
-        stand_list = self.get_stand_list()
-        if stand_list is None:  # Noneが返った時は以下の処理をしない。(ガード)
-            return None
-        for stand in stand_list:
-            filter_str += f'{stand} has|'
-
-        filter_str = re.sub(r'\|$', '', filter_str) # 最後尾がパイプ文字ならそれを削除する。
-        print(filter_str)
+        # フィルター用の文字列を生成します。
+        filter_str = self._make_filter_str()
 
         resub = re.sub(f'({filter_str})', r'\n\1', result)
         print(resub)
@@ -180,12 +171,47 @@ class Extension:
         command_info = [x for x in list_b if wanna_info_name in x]  # wanna_info_nameを元に期待される返り値のみを取得する。
         if command_info[0] == '' or command_info is None:   # 何らかの理由で情報が取得できなかった場合。(ガード)
             return None
-        
+
         command_result = None
         command_result = self.heavy_processing(wanna_info_name, command_info[0])
 
         return command_result
 
+    def _make_filter_str(self):
+        '''
+        フィルター用の文字列を作成します。
+
+        Parameter
+            None
+
+        Return
+            filter_str : str
+                フィルター用の文字列。\r
+                sample-> 'player0 has|player1 has|stand0 has|stand1 has|The nearest minecraft:'
+
+        '''
+        filter_str = ''
+
+        name_list = self.get_joinner_list()
+        if name_list is None:   # Noneが返った時は以下の処理をしない。(ガード)
+            return None
+        for name in name_list:
+            filter_str += f'{name} has|'
+
+        stand_list = self.get_stand_list()
+        if stand_list is None:  # Noneが返った時は以下の処理をしない。(ガード)
+            return None
+        for stand in stand_list:
+            filter_str += f'{stand} has|'
+
+        # The nearest minecraft:forest is at [-144, 90, 16] (71 blocks away)
+        special_filter = ('The nearest minecraft:',) # 現在単数なので最後にカンマを置いています。複数なら失くしてよい。
+        for special in special_filter:
+            filter_str += f'{special}|'
+
+        filter_str = re.sub(r'\|$', '', filter_str) # 最後尾がパイプ文字ならそれを削除する。
+
+        return filter_str
 
     def heavy_processing(wanna_info_name, command_info):
         '''
