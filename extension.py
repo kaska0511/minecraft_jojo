@@ -4,7 +4,7 @@ import json
 # ワールド参加者はListというアマスタに名前をtag登録する必要がある。
 
 class Extension:
-    def __init__(self, mcr, name, stand):
+    def __init__(self, mcr, name=None, stand=None):
         self.mcr = mcr
         self.name = name
         self.stand = stand
@@ -129,7 +129,7 @@ class Extension:
         # self.nameかself.standどちらかの情報が入っているはずなので、そこを自動で識別し、returnさせたい。
         # この関数にcommandを投げたということは「自分の名前 has the...」or「自分のスタンド名 has the...」の情報が必ずあるはず。ということ。
 
-        result = 'KASKA0511 has the following entity data: 20ARMZ1341 has the following entity data: 1HSLQ12 has the following entity data: 5'  # sumple
+        #result = 'KASKA0511 has the following entity data: 20ARMZ1341 has the following entity data: 1HSLQ12 has the following entity data: 5'  # sumple
         result = self.mcr.command(command)
 
         # 汎用性を高めるため、第二引数を省略した場合、ユーザー名かスタンド名を指定する。
@@ -139,11 +139,20 @@ class Extension:
             if f'{self.stand} has' in result:
                 wanna_info_name = self.stand    # コマンドの結果にスタンド名が含まれるならスタンド名
 
-            # バグの元になりそうなので隠す。
+            # バグの元になりそうなので隠す。ただし何かしらに使えそうなので残す。
             """if 'name=' in command:    # commandのターゲットセレクタ引数からnameが指定されているならそれも併せて確認。
                 name = re.findall(r'.*\[.*name=(.+?)[\]|,].*', command)
                 if name != wanna_info_name:
                     return False    # 構文ミス。"""
+
+        # 命令形やエンティティやエンティティのnbtが無い場合はすぐに返す処理。
+        # wanna_info_nameを設定する、上の処理を経てもNoneなら、命令形やエンティティやエンティティのnbtが無い可能性がある。
+        if wanna_info_name is None:
+            # エンティティが居ない or 構文ミス。
+            if 'No entity was found' in result or 'Found no elements matching' in result:
+                return None
+        else:
+                return  # 命令形。まあ命令形はreturnを読む必要はないはずなので問題はなさそうだが留意。
 
         filter_str = ''
 
@@ -168,7 +177,7 @@ class Extension:
         line_break = resub.splitlines()
         list_b = [x for x in line_break if x != '']
 
-        command_info = [x for x in list_b if wanna_info_name in x]
+        command_info = [x for x in list_b if wanna_info_name in x]  # wanna_info_nameを元に期待される返り値のみを取得する。
         if command_info[0] == '' or command_info is None:   # 何らかの理由で情報が取得できなかった場合。(ガード)
             return None
         
