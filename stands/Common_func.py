@@ -3,10 +3,22 @@ import json
 import time
 
 class Common_func:
-    def __init__(self, name, ext, uuid):
+    def __init__(self, name, ext, controller):
         self.name = name
         self.ext = ext
         self.uuid = self.get_uuid()
+        self.run_stand = False
+        self.right_click = False
+        self.left_click = False
+
+        self.controller = controller
+        self.pass_point = int(self.controller.get_pass_point(self.ext.stand))   #現在のチェックポイント（初回は0）オーバーライドが必要かも。
+        self.point_pos = self.controller.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
+        self.ticket_item = self.controller.get_ticket_info(self.pass_point)
+        self.ticket_target = False
+        self.bonus_start_time = time.time()
+        self.bonus_time = None
+        self.bonus_cnt = 0
 
 
     def get_uuid(self):
