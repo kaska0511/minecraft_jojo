@@ -4,10 +4,10 @@ import json
 # ワールド参加者はListというアマスタに名前をtag登録する必要がある。
 
 class Extension:
-    def __init__(self, mcr, name=None, stand=None):
+    def __init__(self, mcr):
         self.mcr = mcr
-        self.name = name
-        self.stand = stand
+        self.name = None
+        self.stand = None
 
     def extraction_user(self):
         # userchache.jsonからワールド参加者を抽出。
