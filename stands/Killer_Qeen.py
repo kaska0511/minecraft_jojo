@@ -4,42 +4,24 @@ import time
 from stands.Common_func import Common_func
 
 class Killer_Qeen(Common_func):
-    def __init__(self, name, ext, controller, target=None, observe_pos=None, bomb_pos=None, run_stand=False, mode=0, summon_flag=False, air_bomb_dis=0) -> None:
-        super().__init__(name, ext)
-        self.name = name
-        self.ext = ext
-        self.controller = controller
-        self.uuid = self.get_uuid()
-        self.target = target    # targetのUUIDが入ります。
-        self.observe_pos = observe_pos
-        self.bomb_pos = bomb_pos
-        self.run_stand = run_stand
-        self.mode = mode
-        self.summon_flag = summon_flag
-        self.air_bomb_dis = air_bomb_dis
-        self.pass_point = int(self.controller.get_pass_point('Killer_Qeen'))   #現在のチェックポイント（初回は0）
-        self.point_pos = self.controller.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
-        self.ticket_item = self.controller.get_ticket_info(self.pass_point)
-        self.ticket_target = False
-        self.bonus_start_time = time.time()
-        self.bonus_time = None
-        self.bonus_cnt = 0
+    def __init__(self, name, ext, controller) -> None:
+        super().__init__(name, ext, controller)
+        self.target = None    # targetのUUIDが入ります。
+        self.observe_pos = None
+        self.bomb_pos = None
+        self.mode = 0
+        self.summon_flag = False
+        self.air_bomb_dis = 0
+
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
             return
 
-        reg= r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
         item, tag = self.get_SelectedItem()
         if tag == "Killer":
-            #/data modify block -186 68 -123 auto set value 0
-            #self.ext.extention_command(f'execute as {self.name} at @s run tp @e[tag=kqeeninter,limit=1] ^ ^ ^1')
-            self.ext.extention_command(f'data modify block 2 -64 0 auto set value 1')
-            inter = self.ext.extention_command(f'data get entity @e[tag=kqeeninter,limit=1] interaction.player') # Interaction has the following entity data: [I; 123, -1234, -1234, 1234]
-            inter_uuid = re.sub(reg, '', inter)
-            self.ext.extention_command(f'data remove entity @e[tag=kqeeninter,limit=1] interaction')
 
-            if item == "minecraft:gunpowder" and self.uuid == inter_uuid:
+            if item == "minecraft:gunpowder" and self.right_click:
                 self.ext.extention_command(f'kill @e[tag=air_bomb]')
                 self.summon_flag = False
 
@@ -50,11 +32,11 @@ class Killer_Qeen(Common_func):
                 self.mode = 2
                 self.summon_Sheer_Heart_Attack()
             """
-            if item == "minecraft:fire_charge" and self.uuid == inter_uuid: # 猫をテイムしているなら判定も入れられると良い。
+            if item == "minecraft:fire_charge" and self.right_click: # 猫をテイムしているなら判定も入れられると良い。
                 self.mode = 3
                 self.summon_air_bomb()
 
-            if item == "minecraft:flint" and self.uuid == inter_uuid and self.run_stand == True:
+            if item == "minecraft:flint" and self.right_click and self.run_stand == True:
                 self.ext.extention_command(f'execute as {self.name} at @s run playsound minecraft:item.lodestone_compass.lock master @a[distance=..8] ~ ~ ~ 200 2')
                 self.ext.extention_command(f'particle minecraft:lava {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]} 1.5 1.5 1.5 0 10 normal @a')
                 self.ext.extention_command(f'execute as {self.name} at @s run summon minecraft:tnt {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]}')  # 1行分だと威力がほぼない。
@@ -65,10 +47,12 @@ class Killer_Qeen(Common_func):
                 self.run_stand = False  # 爆弾を解除 -> スタンド能力を解除
                 self.mode = 0
 
+            # 右クリックフラグを下げる。
+            self.right_click = False
+
         else:
-            # killしてもいいけど今のところはスタンドアイテムを持っていないときは元の場所に戻す。
-            self.ext.extention_command(f'data modify block 2 -64 0 auto set value 0')
-            self.ext.extention_command(f'tp @e[tag=kqeeninter,limit=1] 0 -64 0')
+            # 右クリックフラグを下げる。
+            self.right_click = False
 
         if self.run_stand:
             if self.mode == 1:
