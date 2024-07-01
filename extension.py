@@ -275,12 +275,12 @@ class Extension:
         string = re.sub(removal_string, '', command_info)
 
         string = string.strip("'")   # 両端からシングルクォーテーション削除 例：CustomName
-        string = string.strip("'")   # 両端からシングルクォーテーション削除 例：CustomName
+        string = string.strip('"')   # 両端からダブルクォーテーション削除 例：CustomName
         #if self.is_float(string):
         #    string = float(string)  #数字を数値(float型)へ変換。
 
         if string.find('[') != -1 and string.rfind(']') != -1:  # 角括弧があるか検索。両端にあるかまで検索したいなら-1ではなく0にする。 例：Tags
-            string = string.strip('[]')         # 両端からダブルクォーテーション削除 例：Tags
+            string = string.strip('[]')         # 両端から角括弧削除 例：Tags
             string = string.replace('"', '')    # 全文字列からダブルクォーテーションを削除 例：Tags
             string = string.replace('I; ', '')  # 「I; 」を削除 例：UUID
             string = re.split(r', ', string)    #「, 」でsplitし配列にする。
