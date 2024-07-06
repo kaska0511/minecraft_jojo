@@ -24,7 +24,7 @@ class Extension:
 
     def summon_joinner_armor(self, server_side):
         '''
-        サーバー参加者の名簿となる防具立てと、\n
+        サーバー新規参加者の名簿とサーバー参加者の名簿となる防具立てと、\n
         ゲーム内で使用されるスタンドの名簿となる防具立てを作成します。
 
         Parameter
@@ -36,7 +36,9 @@ class Extension:
         '''
         # サーバーサイド。繰り返し処理内部へ。
         if server_side:
-            # unless entityはListという名前の防具立てが無いこと。を意味し、それが成り立った場合に再生成を行う。
+            # unless entityはNEWという名前の防具立てが無いこと。を意味し、それが成り立った場合にrun以降が実行され再生成を行う。
+            # 新規参加者リスト防具立てを生成
+            self.mcr.command('execute unless entity @e[name=NEW,type=minecraft:armor_stand] run summon minecraft:armor_stand 0 -74 0 {CustomName:"NEW",Invulnerable:1,NoGravity:1}')
             # 参加者リスト防具立てを生成
             self.mcr.command('execute unless entity @e[name=List,type=minecraft:armor_stand] run summon minecraft:armor_stand 0 -74 0 {CustomName:"List",Invulnerable:1,NoGravity:1}')
             # スタンドリスト防具立てを生成
@@ -50,10 +52,31 @@ class Extension:
                 self.mcr.command(f'tag @e[name=Standlist,type=minecraft:armor_stand,limit=1] add {standname}')  #! 現在TuskAct4のタグをつけると重複により、問題が発生する。よって、タスクのコード内にあるtag=TuskAct4を別名に変える。
 
 
+    def get_newjoinner_list(self):
+        '''
+        新規ゲーム参加者の名前を一覧で取得します。
+
+        Parameter
+            None
+
+        Return
+            name_list : list
+                リスト型の参加者名簿
+        '''
+        result = self.mcr.command('data get entity @e[name=NEW,type=minecraft:armor_stand,limit=1] Tags')
+        #result = 'aaaaaaaaaaaNEW has the following entity data: ["HSLQ12", "ARMZ1341", "16iw0lRf", "moyashi21", "KASKA0511"]HSLQ12 has .........'  # sample
+        if 'NEW has the' in result:    # ガード処理
+            lists = re.findall(r'.*NEW has the following entity data: \["(.+?)"\].*', result)  # (.+?)の?は非貪欲マッチ。丸括弧の中の文字列を抽出。
+            name_list = re.split(r'", "', lists[0])
+
+            return name_list
+        else:
+            return None
+
     def get_joinner_list(self):
         '''
         ゲーム参加者の名前を一覧で取得します。
-        
+
         Parameter
             None
 
@@ -111,8 +134,9 @@ class Extension:
             command_info : str
                 コマンドの実行結果
         '''
+        
         command_info = self._listen_commands_return(command, wanna_info_name)
-
+        print(f'return:     {command_info}')
         return command_info
 
 
@@ -121,9 +145,11 @@ class Extension:
         # self.nameかself.standどちらかの情報が入っているはずなので、そこを自動で識別し、returnさせたい。
         # この関数にcommandを投げたということは「自分の名前 has the...」or「自分のスタンド名 has the...」の情報が必ずあるはず。ということ。
 
+        command_result = None   # return値初期化
+
         #result = 'KASKA0511 has the following entity data: 20ARMZ1341 has the following entity data: 1HSLQ12 has the following entity data: 5'  # sample
         result = self.mcr.command(command)
-
+        print(f'result: {result}')
         # 汎用性を高めるため、第二引数を省略した場合、ユーザー名かスタンド名を指定する。
         if wanna_info_name is None: # 引数に名前指定がされていないなら
             if f'{self.name} has' in result:
@@ -133,17 +159,20 @@ class Extension:
             if 'name=' in command:    # commandのターゲットセレクタ引数からnameが指定されているならそれに変更。
                 name = re.findall(r'.*\[.*name=(.+?)[\]|,].*', command)
                 wanna_info_name = name[0]
+            #!! data get entity @e[tag=KASKA0511,type=armor_stand] CustomNameの場合、wanna_info_nameがNoneになるし、それ専用の処理が必要かも。
 
         # dataコマンド以外で情報を取得したい場合はここより下に特別な記述が必要。
         if 'locate ' in command:   # locateコマンド専用
             wanna_info_name = "The nearest minecraft:"
-
+            command_result = self.heavy_processing_for_locate(result)
+            return command_result
 
         # 命令形コマンドまたはエンティティやエンティティのnbtが無い場合はすぐに返す処理。
         # wanna_info_nameを設定する、上の処理を経てもNoneなら、命令形コマンドまたはエンティティやエンティティのnbtが無い可能性がある。
+        #! バグる
         if wanna_info_name is None:
             # エンティティが居ない or 構文ミス。
-            if 'No entity was found' in result or 'Found no elements matching' in result:
+            if 'No player was found' in result or 'No entity was found' in result or 'Found no elements matching' in result:
                 return None
             else:
                 return  # 命令形。まあ命令形はreturnを読む必要はないはずなので問題はなさそうだが留意。
@@ -162,12 +191,9 @@ class Extension:
 
         # 抽出されたコマンドの実行結果から必要な情報のみに整形します。
         # KASKA0511 has the following entity data: 20
-        command_result = None
-        if 'locate ' in command:   # locateコマンド専用
-            command_result = self.heavy_processing_for_locate(takeout_result)
-        else:
-            # dataコマンドによるエンティティの情報が欲しい場合
-            command_result = self.heavy_processing(wanna_info_name, takeout_result)
+
+        # dataコマンドによるエンティティの情報が欲しい場合
+        command_result = self.heavy_processing(wanna_info_name, takeout_result)
 
         return command_result
 
@@ -181,7 +207,7 @@ class Extension:
         Return
             filter_str : str
                 フィルター用の文字列。\r
-                sample-> 'player0 has|player1 has|stand0 has|stand1 has|The nearest minecraft:'
+                sample-> 'player0|player1|stand0|stand1'
 
         '''
         filter_str = ''
@@ -190,16 +216,15 @@ class Extension:
         if name_list is None:   # Noneが返った時は以下の処理をしない。(ガード)
             return None
         for name in name_list:
-            filter_str += f'{name} has|'
+            filter_str += f'{name}|'
 
         stand_list = self.get_stand_list()
         if stand_list is None:  # Noneが返った時は以下の処理をしない。(ガード)
             return None
         for stand in stand_list:
-            filter_str += f'{stand} has|'
+            filter_str += f'{stand}|'
 
-        # The nearest minecraft:forest is at [-144, 90, 16] (71 blocks away)
-        special_filter = ('The nearest minecraft:',) # 現在単数なので最後にカンマを置いています。複数なら失くしてよい。
+        special_filter = ('Standlist', 'List', 'NEW')
         for special in special_filter:
             filter_str += f'{special}|'
 
@@ -226,19 +251,33 @@ class Extension:
                 生データから抽出できたコマンド結果。
 
         '''
-        resub = re.sub(f'({filter_str})', r'\n\1', result)
-        #print(resub)
+        sample = []
 
-        line_break = resub.splitlines()
-        list_b = [x for x in line_break if x != '']
+        
+        if f'{wanna_info_name} has' in result:
+        # 以上の処理を経て、hoge has...fuga has...foo has...bar has...というデータになっているはず。
+            #print("***********************************************************")
+            #print(result)
+            result = re.sub(r'.*'+wanna_info_name+r' has the following entity data: ', '', result)    # [何らかの文字列 + 自分の名前orスタンド名 has the following entity data: ]を削除。
+            #print(result)
+            result = re.findall(r'^(.+)( has?.+|$)', result)     # 例えば[I; 11111, 2222, 33333]KASKA0511みたいなのが入るはず。
+            
+            #print(result)
+            #print(type(result))
+            result = re.sub(f'({filter_str})', '', result[0][0])
+            sample.insert(0,(wanna_info_name, result))  # 先頭にtupleで追加。例:[(KASKA0511, 0s),'No entity was found', 'Found no elements matching']
+            #print(f'{wanna_info_name}:{result}')
+            
+            return sample[0][1]
+        
+        else:   #ここ冗長かも。_listen_commands_return
+            if 'No player was found' in result:
+                return None
+            if 'No entity was found' in result:
+                return None
+            if 'Found no elements matching' in result:
+                return None
 
-        command_info = [x for x in list_b if wanna_info_name in x]  # wanna_info_nameを元に期待される返り値のみを取得する。
-        if command_info == []:   # 何らかの理由で情報が取得できなかった場合。(ガード)
-            return None
-
-        list2str = command_info[0]
-
-        return list2str
 
     def is_int(self, s):
         try:
