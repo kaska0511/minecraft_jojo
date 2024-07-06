@@ -159,7 +159,6 @@ class Extension:
             if 'name=' in command:    # commandのターゲットセレクタ引数からnameが指定されているならそれに変更。
                 name = re.findall(r'.*\[.*name=(.+?)[\]|,].*', command)
                 wanna_info_name = name[0]
-            #!! data get entity @e[tag=KASKA0511,type=armor_stand] CustomNameの場合、wanna_info_nameがNoneになるし、それ専用の処理が必要かも。
 
         # dataコマンド以外で情報を取得したい場合はここより下に特別な記述が必要。
         if 'locate ' in command:   # locateコマンド専用
@@ -186,16 +185,8 @@ class Extension:
         # takeout_resultには以下のような結果が入ります。
         #   KASKA0511 has the following entity data: 20
         takeout_result = self._take_out_result(result, wanna_info_name, filter_str)
-        if takeout_result is None:  # 何らかの理由で情報が取得できなかった。(ガード)
-            return None
+        return takeout_result
 
-        # 抽出されたコマンドの実行結果から必要な情報のみに整形します。
-        # KASKA0511 has the following entity data: 20
-
-        # dataコマンドによるエンティティの情報が欲しい場合
-        command_result = self.heavy_processing(wanna_info_name, takeout_result)
-
-        return command_result
 
     def _make_filter_str(self):
         '''
@@ -245,30 +236,38 @@ class Extension:
             filter_str : str
                 _make_filter_strの実行結果。
 
-
         Return
-            list2str : str
+            result : any | None
                 生データから抽出できたコマンド結果。
 
         '''
-        sample = []
 
-        
         if f'{wanna_info_name} has' in result:
-        # 以上の処理を経て、hoge has...fuga has...foo has...bar has...というデータになっているはず。
-            #print("***********************************************************")
-            #print(result)
-            result = re.sub(r'.*'+wanna_info_name+r' has the following entity data: ', '', result)    # [何らかの文字列 + 自分の名前orスタンド名 has the following entity data: ]を削除。
-            #print(result)
-            result = re.findall(r'^(.+)( has?.+|$)', result)     # 例えば[I; 11111, 2222, 33333]KASKA0511みたいなのが入るはず。
-            
-            #print(result)
-            #print(type(result))
-            result = re.sub(f'({filter_str})', '', result[0][0])
-            sample.insert(0,(wanna_info_name, result))  # 先頭にtupleで追加。例:[(KASKA0511, 0s),'No entity was found', 'Found no elements matching']
-            #print(f'{wanna_info_name}:{result}')
-            
-            return sample[0][1]
+
+            if f'{wanna_info_name} has the following entity data: [' in result: # Tags(複数), uuidなど
+                result = re.findall(wanna_info_name + r' has the following entity data: (\[.+\]?)', result)
+                result = result[0].strip('[]')         # 両端から角括弧削除。 例：Tags
+                result = result.replace('"', '')    # 全文字列からダブルクォーテーションを削除 例：Tags
+                result = result.replace('I; ', '')  # 「I; 」を削除 例：UUID
+                result = re.split(r', ', result)    #「, 」でsplitし配列にする。
+
+            elif wanna_info_name + ' has the following entity data: {' in result:   # Inventory[{Slot:3b}].tag
+                result = re.findall(wanna_info_name + r' has the following entity data: \{(.+)\}?', result)
+                result = result[0]
+            elif f"{wanna_info_name} has the following entity data: '" in result:   # CustomName='"The_World"'←注意ダブルクォーテーションとシングルクォーテーションで囲われている。
+                result = re.findall(wanna_info_name + r" has the following entity data: \'(.+)\'?", result)
+                result = result[0].strip("'")   # 両端からシングルクォーテーション削除。念のため。 例：CustomName
+                result = result.strip('"')   # 両端からダブルクォーテーション削除 例：CustomName
+
+            elif f'{wanna_info_name} has the following entity data: "' in result:   # Tags(単一), Inventory[{Slot:3b}].id
+                result = re.findall(wanna_info_name + r' has the following entity data: \"(.+)\"?', result)
+                result = result[0].strip('"')   # 両端からダブルクォーテーション削除。念のため。
+                result = result.strip("'")   # 両端からシングルクォーテーション削除
+            else:
+                result = re.findall(wanna_info_name + r' has the following entity data: (.+[s|f|d]?)', result)
+                result = result[0]
+
+            return result
         
         else:   #ここ冗長かも。_listen_commands_return
             if 'No player was found' in result:
