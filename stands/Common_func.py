@@ -85,23 +85,25 @@ class Common_func:
 
         # runの後は何でもよかった。メインは「nbt=」の部分で特定のタグ名を持つアイテムを所持しているならrunの後が実行される。
         # 持っていないなら空文字が返される。
-        if self.get_player_Death() != True or self.get_logout() == False:
+        if self.get_player_Death() == False or self.get_logout() == False:
+        #if self.get_player_Death() != True:
             # execute if entity @a[name=KASKA0511,nbt={Inventory:[{tag:{Tags:["DIO"]}}]}] run data get entity KASKA0511 DeathTime # DIOタグのアイテムを持っていたらrun以降が実行される。持っていなかったら空文字が返る。
-
-            # 一つのアイテムに "複数" のTagsを持つ場合はこちらが実行される。
-            substituent = 'execute if entity @a[name=_NAME_,nbt={Inventory:[{tag:{Tags:["_TAG_"]}}]}] run data get entity _NAME_ DeathTime'
-            substituent = substituent.replace(f'_NAME_', self.name)
-            substituent = substituent.replace(f'_TAG_', tag)
-            result = self.ext.extention_command(f'{substituent}')
 
             # 一つのアイテムに "単一" のTagsを持つ場合はこちらが実行される。
             substituent = 'execute if entity @a[name=_NAME_,nbt={Inventory:[{tag:{Tags:"_TAG_"}}]}] run data get entity _NAME_ DeathTime'
             substituent = substituent.replace(f'_NAME_', self.name)
             substituent = substituent.replace(f'_TAG_', tag)
+            result = self.ext.extention_command(f'{substituent}')
 
-            result1 = self.ext.extention_command(f'{substituent}')
-            # result か result1 で結果が得られたら(is not None)スタンドアイテムを持っている。 = True
-            have_a_stand = True if result is not None or result1 is not None else False
+            if result is None:  # タグ一つで検索してNoneなら複数形で検索をかける。
+                # 一つのアイテムに "複数" のTagsを持つ場合はこちらが実行される。
+                substituent = 'execute if entity @a[name=_NAME_,nbt={Inventory:[{tag:{Tags:["_TAG_"]}}]}] run data get entity _NAME_ DeathTime'
+                substituent = substituent.replace(f'_NAME_', self.name)
+                substituent = substituent.replace(f'_TAG_', tag)
+                result = self.ext.extention_command(f'{substituent}')
+
+            # resultで結果が得られたら(is not None)スタンドアイテムを持っている。 = True
+            have_a_stand = True if result is not None else False
 
         return have_a_stand
 
