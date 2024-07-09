@@ -6,12 +6,12 @@ from stands.Common_func import Common_func
 class Killer_Qeen(Common_func):
     def __init__(self, name, ext, controller) -> None:
         super().__init__(name, ext, controller)
-        self.target = None    # targetのUUIDが入ります。
         self.observe_pos = None
         self.bomb_pos = None
         self.mode = 0
         self.summon_flag = False
         self.air_bomb_dis = 0
+        self.move_speed_for_air = 0.5
 
 
     def loop(self):
@@ -22,6 +22,7 @@ class Killer_Qeen(Common_func):
         if tag == "Killer":
 
             if item == "minecraft:gunpowder" and self.right_click:
+                #print("ブロック爆弾化発動")
                 self.ext.extention_command(f'kill @e[tag=air_bomb]')
                 self.summon_flag = False
 
@@ -33,19 +34,18 @@ class Killer_Qeen(Common_func):
                 self.summon_Sheer_Heart_Attack()
             """
             if item == "minecraft:fire_charge" and self.right_click: # 猫をテイムしているなら判定も入れられると良い。
+                #print("空気爆弾発射")
                 self.mode = 3
                 self.summon_air_bomb()
 
             if item == "minecraft:flint" and self.right_click and self.run_stand == True:
+                #print("爆弾着火")
                 self.ext.extention_command(f'execute as {self.name} at @s run playsound minecraft:item.lodestone_compass.lock master @a[distance=..8] ~ ~ ~ 200 2')
                 self.ext.extention_command(f'particle minecraft:lava {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]} 1.5 1.5 1.5 0 10 normal @a')
+                #self.ext.extention_command(f'execute as {self.name} at @s run setblock {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]} minecraft:tnt destroy') # test用
                 self.ext.extention_command(f'execute as {self.name} at @s run summon minecraft:tnt {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]}')  # 1行分だと威力がほぼない。
                 self.ext.extention_command(f'execute as {self.name} at @s run summon minecraft:tnt {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]}')  # 2行分必要です。
-                self.ext.extention_command(f'kill @e[tag=air_bomb]')
-                self.bomb_pos = []  # 記録された座標をクリア
-                self.summon_flag = False
-                self.run_stand = False  # 爆弾を解除 -> スタンド能力を解除
-                self.mode = 0
+                self.cancel_stand()
 
             # 右クリックフラグを下げる。
             self.right_click = False
@@ -82,15 +82,12 @@ class Killer_Qeen(Common_func):
                 self.ext.extention_command(f'execute as @e[tag=SHA,limit=1] at @s if entity @e[name=!{self.name},tag=!SHA,tag=!SHA_owner,tag=!SHA_searcher,type=!item,distance=..1.5] run kill @e[tag=SHA_target]')
             """
             if self.mode == 3:
-                if self.summon_flag and self.air_bomb_dis < 600:   # 進む距離と左の数値を掛け算して60になればよい。
+                if self.summon_flag and self.air_bomb_dis < (60/self.move_speed_for_air):   # 進む距離と左の数値を掛け算して60になればよい。
                     self.air_bomb_dis += 1
                     self.move_air_bomb()
 
-                elif self.air_bomb_dis >= 300:   # 射程距離の外に出たので空気爆弾を破壊。この時爆破はしない。
-                    self.ext.extention_command(f'kill @e[tag=air_bomb]')
-                    self.air_bomb_dis = 0
-                    self.summon_flag = False
-                    self.run_stand = False
+                elif self.air_bomb_dis >= (60/self.move_speed_for_air):   # 射程距離の外に出たので空気爆弾を破壊。この時爆破はしない。
+                    self.cancel_stand()
 
         """
         # チケットアイテム獲得によるターゲット該当者処理
@@ -160,27 +157,34 @@ class Killer_Qeen(Common_func):
 
     def cancel_stand(self):
         self.bomb_pos = []  # 記録された座標をクリア
-
         self.ext.extention_command(f'kill @e[tag=air_bomb]')
         self.air_bomb_dis = 0
         self.summon_flag = False
-
         self.run_stand = False  # 爆弾を解除 -> スタンド能力を解除
+        self.mode = 0
 
 
     def set_bomb(self):
         discovery = False
         # 目線の高さに合わせてsummonする。
-        self.ext.extention_command(f'execute as {self.name} at @s anchored eyes run summon minecraft:interaction ^ ^ ^ {{Tags:["searcher"],height:0.05,width:0.1}}')
-        self.ext.extention_command(f'execute as {self.name} at @s anchored eyes run summon minecraft:interaction ^ ^ ^ {{Tags:["searcher"],height:-0.05,width:0.1}}')
-        for _ in range(5):
-            self.ext.extention_command(f'execute as @e[tag=searcher] at @s rotated as {self.name} run tp ^ ^ ^1')   # interactionの視線をプレイヤーとリンクさせる。その視点で5回前進する。
+        #! インタラクションではなく、できるだけ小さいカスタムネームの効いたアマスタへ変更。名前はKiller_Qeen（フィルターのため。）、tagはそのままsearcherで良さそう。
+        substituent = 'execute as _NAME_ at @s run summon minecraft:armor_stand ~ ~ ~ {CustomName:"Killer_Qeen",Attributes:[{Name:"generic.scale",Base:0.0625}],Tags:["searcher"],Silent:1,Invulnerable:1,Invisible:1,NoGravity:1}'
+        substituent = substituent.replace(f'_NAME_', self.name)
+        self.ext.extention_command(substituent)
+
+        substituent = 'execute as _NAME_ at @s anchored eyes run tp @e[tag=searcher] ^ ^ ^0.1'
+        substituent = substituent.replace(f'_NAME_', self.name)
+        self.ext.extention_command(substituent)   # アマスタを召喚した直後は足元にいるので、プレイヤーの目線の先(0.1マス)に移動させる。
+
+        self.ext.extention_command(f'execute as @e[tag=searcher] at @s rotated as {self.name} run tp ^ ^ ^')   # 防具立ての視線をプレイヤーとリンクさせる。
+        for _ in range(25):     # 5マス分を範囲にしたいので、range(25) * 前進マス(0.2) = 5マス。
+            self.ext.extention_command(f'execute as @e[tag=searcher] at @s run tp ^ ^ ^0.2')   # 視線をプレイヤーとリンクした状態で5マス分前進する。
             discovery = self.judge_block("searcher")
             if discovery:   # 爆弾に変えてもよいブロックが見つかっていたらこれ以上の探索は不要
                 break
 
         if discovery:   # 爆弾に変えるブロックの座標を取得する。
-            self.bomb_pos = self.get_inter_pos("searcher")
+            self.bomb_pos = self.get_armor_stand_pos("searcher")
             self.run_stand = True
         self.ext.extention_command(f'kill @e[tag=searcher]')
 
@@ -189,8 +193,9 @@ class Killer_Qeen(Common_func):
         exclude_list = ('air','water','fire','soul_fire','lava','nether_portal','end_portal','barrier') # 当てはまりやすいもの順に並べること。
         collision_flag = False
         for block in exclude_list:
-            res = self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s if block ~ ~ ~ minecraft:{block}')  # interactionに重なるブロックが除外ブロックか検知
-            if res == 'Test passed':  # 除外リストに当てはまったら
+            # run 以降は if block が当てはまった場合に実行される。
+            res = self.ext.extention_command(f'execute as @e[name=Killer_Qeen,tag={tag},limit=1] at @s if block ~ ~ ~ minecraft:{block} run data get entity @e[name=Killer_Qeen,tag={tag},limit=1] DeathTime')  # アマスタに重なるブロックが除外ブロックか検知
+            if res == '0s':  # 除外リストに当てはまったら0sが返ってくるはず。
                 break
             elif block == 'barrier':    # 最後まで調べてresが空なら爆弾に変えてもよいブロックに重なった判定
                 collision_flag = True
@@ -198,24 +203,22 @@ class Killer_Qeen(Common_func):
         return collision_flag
 
 
-    def get_inter_pos(self, tag):
-        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
+    def get_armor_stand_pos(self, tag):
         edit_pos = []
-        res = self.ext.extention_command(f'data get entity @e[tag={tag},limit=1] Pos')
-        split_str = re.split(r' ', res)
-        pos = None if split_str[0] == 'No' else re.sub(reg, '', res).strip('"')
-        if pos != None:
-            res = re.sub(reg, '', res).strip("[d]")
-            res = re.split('d, ', res)
-            # 0以上は切り捨て、負の値は切り上げの計算とする。-1.2　=> -2、0.3 => 0, 12.1 => 12
-            for i in res:
-                edit_pos.append(math.floor(float(i)))
+        res = self.ext.extention_command(f'data get entity @e[name=Killer_Qeen,tag={tag},limit=1] Pos')
+        #print(res)
+        if res is not None or res != []:
+            for floatd in res:
+                floater = floatd.strip("d")
+                # 0以上は切り捨て、負の値は切り上げの計算とする。-1.2　=> -2、0.3 => 0, 12.1 => 12
+                edit_pos.append(math.floor(float(floater)))
+        #print(edit_pos)
         return edit_pos
 
 
     def observe_bomb(self):
-        res = self.ext.extention_command(f'execute as {self.name} at @s if block {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]} minecraft:air')  # 恐らく破壊されている
-        if res == 'Test passed':
+        res = self.ext.extention_command(f'execute if block {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]} minecraft:air run data get entity {self.name} DeathTime')  # 恐らく破壊されている
+        if res == '0s':
             self.bomb_pos = []  # 記録された座標をクリア
             self.run_stand = False  # 爆弾を解除 -> スタンド能力を解除
 
@@ -224,19 +227,25 @@ class Killer_Qeen(Common_func):
         if not self.summon_flag:    # 複数召喚させない
             self.summon_flag = True
             self.run_stand = True
-            self.ext.extention_command(f'execute as {self.name} at @s anchored eyes run summon minecraft:interaction ^ ^ ^ {{Tags:["air_bomb"],height:0.25,width:0.5}}')
-            self.ext.extention_command(f'execute as {self.name} at @s anchored eyes run summon minecraft:interaction ^ ^ ^ {{Tags:["air_bomb"],height:-0.25,width:0.5}}')
-            self.ext.extention_command(f'execute as @e[tag=air_bomb] at @s rotated as {self.name} run tp ^ ^ ^')      # 視線をプレイヤーと同じにする。
+            substituent = 'execute as _NAME_ at @s run summon minecraft:armor_stand ~ ~ ~ {CustomName:"Killer_Qeen",Small:1,Tags:["air_bomb"],Silent:1,Invulnerable:1,Invisible:1,NoGravity:1}'
+            substituent = substituent.replace(f'_NAME_', self.name)
+            self.ext.extention_command(substituent)
+
+            substituent = 'execute as _NAME_ at @s anchored eyes run tp @e[tag=air_bomb] ^ ^ ^0.1'
+            substituent = substituent.replace(f'_NAME_', self.name)
+            self.ext.extention_command(substituent)   # アマスタを召喚した直後は足元にいるので、プレイヤーの目線の先(0.1マス)に移動させる。
+
+            self.ext.extention_command(f'execute as @e[tag=air_bomb] at @s rotated as {self.name} run tp ^ ^ ^')   # 防具立ての視線をプレイヤーとリンクさせる。
 
 
     def move_air_bomb(self):
         # 移動してその時の座標を取得
         # 壁にぶつかったらどうする？着火する？
-        #self.ext.extention_command(f'execute as @e[tag=air_bomb] at @s run tp ^ ^ ^0.5')      # 視線の先に直進する。
+        self.ext.extention_command(f'execute as @e[tag=air_bomb] at @s run tp ^ ^ ^{self.move_speed_for_air}')      # 視線の先に直進する。
         self.ext.extention_command(f'execute as @e[tag=air_bomb] at @s run particle minecraft:smoke ^ ^ ^ 0.2 0.2 0.2 0 1 normal @a')      # 少し視認性を上げる。もしかしたらlimitが必要かも
 
         collision_flag = self.judge_block("air_bomb")
-        self.bomb_pos = self.get_inter_pos("air_bomb")
+        self.bomb_pos = self.get_armor_stand_pos("air_bomb")
 
         if collision_flag:  # 空気爆弾が壁にぶつかったので空気爆弾を破壊。この時は爆破させる。
             self.ext.extention_command(f'kill @e[tag=air_bomb]')
