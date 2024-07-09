@@ -148,8 +148,16 @@ class Extension:
         command_result = None   # return値初期化
 
         #result = 'KASKA0511 has the following entity data: 20ARMZ1341 has the following entity data: 1HSLQ12 has the following entity data: 5'  # sample
-        result = self.mcr.command(command)
-        print(f'result: {result}')
+        loop = True if 'data get ' in command else False
+        while loop: # data getなど返り値を求めるコマンドを実行した時データが取得できる状況にもかかわらず稀に何も返ってこない場合がある。その対策。
+            result = self.mcr.command(command)
+            if result != '':
+                print(f'result: {result}')
+                break
+        else:
+            result = self.mcr.command(command)
+            print(f'result: {result}')
+
         # 汎用性を高めるため、第二引数を省略した場合、ユーザー名かスタンド名を指定する。
         if wanna_info_name is None: # 引数に名前指定がされていないなら
             if f'{self.name} has' in result:
@@ -348,14 +356,14 @@ class Extension:
 
         #command_info = The nearest minecraft:forest is at [-144, 90, 16] (71 blocks away) #sample
         # 上記サンプルの[-144, 90, 16]を抽出
-        coordinate = re.findall(r'The nearest minecraft:.+ is at \[(.+?)\] \([0-9]+ blocks away\)', command_info)     # (.+?)の?は非貪欲マッチ。丸括弧の中の文字列を抽出。
+        coordinate = re.findall(r'The nearest minecraft:.+ is at \[(.+?)\]{1}? \([0-9]+ blocks away\)', command_info)     # (.+?)の?は非貪欲マッチ。丸括弧の中の文字列を抽出。
         #print(coordinate)
         coordinate2list = re.split(r', ', coordinate[0])
         locate_info = [int(s) for s in coordinate2list if self.is_int(s)]
         #print(locate_info)
 
         # 上記サンプルの(71 blocks away)の71を抽出
-        distance = re.findall(r'The nearest minecraft:.+ is at \[.+?\] \(([0-9]+?) blocks away\)', command_info)     # (.+?)の?は非貪欲マッチ。丸括弧の中の文字列を抽出。
+        distance = re.findall(r'The nearest minecraft:.+ is at \[.+?\]{1}? \(([0-9]+?) blocks away\)', command_info)     # (.+?)の?は非貪欲マッチ。丸括弧の中の文字列を抽出。
         #print(distance)
         if self.is_int(distance[0]):
             locate_info.append(int(distance[0]))
