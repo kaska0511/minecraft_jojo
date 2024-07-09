@@ -242,29 +242,32 @@ class Extension:
 
         '''
 
+        # 非貪欲マッチの注意点
+        # 非貪欲は最短一致とも呼べ、記号としては?(はてな)を使用します。
+        # はてなを利用し最短一致するには直前に繰り返し表現が必須なため、{num}や+や*を直前に置く必要があるので表現には気を付けてください。
         if f'{wanna_info_name} has' in result:
 
             if f'{wanna_info_name} has the following entity data: [' in result: # Tags(複数), uuidなど
-                result = re.findall(wanna_info_name + r' has the following entity data: (\[.+\]?)', result)
+                result = re.findall(wanna_info_name + r' has the following entity data: (\[.+?\]{1}?)', result)
                 result = result[0].strip('[]')         # 両端から角括弧削除。 例：Tags
                 result = result.replace('"', '')    # 全文字列からダブルクォーテーションを削除 例：Tags
                 result = result.replace('I; ', '')  # 「I; 」を削除 例：UUID
                 result = re.split(r', ', result)    #「, 」でsplitし配列にする。
 
             elif wanna_info_name + ' has the following entity data: {' in result:   # Inventory[{Slot:3b}].tag
-                result = re.findall(wanna_info_name + r' has the following entity data: \{(.+)\}?', result)
+                result = re.findall(wanna_info_name + r' has the following entity data: \{(.+?)\}{1}?', result)
                 result = result[0]
             elif f"{wanna_info_name} has the following entity data: '" in result:   # CustomName='"The_World"'←注意ダブルクォーテーションとシングルクォーテーションで囲われている。
-                result = re.findall(wanna_info_name + r" has the following entity data: \'(.+)\'?", result)
+                result = re.findall(wanna_info_name + r" has the following entity data: \'(.+?)\'{1}?", result)
                 result = result[0].strip("'")   # 両端からシングルクォーテーション削除。念のため。 例：CustomName
                 result = result.strip('"')   # 両端からダブルクォーテーション削除 例：CustomName
 
             elif f'{wanna_info_name} has the following entity data: "' in result:   # Tags(単一), Inventory[{Slot:3b}].id
-                result = re.findall(wanna_info_name + r' has the following entity data: \"(.+)\"?', result)
+                result = re.findall(wanna_info_name + r' has the following entity data: \"(.+?)\"{1}?', result)
                 result = result[0].strip('"')   # 両端からダブルクォーテーション削除。念のため。
                 result = result.strip("'")   # 両端からシングルクォーテーション削除
             else:
-                result = re.findall(wanna_info_name + r' has the following entity data: (.+[s|f|d]?)', result)
+                result = re.findall(wanna_info_name + r' has the following entity data: (.+?[s|f|d]{1}?)', result)
                 result = result[0]
 
             return result

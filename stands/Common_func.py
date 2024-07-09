@@ -86,16 +86,16 @@ class Common_func:
         # runの後は何でもよかった。メインは「nbt=」の部分で特定のタグ名を持つアイテムを所持しているならrunの後が実行される。
         # 持っていないなら空文字が返される。
         if self.get_player_Death() != True or self.get_logout() == False:
-            # execute if entity @a[name=KASKA0511,nbt={Inventory:[{tag:{Tags:["DIO"]}}]}] run data get entity KASKA0511 playerGameType # DIOタグのアイテムを持っていたらrun以降が実行される。持っていなかったら空文字が返る。
+            # execute if entity @a[name=KASKA0511,nbt={Inventory:[{tag:{Tags:["DIO"]}}]}] run data get entity KASKA0511 DeathTime # DIOタグのアイテムを持っていたらrun以降が実行される。持っていなかったら空文字が返る。
 
             # 一つのアイテムに "複数" のTagsを持つ場合はこちらが実行される。
-            substituent = 'execute if entity @a[name=_NAME_,nbt={Inventory:[{tag:{Tags:["_TAG_"]}}]}] run data get entity _NAME_ playerGameType'
+            substituent = 'execute if entity @a[name=_NAME_,nbt={Inventory:[{tag:{Tags:["_TAG_"]}}]}] run data get entity _NAME_ DeathTime'
             substituent = substituent.replace(f'_NAME_', self.name)
             substituent = substituent.replace(f'_TAG_', tag)
             result = self.ext.extention_command(f'{substituent}')
 
             # 一つのアイテムに "単一" のTagsを持つ場合はこちらが実行される。
-            substituent = 'execute if entity @a[name=_NAME_,nbt={Inventory:[{tag:{Tags:"_TAG_"}}]}] run data get entity _NAME_ playerGameType'
+            substituent = 'execute if entity @a[name=_NAME_,nbt={Inventory:[{tag:{Tags:"_TAG_"}}]}] run data get entity _NAME_ DeathTime'
             substituent = substituent.replace(f'_NAME_', self.name)
             substituent = substituent.replace(f'_TAG_', tag)
 
@@ -399,7 +399,9 @@ class Common_func:
                 そのアイテムが持つtag
         '''
         reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        id = self.ext.extention_command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].id')
+        id = self.ext.extention_command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].id')     # KASKA0511 has the following entity data: "minecraft:flint"
+        #   単一    KASKA0511 has the following entity data: "Killer"
+        #   複数    KASKA0511 has the following entity data: ["DIO", "a"]
         tag = self.ext.extention_command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].tag.Tags')
 
         split_id = re.split(r' ', id)
