@@ -148,7 +148,7 @@ class Extension:
         command_result = None   # return値初期化
 
         #result = 'KASKA0511 has the following entity data: 20ARMZ1341 has the following entity data: 1HSLQ12 has the following entity data: 5'  # sample
-        loop = True if 'data get ' in command else False
+        loop = True if ('data get' or 'locate') in command else False
         while loop: # data getなど返り値を求めるコマンドを実行した時データが取得できる状況にもかかわらず稀に何も返ってこない場合がある。その対策。
             result = self.mcr.command(command)
             if result != '':
@@ -179,7 +179,7 @@ class Extension:
         #! バグる
         if wanna_info_name is None:
             # エンティティが居ない or 構文ミス。
-            if 'No player was found' in result or 'No entity was found' in result or 'Found no elements matching' in result:
+            if ('No player was found' or 'No entity was found' or 'Found no elements matching') in result:
                 return None
             else:
                 return  # 命令形。まあ命令形はreturnを読む必要はないはずなので問題はなさそうだが留意。
@@ -287,7 +287,6 @@ class Extension:
                 return None
             if 'Found no elements matching' in result:
                 return None
-
 
     def is_int(self, s):
         try:
