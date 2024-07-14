@@ -4,21 +4,9 @@ from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_EVEN
 from stands.Common_func import Common_func
 
 class Twentieth_Century_Boy(Common_func):
-    def __init__(self, name, ext, controller, rot = None, run_stand=False) -> None:
-        super().__init__(name, ext)
-        self.name = name
-        self.ext = ext
-        self.controller = controller
-        self.uuid = self.get_uuid()
-        self.rot = rot
-        self.run_stand = run_stand
-        self.pass_point = int(self.controller.get_pass_point('Twentieth_Century_Boy'))
-        self.point_pos = self.controller.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
-        self.ticket_item = self.controller.get_ticket_info(self.pass_point)
-        self.ticket_target = False
-        self.bonus_start_time = time.time()
-        self.bonus_time = None
-        self.bonus_cnt = 0
+    def __init__(self, name, ext, controller) -> None:
+        super().__init__(name, ext, controller)
+        self.rot = None
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():

@@ -3,24 +3,12 @@ import time
 from stands.Common_func import Common_func
 
 class Catch_The_Rainbow(Common_func):
-    def __init__(self, name, ext, controller, ability_limit=0, mask=None, run_stand=False) -> None:
-        super().__init__(name, ext)
-        self.name = name
-        self.ext = ext
-        self.controller = controller
-        self.uuid = self.get_uuid()
+    def __init__(self, name, ext, controller) -> None:
+        super().__init__(name, ext, controller)
         self.health = 0.0
-        self.ability_limit = ability_limit
-        self.mask = mask
-        self.run_stand = run_stand
+        self.ability_limit = 0
+        self.mask = None
         self.kill_check = False
-        self.pass_point = int(self.controller.get_pass_point('Catch_The_Rainbow'))
-        self.point_pos = self.controller.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
-        self.ticket_item = self.controller.get_ticket_info(self.pass_point)
-        self.ticket_target = False
-        self.bonus_start_time = time.time()
-        self.bonus_time = None
-        self.bonus_cnt = 0
 
     def set_scoreboard(self):
         self.ext.extention_command(f'scoreboard objectives add SNEAK minecraft.custom:minecraft.sneak_time')

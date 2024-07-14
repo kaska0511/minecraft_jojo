@@ -3,23 +3,12 @@ import time
 from stands.Common_func import Common_func
 
 class TuskAct4(Common_func):
-    def __init__(self, name, ext, controller, target=None, ride_uuid = None, run_stand=False, summon_flag=False) -> None:
-        super().__init__(name, ext)
-        self.name = name
-        self.ext = ext
-        self.controller = controller
-        self.uuid = self.get_uuid()
-        self.target = target    # targetのUUIDが入ります。
-        self.ride_uuid = ride_uuid
-        self.run_stand = run_stand
-        self.summon_flag = summon_flag
-        self.pass_point = int(self.controller.get_pass_point('TuskAct4'))
-        self.point_pos = self.controller.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
-        self.ticket_item = self.controller.get_ticket_info(self.pass_point)
-        self.ticket_target = False
-        self.bonus_start_time = time.time()
-        self.bonus_time = None
-        self.bonus_cnt = 0
+    def __init__(self, name, ext, controller) -> None:
+        super().__init__(name, ext, controller)
+        self.target = None
+        self.ride_uuid = None
+        self.summon_flag = False
+
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
@@ -171,7 +160,7 @@ class TuskAct4(Common_func):
 
         split_killres = re.split(r' ', kill_res)     # killした？
         # もしターゲットがいないなら処理。デスポーンやログアウト用
-        result = self.ext.extention_command(f'data get entity @e[nbt={{UUID:{self.target}}},limit=1] UUID')
+        result = self.ext.extention_command(f'data get entity @e[nbt={{UUID:{self.target}}},limit=1] UUID') #! mobのUUIDを取るのは困難になったのでtag add でタグ付けしてそれを追うようにする。
         if result == 'No entity was found' or split_killres[0] == "Killed" or not self.get_DeathTime(self.target):  # ターゲットがいない or 殺し終わった or 既にターゲットが死んでいるなら
             self.cancel_stand()
             return

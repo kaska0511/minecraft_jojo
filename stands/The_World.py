@@ -3,26 +3,14 @@ import re
 from stands.Common_func import Common_func
 
 class The_World(Common_func):
-    def __init__(self, name, ext, controller, pos, timer, run_stand=False, fix_flag=False, poss = None, rots = None) -> None:
-        super().__init__(name,ext)
-        self.name = name
-        self.ext = ext
-        self.controller = controller
-        self.uuid = self.get_uuid()
-        self.pos = pos
+    def __init__(self, name, ext, controller) -> None:
+        super().__init__(name, ext, controller)
         self.standard_time = time.time()    # 止める時間を設定するための基準時間
-        self.timer = timer  # 止められる時間（秒）
-        self.run_stand = run_stand
-        self.fix_flag = fix_flag
-        self.poss = poss    # 他のプレイヤーの座標を記録する
-        self.rots = rots    # 他のプレイヤーの視線座標を記録する
-        self.pass_point = int(self.controller.get_pass_point('The_World'))
-        self.point_pos = self.controller.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
-        self.ticket_item = self.controller.get_ticket_info(self.pass_point)
-        self.ticket_target = False
-        self.bonus_start_time = time.time()
-        self.bonus_time = None
-        self.bonus_cnt = 0
+        self.timer = 5  # 止められる時間（秒）初回5秒
+        self.fix_flag = False
+        self.poss = None    # 他のプレイヤーの座標を記録する
+        self.rots = None    # 他のプレイヤーの視線座標を記録する
+
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():

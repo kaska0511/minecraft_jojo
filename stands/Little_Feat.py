@@ -3,15 +3,9 @@ import time
 from stands.Common_func import Common_func
 
 class Little_Feat(Common_func):
-    def __init__(self, name, ext , controller, run_stand=False) -> None:
-        super().__init__(name, ext)
-        self.name = name
-        self.ext = ext
-        self.controller = controller
-        self.uuid = self.get_uuid()
-        self.run_stand = run_stand
+    def __init__(self, name, ext , controller) -> None:
+        super().__init__(name, ext, controller)
         self.target_uuid = None
-        self.ticket_target = False
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
