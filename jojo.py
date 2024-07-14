@@ -4,7 +4,12 @@ import random
 import time
 import json
 import os
+import keyboard
+import mouse
+import win32gui
+from extension import Extension
 from mcrcon import MCRcon
+
 
 from Steel_Ball_Run_Race.GameController import *
 from Steel_Ball_Run_Race.SBR import *
@@ -88,6 +93,8 @@ def make_stand_list():
     '''
     first = {"The_World": "1dummy", "TuskAct4": "1dummy", "Killer_Qeen": "1dummy", "Catch_The_Rainbow": "1dummy", "Twentieth_Century_Boy": "1dummy", "Little_Feat": "1dummy"}
     with open('./json_list/stand_list.json', 'w', encoding='utf-8') as f:
+        json.dump(first, f, ensure_ascii=False)
+    with open('./json_list/stand_list.json.bak', 'w', encoding='utf-8') as f:   #バックアップ用
         json.dump(first, f, ensure_ascii=False)
 
 
@@ -295,12 +302,10 @@ def gift_stand():
         return
     
     # 参加者を検索
-    rec = mcr.command('list')   
-    cut_rec = re.sub(r'There are [0-9]* of a max of [0-9]* players online: ', '', rec)
-    split_list = re.split(r', ', cut_rec)
-
+    players = ext.extention_command('data get entity @e[type=minecraft:armor_stand,limit=1,name=List] Tags')
+    #print(players)
     # スタンド割り当て処理
-    for player in split_list:
+    for player in players:
         if player != '':
             if player in res.values():  # 既に割り当てられているなら次へ
                 continue
@@ -348,6 +353,9 @@ def name_registration(world,tusk,kqeen,rain,boy,feat):
     #boy.name = "KASKA0511"
     feat.name = stand_list["Little_Feat"]
 
+def test_set_uuid(stand):
+    if stand.name != "1dummy":
+        stand.uuid = stand.get_uuid()
 
 def set_uuid(world,tusk,kqeen,rain,boy,feat):
     if world.name != "1dummy":
@@ -364,6 +372,9 @@ def set_uuid(world,tusk,kqeen,rain,boy,feat):
     if feat.name != "1dummy":
         feat.uuid = feat.get_uuid()
 
+def test_death_or_logout_check(stand):
+    if (stand.get_logout() or stand.get_player_Death()) and stand.run_stand:
+        stand.cancel_stand()
 
 def death_or_logout_check(world,tusk,kqeen,rain,boy,feat):
     if (world.get_logout() or world.get_player_Death()) and world.run_stand:
@@ -378,6 +389,52 @@ def death_or_logout_check(world,tusk,kqeen,rain,boy,feat):
         boy.cancel_stand()
     if (feat.get_logout() or feat.get_player_Death()) and feat.run_stand:
         feat.cancel_stand()
+
+def test_stand_lost_check(stand, my_stand):
+    item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート")
+
+    if my_stand == 'The_World':
+        if not stand.bool_have_a_stand('DIO') and stand.name != '1dummy':
+            ext.extention_command('kill @e[tag=DIOinter]')
+            ext.extention_command('give ' + stand.name + " clock{Tags:DIO,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[0] + '"}]'+"'}}")
+            #stand.create_ticket_compass()
+            #stand.create_target_compass()
+
+    elif my_stand == 'TuskAct4':
+        if not stand.bool_have_a_stand('Saint') and stand.name != '1dummy':
+            ext.extention_command('kill @e[tag=tuskinter]')
+            ext.extention_command('give ' + stand.name + ' saddle')
+            ext.extention_command('give ' + stand.name + ' lead')
+            ext.extention_command('give ' + stand.name + " bone{Tags:Saint,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[1] + '"}]'+"'}}")
+            #stand.create_ticket_compass()
+            #stand.create_target_compass()
+
+    elif my_stand == 'Killer_Qeen':
+        if not stand.bool_have_a_stand('Killer') and stand.name != '1dummy':   # 全て失わないと再取得できないので注意
+            ext.extention_command('kill @e[tag=kqeeninter]')
+            ext.extention_command('give ' + stand.name + " gunpowder{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][0] + '"}]'+"'}}")
+            ext.extention_command('give ' + stand.name + " flint{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][1] + '"}]'+"'}}")
+            ext.extention_command('give ' + stand.name + " fire_charge{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][2] + '"}]'+"'}}")
+            #stand.create_ticket_compass()
+            #stand.create_target_compass()
+
+    elif my_stand == 'Catch_The_Rainbow':
+        if not stand.bool_have_a_stand('Rain') and stand.name != '1dummy':
+            ext.extention_command('give ' + stand.name + " skeleton_skull{Tags:Rain,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[3] + '"}]'+"'}}")
+            stand.create_ticket_compass()
+            stand.create_target_compass()
+
+    elif my_stand == 'Twentieth_Century_Boy':
+        if not stand.bool_have_a_stand('Boy') and stand.name != '1dummy':
+            ext.extention_command('kill @e[tag=boyinter]')
+            ext.extention_command('give ' + stand.name + " snowball{Tags:Boy,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[4] + '"}]'+"'}}")
+            #stand.create_ticket_compass()
+            #stand.create_target_compass()
+
+    elif my_stand == 'Little_Feat':
+        if not stand.bool_have_a_stand('Feat') and stand.name != '1dummy':
+            ext.extention_command('kill @e[tag=featinter]')
+            ext.extention_command('give ' + stand.name + " music_disc_13{Tags:Feat,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[5] + '"}]'+"'}}")
 
 
 def stand_lost_check(world,tusk,kqeen,rain,boy,feat):
@@ -475,6 +532,9 @@ def find_target(controller,world,tusk,kqeen,rain,boy,feat):
 
     return player
 
+def test_update_all_ticketcompass(stand):
+    stand.create_ticket_compass()
+
 def update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat):
     world.create_ticket_compass()
     tusk.create_ticket_compass()
@@ -482,6 +542,36 @@ def update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat):
     rain.create_ticket_compass()
     boy.create_ticket_compass()
     feat.create_ticket_compass()
+
+
+def key_detected(e):
+    print(f'キー{e.name}が押されました')
+
+def right_mouse_detected(arg, stand):
+    #print(f'右クリックを検知')
+    cursor_info = win32gui.GetCursorInfo()
+    #print(f'マウスカーソル：{cursor_info[0]}')   #マウスカーソル 0:非表示　1:表示
+    #print('Minecraft' in get_active_window_title())マウスカーソルが選択しているアプリケーションがMinecraftなら
+    if cursor_info[0] == 0 and ('Minecraft' in get_active_window_title()):
+        stand.right_click = True
+        # クリックしましたという記録を行う。
+
+def left_mouse_detected(arg, stand):
+    #print(f'左クリックを検知')
+    cursor_info = win32gui.GetCursorInfo()
+    #print(f'マウスカーソル：{cursor_info[0]}')   #マウスカーソル 0:非表示　1:表示
+    #print('Minecraft' in get_active_window_title())マウスカーソルが選択しているアプリケーションがMinecraftなら
+    if cursor_info[0] == 0 and ('Minecraft' in get_active_window_title()):
+        stand.left_click = True
+        # クリックしましたという記録を行う。
+
+def get_active_window_title():
+    # 現在マウスカーソルが選択しているアプリケーションの名前を取得します。
+    # sample -> ['Minecraft 24w07a - Multiplayer (3rd-party Server)' | 'Minecraft Launcher' | any...]　
+    window = win32gui.GetForegroundWindow()
+    title = win32gui.GetWindowText(window)
+    return title
+
 
 def main(mcr, is_server):
     
@@ -602,6 +692,74 @@ def main(mcr, is_server):
             controller.ticket_update_flag = False
             update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat)
 
+
+def test_main(ext, is_server):
+
+    ext.name = 'KASKA0511'
+    ext.stand = 'Killer_Qeen'
+
+    controller = GameController(ext)
+
+    my_stand = ext.stand #　テスト用（自分の名前の防具立てに付与されているスタンド名を取得する関数に置き換えられる。）
+    stand = None    #while内でインスタンスが入る。
+    while True:
+        if stand is None:   #インスタンスが入ると再度インスタンス化されることは無くなる。#!!スタンドを変えたい場合はそれ用の関数を作るべき。
+            if my_stand == 'The_World':
+                stand = The_World(name=ext.name, ext=ext, controller=controller)
+                ext.extention_command('kill @e[tag=DIOinter]')
+                ext.extention_command('summon interaction 0 -64 0 {Tags:["DIOinter"],height:2,width:1}')
+
+            elif my_stand == 'TuskAct4':
+                stand = TuskAct4(name=ext.name, ext=ext, controller=controller)
+                ext.extention_command('kill @e[tag=tuskinter]')
+                ext.extention_command('summon interaction 0 -64 0 {Tags:["tuskinter"],height:2,width:1}')
+
+            elif my_stand == 'Killer_Qeen':
+                stand = Killer_Qeen(name=ext.name, ext=ext, controller=controller)
+
+            elif my_stand == 'Catch_The_Rainbow':
+                stand = Catch_The_Rainbow(name=ext.name, ext=ext, controller=controller)
+                stand.set_scoreboard()
+                stand.summon_amedas()
+                stand.mask_air()
+
+            elif my_stand == 'Twentieth_Century_Boy':
+                stand = Twentieth_Century_Boy(name=ext.name, ext=ext, controller=controller)
+                ext.extention_command('kill @e[tag=boyinter]')
+                ext.extention_command('summon interaction 0 -64 0 {Tags:["boyinter"],height:2,width:1}')
+
+            elif my_stand == 'Little_Feat':
+                stand = Little_Feat(name=ext.name, ext=ext, controller=controller)
+                ext.extention_command('kill @e[tag=featinter]')
+                ext.extention_command('summon interaction 0 -64 0 {Tags:["featinter"],height:2,width:1}')
+
+        # キーボードは何のキーを押したのか検知できる。いずれ使うことになると思うので記録として残す。
+        #keyboard.on_press(callback=key_detected)
+
+        # マウスは引数の指定の仕方で検知可能なクリックが変わる。
+        # 左右別々にするならbuttonsを分ける必要がある。
+        # typesはdownとdoubleが無難。→連打が検知可能な状態。
+        mouse.on_button(callback=left_mouse_detected,args=('sample', stand),buttons=('left'),types=('down','double'))    # 引数を渡しながら実行する。
+        mouse.on_button(callback=right_mouse_detected,args=('sample', stand),buttons=('right'),types=('down','double'))    # 引数を渡しながら実行する。
+
+        if is_server:
+            # スタンド能力を付与。
+            gift_stand()
+
+        # スタンド使いの名前を登録する。
+        #name_registration(stand)
+
+        # プレイヤーが入ってきたときuuidを設定しなくてはならない。
+        test_set_uuid(stand)
+
+        # 能力者が死んでいたり、ログアウトしていたりしたら能力を解除
+        test_death_or_logout_check(stand)
+
+        # スタンドアイテムを付与。死亡時やスタンドアイテムをなくした場合自動で与えられる。
+        test_stand_lost_check(stand, my_stand)
+
+        stand.loop()
+
 #初期セットアップ
 if __name__ == '__main__':
      
@@ -625,4 +783,8 @@ if __name__ == '__main__':
     rip, rport, rpassword = get_rcon_info(is_server)
 
     with MCRcon(rip, rpassword, rport) as mcr:
-        main(mcr, is_server)
+
+        ext = Extension(mcr)
+        #main(mcr, is_server)
+        test_main(ext, is_server)
+
