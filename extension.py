@@ -66,7 +66,7 @@ class Extension:
         result = self.mcr.command('data get entity @e[name=NEW,type=minecraft:armor_stand,limit=1] Tags')
         #result = 'aaaaaaaaaaaNEW has the following entity data: ["HSLQ12", "ARMZ1341", "16iw0lRf", "moyashi21", "KASKA0511"]HSLQ12 has .........'  # sample
         if 'NEW has the' in result:    # ガード処理
-            lists = re.findall(r'.*NEW has the following entity data: \["(.+?)"\].*', result)  # (.+?)の?は非貪欲マッチ。丸括弧の中の文字列を抽出。
+            lists = re.findall(r'.*NEW has the following entity data: \["(.+?)"\]{1}?.*', result)  # (.+?)の?は非貪欲マッチ。丸括弧の中の文字列を抽出。
             name_list = re.split(r'", "', lists[0])
 
             return name_list
@@ -87,7 +87,7 @@ class Extension:
         result = self.mcr.command('data get entity @e[name=List,type=minecraft:armor_stand,limit=1] Tags')
         #result = 'aaaaaaaaaaaList has the following entity data: ["HSLQ12", "ARMZ1341", "16iw0lRf", "moyashi21", "KASKA0511"]HSLQ12 has .........'  # sample
         if 'List has the' in result:    # ガード処理
-            lists = re.findall(r'.*List has the following entity data: \["(.+?)"\].*', result)  # (.+?)の?は非貪欲マッチ。丸括弧の中の文字列を抽出。
+            lists = re.findall(r'.*List has the following entity data: \["(.+?)"\]{1}?.*', result)  # (.+?)の?は非貪欲マッチ。丸括弧の中の文字列を抽出。
             name_list = re.split(r'", "', lists[0])
 
             return name_list
@@ -109,7 +109,7 @@ class Extension:
         result = self.mcr.command('data get entity @e[name=Standlist,type=minecraft:armor_stand,limit=1] Tags')
         #result = 'aaaaaaaaaaaStandlist has the following entity data: ["The_World", "Killer", "TuskAct4"]HSLQ12 has .........' # sample
         if 'Standlist has the' in result:    # ガード処理
-            lists = re.findall(r'.*Standlist has the following entity data: \["(.+?)"\].*', result)     # (.+?)の?は非貪欲マッチ。丸括弧の中の文字列を抽出。
+            lists = re.findall(r'.*Standlist has the following entity data: \["(.+?)"\]{1}?.*', result)     # (.+?)の?は非貪欲マッチ。丸括弧の中の文字列を抽出。
             stand_list = re.split(r'", "', lists[0])
 
             return stand_list
