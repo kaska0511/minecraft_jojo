@@ -114,6 +114,182 @@ def open_json(json_file):
     return df
 
 
+def summon_stand_user_info(mcr):
+    '''
+    スタンド能力と使用者を紐づけるアマスタを生成します。
+    外部ファイルの設定を優先とし、既に生成されている場合はスキップします。
+
+    Parameter
+        mcr : MCRcon
+            Rconのサーバ情報
+    '''
+    str_dir = 'json_list'
+    str_stand_file = 'stand_list.json'
+    entity_name = 'minecraft:armor_stand'
+    X = 0
+    Y = -74
+    Z = 0
+    invulnerable = True
+    nogravity = True
+    contents = open_json(f'{str_dir}/{str_stand_file}')
+
+    for stand_name in contents.keys():
+        
+        #ワールドのエンティティの情報を取得
+        resp = get_entity_data(mcr, entity_name, None, stand_name, 'Tags')
+        
+        #ワールドのエンティティが存在しない場合
+        if resp is None:
+            #エンティティを新規で生成する
+            _ = set_entity_data(mcr, entity_name, X, Y, Z, invulnerable, nogravity, contents.get(stand_name) , stand_name)
+
+        #外部ファイルとワールドのエンティティが一致しない場合  
+        elif resp != contents.get(stand_name):
+            #外部ファイルを踏襲
+            _ = edit_entity_tag_data(mcr, entity_name, stand_name, resp, contents.get(stand_name))
+
+        #外部ファイルとエンティティが一致する場合
+        else:
+            pass
+
+
+def get_entity_data(mcr, types, tag, name, target=None):
+    '''
+    指定されたエンティティの情報を取得します。
+
+    Parameter
+        mcr : MCRcon
+            Rconのサーバ情報
+        types : str
+            検索対象のオブジェクト名
+        tag : str
+            タグ情報
+        name : str
+            Name情報
+        target : str
+            ターゲット情報(省略可)
+
+    Return
+        targetに指定した情報。エンティティが存在しない場合はNone。
+    '''
+    #コマンドの基本構文を生成
+    cmd = f'/data get entity @e[limit=1,%types%%tag%%name%] %target%'
+    
+    #「%types%」箇所の置換
+    cmd = cmd.replace(f'%types%', '') if types is None else cmd.replace(f'%types%', f'type={types},')
+    
+    #「%tag%」箇所の置換
+    cmd = cmd.replace(f'%tag%', '') if tag is None else cmd.replace(f'%tag%', f'tag={tag},')
+
+    #「%name%」箇所の置換
+    cmd = cmd.replace(f'%name%', '') if name is None else cmd.replace(f'%name%', f'name={name}')
+    
+    #「%target%」箇所の置換
+    cmd = cmd.replace(f'%target%', '') if target is None else cmd.replace(f'%target%', f'{target}')
+
+    return mcr.command(cmd)
+
+
+def set_entity_data(mcr, types, X, Y, Z, invulnerable, nogravity, tags, name):
+    '''
+    指定されたエンティティを作成します。
+
+    Parameter
+        mcr : MCRcon
+            Rconのサーバ情報
+        types : str
+            検索対象のオブジェクト名
+        X : int
+            エンティティのX座標
+        Y : int
+            エンティティのY座標
+        Z : int
+            エンティティのZ座標
+        invulnerable : bool
+            エンティティの不死身属性(True：不死身、False：定命)
+        nogravity : bool
+            エンティティの無重力属性(True：無重力、False：重力)
+        tags : list
+            タグ情報
+        name : str
+            Name情報
+    Return
+        コマンドの実行結果
+    '''
+    #コマンドの基本構文を生成
+    cmd = f'/summon %types% %X% %Y% %Z% {{%invulnerable%%nogravity%%tag%%name%}}'
+    
+    #「%types%」箇所の置換
+    cmd = cmd.replace(f'%types%', '') if types is None else cmd.replace(f'%types%', f'{types}')
+    
+    #「%X%」箇所の置換
+    cmd = cmd.replace(f'%X%', '') if X is None else cmd.replace(f'%X%', f'{X}')
+    
+    #「%Y%」箇所の置換
+    cmd = cmd.replace(f'%Y%', '') if Y is None else cmd.replace(f'%Y%', f'{Y}')
+    
+    #「%Z%」箇所の置換
+    cmd = cmd.replace(f'%Z%', '') if Z is None else cmd.replace(f'%Z%', f'{Z}')
+    
+    #「%invulnerable%」箇所の置換
+    cmd = cmd.replace(f'%invulnerable%', '') if invulnerable is None else cmd.replace(f'%invulnerable%', f'Invulnerable:1,') if invulnerable else cmd.replace(f'%invulnerable%', f'Invulnerable:0,')
+ 
+    #「%gravity%」箇所の置換
+    cmd = cmd.replace(f'%nogravity%', '') if nogravity is None else cmd.replace(f'%nogravity%', f'NoGravity:1,') if nogravity else cmd.replace(f'%nogravity%', f'NoGravity:0,')
+
+    #「%tag%」箇所の置換
+    cmd = cmd.replace(f'%tag%', '') if tags is None else cmd.replace(f'%tag%', f'Tags:[{(", ").join(tags)}],')
+
+    #「%name%」箇所の置換
+    cmd = cmd.replace(f'%name%', '') if name is None else cmd.replace(f'%name%', f'CustomName:\'{name}\'')
+    
+    return mcr.command(cmd)
+
+
+def edit_entity_tag_data(mcr, types, name, old_tags, new_tag):
+    '''
+    指定されたエンティティのタグ名を変更します。
+
+    Parameter
+        mcr : MCRcon
+            Rconのサーバ情報
+        types : str
+            検索対象のオブジェクト名
+        old_tags : str
+            変更前のタグ名
+        new_tag : str
+            変更後のタグ名
+        name : str
+            Name情報
+    Return
+        コマンドの実行結果(list型)
+    '''
+    #コマンドの基本構文を生成
+    cmd = f'/tag @e[limit=1,%types%%name%] %command% %tag%'    
+    
+    #「%types%」箇所の置換
+    cmd = cmd.replace(f'%types%', '') if types is None else cmd.replace(f'%types%', f'type={types},')
+
+    #「%name%」箇所の置換
+    cmd = cmd.replace(f'%name%', '') if name is None else cmd.replace(f'%name%', f'name={name}')
+    
+    #参加者リストの取得
+    name_list = ext.get_joinner_list()
+    
+    #参加者リストを元にold_tags内の氏名を検索
+    index = None
+    for i in range(len(old_tags)):
+        if old_tags[i] in name_list:
+            index = i
+            break
+
+    #「%command%」、「%tag%」箇所を置換しコマンド実行
+    remove_resp = mcr.command(cmd.replace(f'%command%', 'remove').replace(f'%tag%', '') if old_tags[index] is None else cmd.replace(f'%command%', 'remove').replace(f'%tag%', f'{old_tags[index]}'))
+    addtag_resp = mcr.command(cmd.replace(f'%command%', 'add').replace(f'%tag%', '') if new_tag is None else cmd.replace(f'%command%', 'add').replace(f'%tag%', f'{new_tag}'))
+
+    return [remove_resp, addtag_resp]
+
+
 def gift_stand():
     # stand_list.jsonを開く。
     res = open_json('./json_list/stand_list.json')
@@ -367,6 +543,7 @@ def update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat):
     boy.create_ticket_compass()
     feat.create_ticket_compass()
 
+
 def key_detected(e):
     print(f'キー{e.name}が押されました')
 
@@ -396,7 +573,12 @@ def get_active_window_title():
     return title
 
 
-def main(mcr):
+def main(mcr, is_server):
+    
+    if is_server:
+        #スタンド能力と使用者を紐づけるアマスタを生成
+        summon_stand_user_info(mcr) 
+
     mcr.command("gamerule sendCommandFeedback false")
 
     #checkpoint_prepare()
@@ -601,6 +783,8 @@ if __name__ == '__main__':
     rip, rport, rpassword = get_rcon_info(is_server)
 
     with MCRcon(rip, rpassword, rport) as mcr:
+
         ext = Extension(mcr)
-        #main(mcr)
+        #main(mcr, is_server)
         test_main(ext, is_server)
+
