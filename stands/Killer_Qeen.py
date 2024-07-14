@@ -7,7 +7,7 @@ class Killer_Qeen(Common_func):
     def __init__(self, name, ext, controller) -> None:
         super().__init__(name, ext, controller)
         self.observe_pos = None
-        self.bomb_pos = None
+        self.bomb_pos = []
         self.mode = 0
         self.summon_flag = False
         self.air_bomb_dis = 0
@@ -204,14 +204,22 @@ class Killer_Qeen(Common_func):
 
 
     def get_armor_stand_pos(self, tag):
-        edit_pos = []
+        edit_pos = self.bomb_pos
         res = self.ext.extention_command(f'data get entity @e[name=Killer_Qeen,tag={tag},limit=1] Pos')
         #print(res)
-        if res is not None or res != []:
-            for floatd in res:
-                floater = floatd.strip("d")
-                # 0以上は切り捨て、負の値は切り上げの計算とする。-1.2　=> -2、0.3 => 0, 12.1 => 12
-                edit_pos.append(math.floor(float(floater)))
+        # 返り値がNoneだったり、[]のようにうまく取得できなかった場合は現在のself.bomb_posを返す。
+        if res is None:
+            return edit_pos
+        if res == []:
+            return edit_pos
+
+        # 上記ifを抜けられた場合、コマンドが上手く動作し返り値が得られたとして整形処理へ移る。
+        edit_pos = []
+        for floatd in res:
+            floater = floatd.strip("d")
+            # 0以上は切り捨て、負の値は切り上げの計算とする。-1.2　=> -2、0.3 => 0, 12.1 => 12
+            edit_pos.append(math.floor(float(floater)))
+
         #print(edit_pos)
         return edit_pos
 
