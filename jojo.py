@@ -123,23 +123,23 @@ def summon_stand_user_info(mcr):
     Y = -74
     Z = 0
     invulnerable = True
-    gravity = False
-    contnts = open_json(f'{str_dir}/{str_stand_file}')
+    nogravity = True
+    contents = open_json(f'{str_dir}/{str_stand_file}')
 
-    for key in contnts.keys():
+    for stand_name in contents.keys():
         
         #ワールドのエンティティの情報を取得
-        resp = get_entity_data(mcr, entity_name, None, key, 'Tags')
+        resp = get_entity_data(mcr, entity_name, None, stand_name, 'Tags')
         
         #ワールドのエンティティが存在しない場合
         if resp is None:
             #エンティティを新規で生成する
-            _ = set_entity_data(mcr, entity_name, X, Y, Z, invulnerable, gravity, resp[0], key)
-        
+            _ = set_entity_data(mcr, entity_name, X, Y, Z, invulnerable, nogravity, contents.get(stand_name) , stand_name)
+
         #外部ファイルとワールドのエンティティが一致しない場合  
-        elif resp != contnts.get(key):
+        elif resp != contents.get(stand_name):
             #外部ファイルを踏襲
-            _ = edit_entity_tag_data(mcr, entity_name, resp[0], contnts.get(key), key)
+            _ = edit_entity_tag_data(mcr, entity_name, stand_name, resp, contents.get(stand_name))
 
         #外部ファイルとエンティティが一致する場合
         else:
@@ -166,7 +166,7 @@ def get_entity_data(mcr, types, tag, name, target=None):
         targetに指定した情報。エンティティが存在しない場合はNone。
     '''
     #コマンドの基本構文を生成
-    cmd = f'/data get entity @e[limit=1,%types%%tag%%name%]%target%'
+    cmd = f'/data get entity @e[limit=1,%types%%tag%%name%] %target%'
     
     #「%types%」箇所の置換
     cmd = cmd.replace(f'%types%', '') if types is None else cmd.replace(f'%types%', f'type={types},')
@@ -178,12 +178,12 @@ def get_entity_data(mcr, types, tag, name, target=None):
     cmd = cmd.replace(f'%name%', '') if name is None else cmd.replace(f'%name%', f'name={name}')
     
     #「%target%」箇所の置換
-    cmd = cmd.replace(f'%target%', '') if target is None else cmd.replace(f'%target%', f'\u0020{target}')
+    cmd = cmd.replace(f'%target%', '') if target is None else cmd.replace(f'%target%', f'{target}')
 
     return mcr.command(cmd)
 
 
-def set_entity_data(mcr, types, X, Y, Z, invulnerable, gravity, tag, name):
+def set_entity_data(mcr, types, X, Y, Z, invulnerable, nogravity, tags, name):
     '''
     指定されたエンティティを作成します。
 
@@ -200,9 +200,9 @@ def set_entity_data(mcr, types, X, Y, Z, invulnerable, gravity, tag, name):
             エンティティのZ座標
         invulnerable : bool
             エンティティの不死身属性(True：不死身、False：定命)
-        gravity : bool
-            エンティティの重力属性(True：重力、False：無重力)
-        tag : str
+        nogravity : bool
+            エンティティの無重力属性(True：無重力、False：重力)
+        tags : list
             タグ情報
         name : str
             Name情報
@@ -210,7 +210,7 @@ def set_entity_data(mcr, types, X, Y, Z, invulnerable, gravity, tag, name):
         コマンドの実行結果
     '''
     #コマンドの基本構文を生成
-    cmd = f'/summon %types% %X% %Y% %Z% {{%invulnerable%%gravity%%tag%%name%}}'
+    cmd = f'/summon %types% %X% %Y% %Z% {{%invulnerable%%nogravity%%tag%%name%}}'
     
     #「%types%」箇所の置換
     cmd = cmd.replace(f'%types%', '') if types is None else cmd.replace(f'%types%', f'{types}')
@@ -228,10 +228,10 @@ def set_entity_data(mcr, types, X, Y, Z, invulnerable, gravity, tag, name):
     cmd = cmd.replace(f'%invulnerable%', '') if invulnerable is None else cmd.replace(f'%invulnerable%', f'Invulnerable:1,') if invulnerable else cmd.replace(f'%invulnerable%', f'Invulnerable:0,')
  
     #「%gravity%」箇所の置換
-    cmd = cmd.replace(f'%gravity%', '') if gravity is None else cmd.replace(f'%gravity%', f'NoGravity:0,') if gravity else cmd.replace(f'%gravity%', f'NoGravity:1,')
-        
+    cmd = cmd.replace(f'%nogravity%', '') if nogravity is None else cmd.replace(f'%nogravity%', f'NoGravity:1,') if nogravity else cmd.replace(f'%nogravity%', f'NoGravity:0,')
+
     #「%tag%」箇所の置換
-    cmd = cmd.replace(f'%tag%', '') if tag is None else cmd.replace(f'%tag%', f'Tags:[{tag}],')
+    cmd = cmd.replace(f'%tag%', '') if tags is None else cmd.replace(f'%tag%', f'Tags:[{(", ").join(tags)}],')
 
     #「%name%」箇所の置換
     cmd = cmd.replace(f'%name%', '') if name is None else cmd.replace(f'%name%', f'CustomName:\'{name}\'')
@@ -239,7 +239,7 @@ def set_entity_data(mcr, types, X, Y, Z, invulnerable, gravity, tag, name):
     return mcr.command(cmd)
 
 
-def edit_entity_tag_data(mcr, types, old_tag, new_tag, name):
+def edit_entity_tag_data(mcr, types, name, old_tags, new_tag):
     '''
     指定されたエンティティのタグ名を変更します。
 
@@ -248,7 +248,7 @@ def edit_entity_tag_data(mcr, types, old_tag, new_tag, name):
             Rconのサーバ情報
         types : str
             検索対象のオブジェクト名
-        old_tag : str
+        old_tags : str
             変更前のタグ名
         new_tag : str
             変更後のタグ名
@@ -266,8 +266,18 @@ def edit_entity_tag_data(mcr, types, old_tag, new_tag, name):
     #「%name%」箇所の置換
     cmd = cmd.replace(f'%name%', '') if name is None else cmd.replace(f'%name%', f'name={name}')
     
+    #参加者リストの取得
+    name_list = ext.get_joinner_list()
+    
+    #参加者リストを元にold_tags内の氏名を検索
+    index = None
+    for i in range(len(old_tags)):
+        if old_tags[i] in name_list:
+            index = i
+            break
+
     #「%command%」、「%tag%」箇所を置換しコマンド実行
-    remove_resp = mcr.command(cmd.replace(f'%command%', 'remove').replace(f'%tag%', '') if old_tag is None else cmd.replace(f'%command%', 'remove').replace(f'%tag%', f'{old_tag}'))
+    remove_resp = mcr.command(cmd.replace(f'%command%', 'remove').replace(f'%tag%', '') if old_tags[index] is None else cmd.replace(f'%command%', 'remove').replace(f'%tag%', f'{old_tags[index]}'))
     addtag_resp = mcr.command(cmd.replace(f'%command%', 'add').replace(f'%tag%', '') if new_tag is None else cmd.replace(f'%command%', 'add').replace(f'%tag%', f'{new_tag}'))
 
     return [remove_resp, addtag_resp]
@@ -473,7 +483,12 @@ def update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat):
     boy.create_ticket_compass()
     feat.create_ticket_compass()
 
-def main(mcr):
+def main(mcr, is_server):
+    
+    if is_server:
+        #スタンド能力と使用者を紐づけるアマスタを生成
+        summon_stand_user_info(mcr) 
+
     mcr.command("gamerule sendCommandFeedback false")
 
     #checkpoint_prepare()
@@ -610,7 +625,4 @@ if __name__ == '__main__':
     rip, rport, rpassword = get_rcon_info(is_server)
 
     with MCRcon(rip, rpassword, rport) as mcr:
-        if is_server:
-            #スタンド能力と使用者を紐づけるアマスタを生成
-            summon_stand_user_info(mcr) 
-        main(mcr)
+        main(mcr, is_server)
