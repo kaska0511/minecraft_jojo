@@ -148,12 +148,12 @@ class Extension:
         command_result = None   # return値初期化
 
         #result = 'KASKA0511 has the following entity data: 20ARMZ1341 has the following entity data: 1HSLQ12 has the following entity data: 5'  # sample
-        loop = True if ('data get' or 'locate') in command else False
-        while loop: # data getなど返り値を求めるコマンドを実行した時データが取得できる状況にもかかわらず稀に何も返ってこない場合がある。その対策。
-            result = self.mcr.command(command)
-            if result != '':
-                print(f'result: {result}')
-                break
+        if ('data get' or 'locate') in command:
+            for _ in range(2): # data getなど返り値を求めるコマンドを実行した時データが取得できる状況にもかかわらず稀に何も返ってこない場合がある。その対策。基本的に2回実行すればよいパターンが多い。
+                result = self.mcr.command(command)
+                if result != '':
+                    print(f'result: {result}')
+                    break
         else:
             result = self.mcr.command(command)
             print(f'result: {result}')
