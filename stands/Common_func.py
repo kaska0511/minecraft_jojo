@@ -23,6 +23,19 @@ class Common_func:
         self.bonus_time = None
         self.bonus_cnt = 0
 
+        # キーボードは何のキーを押したのか検知できる。いずれ使うことになると思うので記録として残す。
+        #keyboard.on_press(callback=key_detected)
+
+        # マウスは引数の指定の仕方で検知可能なクリックが変わる。
+        # 左右別々にするならbuttonsを分ける必要がある。
+        # typesはdownとdoubleが無難。→連打が検知可能な状態。
+        mouse.on_button(callback=self.left_mouse_detected,args=(),buttons=('left'),types=('down','double'))    # 引数を渡しながら実行する。
+        mouse.on_button(callback=self.right_mouse_detected,args=(),buttons=('right'),types=('down','double'))    # 引数を渡しながら実行する。
+
+
+    def key_detected(self, e):
+        print(f'キー{e.name}が押されました')
+
     def right_mouse_detected(self):
         #print(f'右クリックを検知')
         #print('Minecraft' in get_active_window_title())マウスカーソルが選択しているアプリケーションがMinecraftなら
