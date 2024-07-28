@@ -137,7 +137,7 @@ class Extension:
         '''
         
         command_info = self._listen_commands_return(command, wanna_info_name)
-        print(f'return:     {command_info}')
+        #print(f'return:     {command_info}')
         return command_info
 
 
@@ -158,7 +158,7 @@ class Extension:
 
         else:   # 命令形コマンド
             result = self.mcr.command(command)
-            print(f'command: {command}, result: {result}')
+            #print(f'command: {command}, result: {result}')
             command_info = None
 
         return command_info
@@ -325,7 +325,7 @@ class Extension:
                 result = result[0].strip('"')   # 両端からダブルクォーテーション削除。念のため。
                 result = result.strip("'")   # 両端からシングルクォーテーション削除
             else:
-                result = re.findall(wanna_info_name + r' has the following entity data: (.+?[s|f|d]{1}?)', result)
+                result = re.findall(wanna_info_name + r' has the following entity data: (.+?[s|f|d|b]{1}?)', result)
                 result = result[0]
 
             return result
