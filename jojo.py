@@ -114,6 +114,75 @@ def open_json(json_file):
     return df
 
 
+def get_json_value(contents, search_key, cond):
+    '''
+    jsonファイルの中身を再帰的に検索する
+
+    Parameter
+        contents : dict or str or bool
+            jsonファイルの中身
+        search_key : str
+            検索対象のKey値
+        cond : def
+            has_keyメソッド
+
+    Return
+        検索対象のValue値。存在しない場合はNone。
+    '''
+    res = ""
+    
+    #has_keyメソッドでcontentsに検索対象のKey値が存在するか判定する
+    if cond(contents, search_key):
+        #存在した場合、Returnに設定
+        res = contents.get(search_key)
+    
+    #contentsがdictだった場合
+    elif isinstance(contents, dict):
+        
+        #Key値でループする
+        for key in contents.keys():
+            
+            #contentsを元に再帰的に検索する
+            res += str(get_json_value(contents.get(key), search_key, has_key))
+            
+    return res
+
+
+def has_key(contents, search_key):
+    '''
+    contentsの中に検索対象のKey値が存在するか判定する
+
+    Parameter
+        contents : dict
+            jsonファイルの中身
+        search_key : str
+            検索対象のKey値
+
+    Return
+        判定結果(True：存在する　False：存在しない)
+    '''
+    #contentsに検索対象のKey値が存在するか判定する
+    if isinstance(contents, dict):
+        return True if contents.keys == search_key else search_key in contents
+    return False
+
+
+def search_json(contents, search_key):
+    '''
+    jsonファイルの検索をコントロールする
+
+    Parameter
+        contents : dict
+            jsonファイルの中身
+        search_key : str
+            検索対象のKey値
+
+    Return
+        検索対象のKey値に対するValue値。存在しない場合はNone。
+    '''
+    return get_json_value(contents, search_key, has_key)
+
+
 def summon_stand_user_info(mcr):
     '''
     スタンド能力と使用者を紐づけるアマスタを生成します。
@@ -288,6 +357,22 @@ def edit_entity_tag_data(mcr, types, name, old_tags, new_tag):
     addtag_resp = mcr.command(cmd.replace(f'%command%', 'add').replace(f'%tag%', '') if new_tag is None else cmd.replace(f'%command%', 'add').replace(f'%tag%', f'{new_tag}'))
 
     return [remove_resp, addtag_resp]
+
+
+def get_self_playername():
+    '''
+    自身のプレイヤー名を取得します。
+
+    Parameter
+        なし
+    Return
+        自身のプレイヤー名
+    '''
+    str_dir = os.getenv('APPDATA') + '\\.minecraft'
+    str_file = 'launcher_accounts_microsoft_store.json'
+    contents = open_json(f'{str_dir}\\{str_file}')
+    
+    return search_json(contents, 'name')
 
 
 def gift_stand():
@@ -574,6 +659,8 @@ def get_active_window_title():
 
 
 def main(mcr, is_server):
+    
+    myname = get_self_playername()
     
     if is_server:
         #スタンド能力と使用者を紐づけるアマスタを生成
