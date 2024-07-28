@@ -3,6 +3,10 @@ import time
 import keyboard
 from stands.Common_func import Common_func
 
+# ダブルクリックを検出するためのタイムアウト設定（ミリ秒）
+DOUBLE_CLICK_THRESHOLD_MAX = 300
+DOUBLE_CLICK_THRESHOLD_MIN = 100
+
 class Catch_The_Rainbow(Common_func):
     def __init__(self, name, ext, controller) -> None:
         super().__init__(name, ext, controller)
@@ -10,21 +14,30 @@ class Catch_The_Rainbow(Common_func):
         self.ability_limit = 0
         self.mask = None
         self.kill_check = False
+        self.last_press_time = 0   # 最後のキー押下時刻
+        self.double_spacekey = False
         self.mask_air()
         self.summon_amedas()
+        keyboard.on_press_key('space', self.on_space_key_event)
 
-    def summon_amedas(self):
-        """
-        雨が降るバイオーム検索用スノーゴーレムを作成する。
-        召喚するバイオームは生成率が高く、雨が降る森林。
-        """
-        res = self.ext.extention_command(f'locate biome minecraft:forest')
-        self.ext.extention_command(f'forceload add {res[0]} {res[2]} {res[0]} {res[2]}')
-        self.ext.extention_command(f'execute as {self.name} at @s positioned {res[0]} 317 {res[2]} rotated 0 0 run fill ^1 ^ ^-1 ^-1 ^2 ^1 minecraft:barrier destroy')
-        self.ext.extention_command(f'execute as {self.name} at @s positioned {res[0]} 317 {res[2]} rotated 0 0 run fill ^ ^1 ^ ^ ^2 ^ minecraft:air destroy')
-        self.ext.extention_command(f'execute unless entity @e[name=Catch_The_Rainbow,tag=Amedas,limit=1] run summon minecraft:snow_golem {res[0]} 318 {res[2]} {{CustomName:Catch_The_Rainbow,NoAI:1,Silent:1,NoGravity:1,Tags:["Amedas"]}}')
-        self.ext.extention_command(f'effect give @e[tag=Amedas,limit=1] minecraft:health_boost infinite 120 false')  # 体力最大値をウォーデン並みにする。
-        self.ext.extention_command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 120 true')     # 最大値を変更したら上限まで回復させる必要がある。（即時回復）
+    def on_space_key_event(self, event):
+        current_time = time.time() * 1000  # ミリ秒に変換
+
+        # 最後の押下からの経過時間を計算
+        elapsed_time = current_time - self.last_press_time
+
+        if elapsed_time >= DOUBLE_CLICK_THRESHOLD_MIN and elapsed_time <= DOUBLE_CLICK_THRESHOLD_MAX:
+            #print("スペースキーダブルクリック検出！")
+            # マイクラウィンドウactive and カーソルが非表示。両方を満たしているか？
+            if self.is_Minecraftwindow()[0] and self.invisible_cursor():
+                self.double_spacekey = not self.double_spacekey # スペースキーの打鍵を反転
+
+        else:
+            pass
+            #print("スペースキーが押されました")
+
+        # 現在の時刻を最後の押下時刻として記録
+        self.last_press_time = current_time
 
     def mask_air(self):
         biome = ('deep_cold_ocean','cold_ocean','deep_ocean')
@@ -56,7 +69,6 @@ class Catch_The_Rainbow(Common_func):
                     else:
                         loop = True
 
-
     def check_mask(self, res):
         max = 73
         for i in range(63, max):
@@ -71,6 +83,19 @@ class Catch_The_Rainbow(Common_func):
                 self.ext.extention_command(f'forceload remove {res[0]} {res[2]} {res[0]} {res[2]}')
                 return False
 
+    def summon_amedas(self):
+        """
+        雨が降るバイオーム検索用スノーゴーレムを作成する。
+        召喚するバイオームは生成率が高く、雨が降る森林。
+        """
+        res = self.ext.extention_command(f'locate biome minecraft:forest')
+        self.ext.extention_command(f'forceload add {res[0]} {res[2]} {res[0]} {res[2]}')
+        self.ext.extention_command(f'execute as {self.name} at @s positioned {res[0]} 317 {res[2]} rotated 0 0 run fill ^1 ^ ^-1 ^-1 ^2 ^1 minecraft:barrier destroy')
+        self.ext.extention_command(f'execute as {self.name} at @s positioned {res[0]} 317 {res[2]} rotated 0 0 run fill ^ ^1 ^ ^ ^2 ^ minecraft:air destroy')
+        self.ext.extention_command(f'execute unless entity @e[name=Catch_The_Rainbow,tag=Amedas,limit=1] run summon minecraft:snow_golem {res[0]} 318 {res[2]} {{CustomName:Catch_The_Rainbow,NoAI:1,Silent:1,NoGravity:1,Tags:["Amedas"]}}')
+        self.ext.extention_command(f'effect give @e[tag=Amedas,limit=1] minecraft:health_boost infinite 120 false')  # 体力最大値をウォーデン並みにする。
+        self.ext.extention_command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 120 true')     # 最大値を変更したら上限まで回復させる必要がある。（即時回復）
+
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
             return
@@ -78,31 +103,39 @@ class Catch_The_Rainbow(Common_func):
         # standを走らせてもよいか？
         self.run_stand = self.can_I_run_stand()
 
-        if self.run_stand:
+        if self.run_stand and self.double_spacekey:
+            # マイクラウィンドウactive and カーソルが非表示。両方を満たしているか？
+            active_minecraft = True if self.is_Minecraftwindow()[0] and self.invisible_cursor() else False
+
             # 能力解除時に死ぬかどうかのフラグ。
             self.kill_check = True
             # 体力値に応じてダメージ軽減を付与。
             self.effect_Resistance()
-             # 足元に3*3のバリアブロックを常に配置（恐らくジャンプしてもすぐに配置されるのでジャンプ検知は不要？）
-            if self.ability_limit == 0:
-                self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^-2 ^-2 ^-2 ^2 ^-1 ^2 minecraft:barrier keep')  #
-            elif self.ability_limit == 1:
-                # yで起点を決め、dyで起点から+何ブロック分を範囲にするか決められる。
-                self.ext.extention_command(f'execute as {self.name} at @s if entity @s[y=-64,dy=192] rotated 0 0 run fill ^-2 ^-2 ^-2 ^2 ^-1 ^2 minecraft:barrier keep')   #
+            # 落下ダメージの倍率0にする = 落下ダメージを受けない。
+            self.ext.extention_command(f'attribute {self.name} minecraft:generic.fall_damage_multiplier base set 0')
 
-            self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^-2 ^-3 ^-2 ^2 ^-30 ^2 minecraft:air replace minecraft:barrier') #   ^-1 ^-3 ^-1 ^1 ^-3 ^1
-            self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^-2 ^ ^-2 ^2 ^10 ^2 minecraft:air replace minecraft:barrier')   #   ^-1 ^1 ^-1 ^1 ^1 ^1
+            # 上昇と下降両方押している場合→その場で停止
+            if keyboard.is_pressed('space') and keyboard.is_pressed('shift'):
+                if active_minecraft:
+                    self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0')
+            else:   # 少なくとも両方を押していない。
+                if keyboard.is_pressed('space') and active_minecraft:   # 空中でspaceを押した and マイクラウィンドウactive and カーソルが非表示
+                    #print(f'space押した!{keyboard.is_pressed('space')}')
+                    if self.ability_limit == 0: # どの高度でも雨が降る
+                        self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set -0.01')
+                    if self.ability_limit == 1: # 高度次第で変化するバイオームで上昇を128ブロックまでに制限
+                        pos = self.ext.extention_command(f'data get entity {self.name} Pos')
+                        if pos is None: # スタンド使いが居ない。処理終了。
+                            return False
+                        if round(float(pos[1].rstrip('d'))) <= 128:  # pos[1] = '70.40762608459386d' →　70
+                            self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set -0.01')
 
-            self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^2 ^-10 ^3 ^-30 ^10 ^30 minecraft:air replace minecraft:barrier')   #^1 ^-2 ^2 ^-3 ^1 ^3
-            self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^-3 ^-10 ^2 ^-30 ^10 ^-30 minecraft:air replace minecraft:barrier') #^-2 ^-2 ^1 ^-3 ^1 ^-3
-            self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^-2 ^-10 ^-3 ^30 ^10 ^-30 minecraft:air replace minecraft:barrier') #^-1 ^-2 ^-2 ^3 ^1 ^-3
-            self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^3 ^-10 ^-2 ^30 ^10 ^30 minecraft:air replace minecraft:barrier')   #^2 ^-2 ^-1 ^3 ^1 ^3
-            if keyboard.is_pressed('shift') and self.is_Minecraftwindow()[0] and self.invisible_cursor():   # shiftを押した and マイクラウィンドウactive and カーソルが非表示
-                #print(f'shift押した!{keyboard.is_pressed('shift')}')
-                self.ext.extention_command(f'execute as @a[name={self.name},limit=1] at @s rotated 0 0 run fill ^-2 ^-1 ^-2 ^2 ^-1 ^2 minecraft:air replace minecraft:barrier')   #
-                self.ext.extention_command(f'execute as @a[name={self.name},limit=1] at @s rotated 0 0 run fill ^-2 ^ ^-2 ^2 ^10 ^2 minecraft:air replace minecraft:barrier')       #^-1 ^ ^-1 ^1 ^ ^1
+                elif keyboard.is_pressed('shift') and active_minecraft:   # shiftを押した and マイクラウィンドウactive and カーソルが非表示
+                    #print(f'shift押した!{keyboard.is_pressed('shift')}')
+                    self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0.01')
 
-                self.ext.extention_command(f'execute as @a[name={self.name},limit=1] at @s rotated 0 0 if block ^ ^-1 ^ minecraft:barrier run tp {self.name} ^ ^-1 ^')
+                else:   # 上昇も下降もしようとしてない→その場で留まる。
+                    self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0')
 
         else:   # 仮面を外したらetc...
             self.cancel_stand()
@@ -181,16 +214,10 @@ class Catch_The_Rainbow(Common_func):
 
     def cancel_stand(self):
         self.run_stand = False
-        self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^-2 ^-2 ^-2 ^2 ^-1 ^2 minecraft:air replace minecraft:barrier') #
+        self.double_spacekey = False
+        self.ext.extention_command(f'attribute {self.name} minecraft:generic.fall_damage_multiplier base set 1')    # 落下ダメージを受けるようにする。
+        self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0.08')    # デフォルトで落下するようにする。
 
-        self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^-2 ^-3 ^-2 ^2 ^-30 ^2 minecraft:air replace minecraft:barrier') #   ^-1 ^-3 ^-1 ^1 ^-3 ^1
-        self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^-2 ^ ^-2 ^2 ^10 ^2 minecraft:air replace minecraft:barrier')   #   ^-1 ^1 ^-1 ^1 ^1 ^1
-
-        self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^2 ^-10 ^3 ^-30 ^10 ^30 minecraft:air replace minecraft:barrier')   #^1 ^-2 ^2 ^-3 ^1 ^3
-        self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^-3 ^-10 ^2 ^-30 ^10 ^-30 minecraft:air replace minecraft:barrier') #^-2 ^-2 ^1 ^-3 ^1 ^-3
-        self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^-2 ^-10 ^-3 ^30 ^10 ^-30 minecraft:air replace minecraft:barrier') #^-1 ^-2 ^-2 ^3 ^1 ^-3
-        self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^3 ^-10 ^-2 ^30 ^10 ^30 minecraft:air replace minecraft:barrier')   #^2 ^-2 ^-1 ^3 ^1 ^3
-        
         self.ext.extention_command(f'effect clear {self.name} minecraft:resistance')
 
     def can_I_run_stand(self):
@@ -229,45 +256,6 @@ class Catch_The_Rainbow(Common_func):
         else:                       # 能力発動不可なバイオームに居る
             #print('!!biome')
             return False
-
-    def test_biome(self):
-        """
-        プレイヤーが現在居るバイオームが雨の降るバイオームか調査する。\n
-        バイオームによっては高度によって雨か雪が降るバイオームもあり、\n
-        self.ability_limitに能力の発動状態が格納される。
-        どの高度でも雨が降る場合は0、高度次第で変化する場合は高度128ブロックまでを制限として1、雪しか降らないバイオームは2が格納される。
-        """
-        # self.ability_limitは能力の制限についての変数。{0:無制限, 1:高度128までの制限, 2:能力が発動できない}
-        # いろいろ考えた結果、検索時間を短縮するため以下のように検索数で優先順位を決めて調べる。
-        # savanna_biomeは能力発動出来ないバイオームだがまとめて3つ調べられる。
-        # y_128_biomeは128以下の高度で能力を限定発動できる。項目数は7個。
-        # exclude_biomeは15個？ぐらいあるので最低順位。
-        savanna_biome = 'is_savanna'
-        y_128_biome = ('windswept_forest','windswept_gravelly_hills','windswept_hills','taiga','old_growth_pine_taiga','old_growth_spruce_taiga','deep_frozen_ocean')          # 高度128までしか発動しないバイオームリスト
-        exclude_biome = ('desert','badlands','eroded_badlands','wooded_badlands','snowy_taiga','snowy_plains','ice_spikes','snowy_taiga','frozen_river','snowy_beach','grove','snowy_slopes','jagged_peaks','frozen_peaks','frozen_ocean')  # 能力が発動できないバイオームリスト
-
-        # サバンナバイオーム検索
-        res = self.ext.extention_command(f'execute as {self.name} at @s if biome ~ ~ ~ #minecraft:{savanna_biome}')
-        if res == 'Test passed':    # savannnaなら能力発動できない。
-            self.ability_limit = 2
-            return
-        
-        # 縛りバイオーム検索
-        for biome in y_128_biome:
-            res = self.ext.extention_command(f'execute as {self.name} at @s if biome ~ ~ ~ minecraft:{biome}')
-            if res == 'Test passed':    # 引っかかったら高度制限で能力発動。
-                self.ability_limit = 1
-                return
-
-        # 除外バイオーム検索
-        for biome in exclude_biome:
-            res = self.ext.extention_command(f'execute as {self.name} at @s if biome ~ ~ ~ minecraft:{biome}')
-            if res == 'Test passed':    # 引っかかったら高度制限で能力発動。
-                self.ability_limit = 4
-                return
-
-        # 何にも引っかからなかったら無制限モード
-        self.ability_limit = 0
 
     def test_biome_new(self):
         """
