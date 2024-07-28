@@ -104,16 +104,13 @@ class Catch_The_Rainbow(Common_func):
         self.run_stand = self.can_I_run_stand()
 
         if self.run_stand and self.left_click: #攻撃
-            nbt = '{Invulnerable:0,NoGravity:0,Small:1,Tags:[rain_knife]}'
+            nbt = '{Invisible:1,Invulnerable:1,NoGravity:0,Small:1,Tags:[rain_knife]}'
             self.ext.extention_command(f'execute as {self.name} at @s rotated 90 0 run summon minecraft:armor_stand ^ ^-2 ^ {nbt}')
             self.ext.extention_command(f'execute as {self.name} at @s run playsound minecraft:block.bubble_column.bubble_pop master @a[distance=..8] ~ ~ ~ 200 1')
         self.left_click = False
         self.ext.extention_command(f'execute as @e[tag=rain_knife] at @s run particle minecraft:splash ^ ^1.5 ^ 0 0 0 0 0 force @a')
         self.ext.extention_command(f'execute as @e[tag=rain_knife] at @s run damage @e[distance=..1,type=!item,type=!minecraft:armor_stand,limit=1] 5 minecraft:indirect_magic by {self.name}')
         self.ext.extention_command(f'execute as @e[tag=rain_knife] at @s if entity @e[distance=..1,type=!item,type=!minecraft:armor_stand,tag=!rain_knife,limit=1] run kill @s')
-
-        if self.run_stand:
-            self.ext.extention_command(f'attribute {self.name} minecraft:generic.movement_speed base set 0.3')
 
         if self.run_stand and self.double_spacekey:
             # マイクラウィンドウactive and カーソルが非表示。両方を満たしているか？
@@ -148,6 +145,9 @@ class Catch_The_Rainbow(Common_func):
 
                 else:   # 上昇も下降もしようとしてない→その場で留まる。
                     self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0')
+
+        if self.run_stand:
+            self.ext.extention_command(f'attribute {self.name} minecraft:generic.movement_speed base set 0.3')
 
         else:   # 仮面を外したらetc...
             self.cancel_stand()
