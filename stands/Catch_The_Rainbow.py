@@ -1,5 +1,6 @@
 import re
 import time
+import keyboard
 from stands.Common_func import Common_func
 
 class Catch_The_Rainbow(Common_func):
@@ -9,12 +10,8 @@ class Catch_The_Rainbow(Common_func):
         self.ability_limit = 0
         self.mask = None
         self.kill_check = False
-
-    def set_scoreboard(self):
-        self.ext.extention_command(f'scoreboard objectives add SNEAK minecraft.custom:minecraft.sneak_time')
-
-    def del_scoreboard(self):
-        self.ext.extention_command(f'scoreboard objectives remove SNEAK')
+        self.mask_air()
+        self.summon_amedas()
 
     def summon_amedas(self):
         """
