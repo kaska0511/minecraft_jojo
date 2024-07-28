@@ -119,8 +119,8 @@ class The_World(Common_func):
     def stop_time(self):
         self.ext.extention_command(f'tp @e[type=interaction,tag!=attackinter,limit=1] 0 -64 0')
         self.ext.extention_command(f'execute as {self.name} at @s run tick freeze')
-        self.ext.extention_command(f'execute as {self.name} at @s run playsound minecraft:block.bell.resonate master @a ~ ~ ~ 1 1')
-        self.ext.extention_command(f'execute as {self.name} at @s run playsound minecraft:entity.bee.death master @a ~ ~ ~ 4 0')
+        self.ext.extention_command(f'playsound minecraft:block.bell.resonate master @a ~ ~ ~ 1 1 1')
+        self.ext.extention_command(f'playsound minecraft:entity.bee.death master @a ~ ~ ~ 4 0 1')
         self.ext.extention_command(f'effect give @a minecraft:blindness 1 1 true')  # 能力演出
         self.ext.extention_command(f'effect give {self.name} minecraft:strength infinite 12 true') # ピグリンブルートを二発で倒せるレベルのパワーを付与。
 
@@ -145,7 +145,7 @@ class The_World(Common_func):
 
 
     def start_time(self):
-        self.ext.extention_command(f'execute as {self.name} at @s run playsound minecraft:block.bell.resonate master @a ~ ~ ~ 1 1')
+        self.ext.extention_command(f'playsound minecraft:block.bell.resonate master @a ~ ~ ~ 1 1 1')
         self.ext.extention_command(f'effect give @a minecraft:blindness 1 1 true')
         self.ext.extention_command(f'effect clear {self.name} minecraft:strength')
 
@@ -183,7 +183,7 @@ class The_World(Common_func):
         elapsed_time = int(time.time() - self.standard_time)
         if elapsed_time >= 1 and self.timer > 0:    # 一秒経過・・・
             self.timer -= 1     # 止められる時間をカウントダウン
-            self.ext.extention_command(f'execute as {self.name} at @s run playsound minecraft:item.lodestone_compass.lock master @a ~ ~ ~ 1 2')
+            self.ext.extention_command(f'playsound minecraft:item.lodestone_compass.lock master @a ~ ~ ~ 1 2 1')
             self.standard_time = time.time()    # 基準時間を更新
 
             if self.timer == 0: # 止められる時間を消費しきったら「時は動き出す・・・」
