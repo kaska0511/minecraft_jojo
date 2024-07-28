@@ -231,10 +231,9 @@ class Extension:
 
         return filter_str
 
-    def _take_out_result(self, result, wanna_info_name, filter_str):
+    def _take_out_result(self, result, wanna_info_name):
         '''
-        コマンド実行結果の生データから特定の結果を抽出します。\n
-        注意！第三引数の filter_str は _make_filter_str の結果を使用しなくてはなりません。
+        コマンド実行結果の生データから特定の結果を抽出します。
 
         Parameter
             result : str
