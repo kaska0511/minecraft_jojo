@@ -368,3 +368,23 @@ class Extension:
             locate_info.append(int(distance[0]))
 
         return locate_info
+
+    def heavy_processing_for_forceload(self, command_info):
+        '''
+        forceload queryコマンド専用です。\n
+        コマンドの実行結果がロードされているかどうかを調べることができます。\n
+
+        Parameter
+            command_info : str
+                コマンド実行結果。
+
+        Return
+            None : bool
+                ロードされていれば真。ロードされていないか返り値が無い場合は偽を返します。\n
+        '''
+        if 'is marked for force loading' in command_info:
+            return True
+        elif 'is not marked for force loading' in command_info:
+            return False
+        else:
+            False
