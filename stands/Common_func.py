@@ -1,6 +1,9 @@
 import re
 import json
 import time
+import keyboard
+import mouse
+import win32gui
 
 class Common_func:
     def __init__(self, name, ext, controller):
@@ -20,6 +23,36 @@ class Common_func:
         self.bonus_time = None
         self.bonus_cnt = 0
 
+    def right_mouse_detected(self, arg):
+        #print(f'右クリックを検知')
+        #print('Minecraft' in get_active_window_title())マウスカーソルが選択しているアプリケーションがMinecraftなら
+        if self.invisible_cursor() and self.is_Minecraftwindow()[0] == True:
+            self.right_click = True
+            # クリックしましたという記録を行う。
+
+    def left_mouse_detected(self, arg):
+        #print(f'左クリックを検知')
+        #print('Minecraft' in get_active_window_title())    マウスカーソルが選択しているアプリケーションがMinecraftなら
+        if self.invisible_cursor() and self.is_Minecraftwindow()[0] == True:
+            self.left_click = True
+            # クリックしましたという記録を行う。
+
+    def is_Minecraftwindow(self):
+        # ユーザーが選択している画面がMinecraftか調べます。
+        # 第二返り値として画面名を返します。
+        # sample -> ['Minecraft 24w07a - Multiplayer (3rd-party Server)' | 'Minecraft Launcher' | any...]　
+        window = win32gui.GetForegroundWindow()
+        title = win32gui.GetWindowText(window)
+
+        is_Minecraft = True if 'Minecraft' in title else False
+
+        return is_Minecraft, title
+
+    def invisible_cursor(self):
+        # 表示されていないならTrue
+        #print(f'マウスカーソル：{cursor_info[0]}')   #マウスカーソル 0:非表示　1:表示
+        cursor_info = win32gui.GetCursorInfo()  #マウスカーソル 0:非表示　1:表示
+        return True if cursor_info[0] == 0 else False
 
     def get_uuid(self):
         result = self.ext.extention_command(f'data get entity {self.name} UUID')
@@ -111,6 +144,7 @@ class Common_func:
     def get_player_Death(self):
         '''
         自分が死んでいるかを調べます。
+        現状の処理だとワールドにプレイヤーがいない(ログアウト)ことも判定として内包されています。
 
         Parameter
             None
@@ -397,20 +431,14 @@ class Common_func:
         Return
             id : str
                 指定インベントリ番号のid
-            tag : str
+            tag : str | list[str]
                 そのアイテムが持つtag
         '''
-        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
         id = self.ext.extention_command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].id')     # KASKA0511 has the following entity data: "minecraft:flint"
+        # tagに関して
         #   単一    KASKA0511 has the following entity data: "Killer"
         #   複数    KASKA0511 has the following entity data: ["DIO", "a"]
         tag = self.ext.extention_command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].tag.Tags')
-
-        split_id = re.split(r' ', id)
-        split_tag = re.split(r' ', tag)
-
-        id = None if split_id[0] == 'Found' or split_id[0] == 'No' else re.sub(reg, '', id).strip('"')    # スロットが空など、もし見つからなかったらNoneで返す。
-        tag = None if split_tag[0] == 'Found' or split_tag[0] == 'No' else re.sub(reg, '', tag).strip('"') # アイテムにTagが無いならNoneで返す。
 
         return id, tag
 
@@ -425,10 +453,7 @@ class Common_func:
             health : float
                 プレイヤーの体力。
         '''
-        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        result = self.ext.extention_command(f'data get entity {self.name} Health')
-
-        split_data = re.split(r' ', result)
-        health = None if split_data[0] == 'No' or split_data[0] == 'Found' else float(re.sub(reg, '', result).strip('f"'))
+        health = self.ext.extention_command(f'data get entity {self.name} Health')
+        health = float(health.rstrip('f'))
 
         return health
