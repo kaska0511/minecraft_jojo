@@ -19,76 +19,66 @@ class Catch_The_Rainbow(Common_func):
         召喚するバイオームは生成率が高く、雨が降る森林。
         """
         res = self.ext.extention_command(f'locate biome minecraft:forest')
-        self.ext.extention_command(f'forceload add {res[0]} {res[2]}')
+        self.ext.extention_command(f'forceload add {res[0]} {res[2]} {res[0]} {res[2]}')
         self.ext.extention_command(f'execute as {self.name} at @s positioned {res[0]} 317 {res[2]} rotated 0 0 run fill ^1 ^ ^-1 ^-1 ^2 ^1 minecraft:barrier destroy')
         self.ext.extention_command(f'execute as {self.name} at @s positioned {res[0]} 317 {res[2]} rotated 0 0 run fill ^ ^1 ^ ^ ^2 ^ minecraft:air destroy')
-        self.ext.extention_command(f'execute as {self.name} at @s run summon minecraft:snow_golem {res[0]} 318 {res[2]} {{NoAI:1,Silent:1,NoGravity:1,Tags:["Amedas"]}}')
+        self.ext.extention_command(f'execute unless entity @e[name=Catch_The_Rainbow,tag=Amedas,limit=1] run summon minecraft:snow_golem {res[0]} 318 {res[2]} {{CustomName:Catch_The_Rainbow,NoAI:1,Silent:1,NoGravity:1,Tags:["Amedas"]}}')
         self.ext.extention_command(f'effect give @e[tag=Amedas,limit=1] minecraft:health_boost infinite 120 false')  # 体力最大値をウォーデン並みにする。
         self.ext.extention_command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 120 true')     # 最大値を変更したら上限まで回復させる必要がある。（即時回復）
 
     def mask_air(self):
         biome = ('deep_cold_ocean','cold_ocean','deep_ocean')
 
-        for ocean in biome:
-            air_flag = False
+        loop = True
+        while loop:
+            for ocean in biome:
+                #import pdb; pdb.set_trace()
+                res = self.ext.extention_command(f'locate biome minecraft:{ocean}')
 
-            res = self.ext.extention_command(f'locate biome minecraft:{ocean}')
+                # 調査座標をロードしておく。遠すぎると読み込むことができないため。
+                self.ext.extention_command(f'forceload add {res[0]} {res[2]} {res[0]} {res[2]}')
+                while not self.ext.extention_command(f'forceload query {res[0]} {res[2]}'): # ロードするまで待つ。
+                    pass
 
-            # 調査座標をロードしておく。遠すぎると読み込むことができないため。
-            self.ext.extention_command(f'forceload add {res[0]} {res[2]}')
-
-            result = self.ext.extention_command(f'execute if block {res[0]} 62 {res[2]} minecraft:water')   # 見つかった座標の場所が水か？
-            if result == 'Test passed':    # 水です。
-                air_flag = True
-            else:
-                self.ext.extention_command(f'forceload remove {res[0]} {res[2]}')
+                result = self.ext.extention_command(f'execute if block {res[0]} 62 {res[2]} minecraft:water run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')   # 見つかった座標の場所が水か？
                 air_flag = False
-                continue    # バイオームを変える。
+                if result == '0s':    # 起点が水なら。（起点が水だと海の場合が多く、上空までブロックが無いことが多い。）
+                    air_flag = True
+                else:
+                    self.ext.extention_command(f'forceload remove {res[0]} {res[2]} {res[0]} {res[2]}')
+                    continue    # バイオームを変える。
 
-            if air_flag:
-                for i in range(63, 68):
-                    result = self.ext.extention_command(f'execute if block {res[0]} {i} {res[2]} minecraft:air')   # 水源から上方5マスが空気か調べる。本当は最高高度320マスまで調べるべき。
-                    if result == 'Test passed':
-                        if i == 67:     # チェックが最後まで出来たらマスク用の場所として登録する。
-                            #! 修正は不要！ 初めmask用の座標はforceloadしないようにしていたが、チャンクを超えると読み込まなくなった。
-                            # このためmask用座標は常に読み込ませる必要がある。
-                            #self.ext.extention_command(f'forceload remove {res[0]} {res[2]}')     
-                            self.mask = res  # mask用の座標を記録。
-                            return
-                    else:   # 
-                        self.ext.extention_command(f'forceload remove {res[0]} {res[2]}')
-                        continue
+                if air_flag:
+                    if self.check_mask(res):    # マスク座標が決定したらforを終了。
+                        loop = False
+                        self.mask = res
+                        return
+                    else:
+                        loop = True
+
+
+    def check_mask(self, res):
+        max = 73
+        for i in range(63, max):
+            result = self.ext.extention_command(f'execute if block {res[0]} {i} {res[2]} minecraft:air run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')   # 水源から上方5マスが空気か調べる。本当は最高高度320マスまで調べるべき。
+            if result == '0s':
+                if i == max-1:     # チェックが最後まで出来たらマスク用の場所として登録する。
+                    #! 修正は不要！ 初めmask用の座標はforceloadしないようにしていたが、チャンクを超えると読み込まなくなった。
+                    # このためmask用座標は常に読み込ませる必要がある。
+                    #self.ext.extention_command(f'forceload remove {res[0]} {res[2]}')
+                    return True
+            else:   # 何らかのブロックに引っかかった。
+                self.ext.extention_command(f'forceload remove {res[0]} {res[2]} {res[0]} {res[2]}')
+                return False
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
             return
 
-        id, tag = self.get_select_Inventory(self.name, "103")
+        # standを走らせてもよいか？
+        self.run_stand = self.can_I_run_stand()
 
-        if id == "minecraft:skeleton_skull":
-            rainny = self.check_amedas()
-
-            if rainny == None:  # アメダスが見つからない場合は再召喚
-                self.summon_amedas()
-
-            # 能力発動可能なバイオームに居て、雨が降っている。
-            if (self.ability_limit == 0 or self.ability_limit == 1) and rainny:
-                self.run_stand = True
-            elif rainny is None:
-                self.run_stand = True
-            else:
-                self.run_stand = False
-
-            # 頭上に遮蔽物があるかチェック
-            shield_flag = self.check_Shield()
-
-            if rainny and shield_flag == False:
-                #start = time.time()
-                self.test_biome_new()   # プレイヤーの現在地で雨が降る環境か調べる。
-                #end = time.time()
-                #print(f'{end - start}')
-
-        if id == "minecraft:skeleton_skull" and tag == "Rain" and shield_flag == False and self.run_stand:
+        if self.run_stand:
             # 能力解除時に死ぬかどうかのフラグ。
             self.kill_check = True
             # 体力値に応じてダメージ軽減を付与。
@@ -96,10 +86,10 @@ class Catch_The_Rainbow(Common_func):
              # 足元に3*3のバリアブロックを常に配置（恐らくジャンプしてもすぐに配置されるのでジャンプ検知は不要？）
             if self.ability_limit == 0:
                 self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^-2 ^-2 ^-2 ^2 ^-1 ^2 minecraft:barrier keep')  #
-            if self.ability_limit == 1:
+            elif self.ability_limit == 1:
                 # yで起点を決め、dyで起点から+何ブロック分を範囲にするか決められる。
                 self.ext.extention_command(f'execute as {self.name} at @s if entity @s[y=-64,dy=192] rotated 0 0 run fill ^-2 ^-2 ^-2 ^2 ^-1 ^2 minecraft:barrier keep')   #
-            
+
             self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^-2 ^-3 ^-2 ^2 ^-30 ^2 minecraft:air replace minecraft:barrier') #   ^-1 ^-3 ^-1 ^1 ^-3 ^1
             self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^-2 ^ ^-2 ^2 ^10 ^2 minecraft:air replace minecraft:barrier')   #   ^-1 ^1 ^-1 ^1 ^1 ^1
 
@@ -107,12 +97,12 @@ class Catch_The_Rainbow(Common_func):
             self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^-3 ^-10 ^2 ^-30 ^10 ^-30 minecraft:air replace minecraft:barrier') #^-2 ^-2 ^1 ^-3 ^1 ^-3
             self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^-2 ^-10 ^-3 ^30 ^10 ^-30 minecraft:air replace minecraft:barrier') #^-1 ^-2 ^-2 ^3 ^1 ^-3
             self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 run fill ^3 ^-10 ^-2 ^30 ^10 ^30 minecraft:air replace minecraft:barrier')   #^2 ^-2 ^-1 ^3 ^1 ^3
-            
-            self.ext.extention_command(f'execute as @a[name={self.name},limit=1,scores={{SNEAK=1..}}] at @s rotated 0 0 run fill ^-2 ^-1 ^-2 ^2 ^-1 ^2 minecraft:air replace minecraft:barrier')   #
-            self.ext.extention_command(f'execute as @a[name={self.name},limit=1,scores={{SNEAK=1..}}] at @s rotated 0 0 run fill ^-2 ^ ^-2 ^2 ^10 ^2 minecraft:air replace minecraft:barrier')       #^-1 ^ ^-1 ^1 ^ ^1
+            if keyboard.is_pressed('shift') and self.is_Minecraftwindow()[0] and self.invisible_cursor():   # shiftを押した and マイクラウィンドウactive and カーソルが非表示
+                #print(f'shift押した!{keyboard.is_pressed('shift')}')
+                self.ext.extention_command(f'execute as @a[name={self.name},limit=1] at @s rotated 0 0 run fill ^-2 ^-1 ^-2 ^2 ^-1 ^2 minecraft:air replace minecraft:barrier')   #
+                self.ext.extention_command(f'execute as @a[name={self.name},limit=1] at @s rotated 0 0 run fill ^-2 ^ ^-2 ^2 ^10 ^2 minecraft:air replace minecraft:barrier')       #^-1 ^ ^-1 ^1 ^ ^1
 
-            self.ext.extention_command(f'execute as @a[name={self.name},limit=1,scores={{SNEAK=1..}}] at @s rotated 0 0 if block ^ ^-1 ^ minecraft:barrier run tp {self.name} ^ ^-1 ^')
-            self.ext.extention_command(f'execute as @a[name={self.name},limit=1,scores={{SNEAK=1..}}] at @s run scoreboard players reset @a[name={self.name},limit=1] SNEAK')
+                self.ext.extention_command(f'execute as @a[name={self.name},limit=1] at @s rotated 0 0 if block ^ ^-1 ^ minecraft:barrier run tp {self.name} ^ ^-1 ^')
 
         else:   # 仮面を外したらetc...
             self.cancel_stand()
@@ -122,7 +112,7 @@ class Catch_The_Rainbow(Common_func):
                 health = self.get_Health()
                 if health is not None and health <= 4.0:
                     self.ext.extention_command(f'kill {self.name}')
-
+        """
         # チケットアイテム獲得によるターゲット該当者処理
         # チケットアイテムを持っていないならFalse。死んだりチェストにしまうとFalseになる。
         self.ticket_target = True if self.controller.check_ticket_item(self.name, self.ticket_item[0], self.ticket_item[1]) else False
@@ -181,6 +171,7 @@ class Catch_The_Rainbow(Common_func):
         #? しかしこのままだと随時更新されてしまう。気がする。。。
         if self.controller.get_someone_get_ticket():
             self.create_ticket_compass()
+        """
 
     def create_ticket_compass(self):
         self.controller.create_ticket_compass(self.name, self.pass_point, self.ticket_item, self.point_pos)
