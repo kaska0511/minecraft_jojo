@@ -8,6 +8,7 @@ class Extension:
         self.mcr = mcr
         self.name = None
         self.stand = None
+        self.try_count = 10 #コマンド実行繰り返し回数。この回数実行する間に返ってこなければ正常値。
 
     def extraction_user(self):
         # userchache.jsonからワールド参加者を抽出。
@@ -141,60 +142,110 @@ class Extension:
 
 
     # この関数ではなく基本的にextention_commandを呼び出すようにする。
-    def _listen_commands_return(self, command, wanna_info_name=None):
-        # self.nameかself.standどちらかの情報が入っているはずなので、そこを自動で識別し、returnさせたい。
-        # この関数にcommandを投げたということは「自分の名前 has the...」or「自分のスタンド名 has the...」の情報が必ずあるはず。ということ。
-
-        command_result = None   # return値初期化
-
+    def _listen_commands_return(self, command, wanna_info_name):
+        command_info = None
         #result = 'KASKA0511 has the following entity data: 20ARMZ1341 has the following entity data: 1HSLQ12 has the following entity data: 5'  # sample
-        if ('data get' or 'locate') in command:
-            for _ in range(2): # data getなど返り値を求めるコマンドを実行した時データが取得できる状況にもかかわらず稀に何も返ってこない場合がある。その対策。基本的に2回実行すればよいパターンが多い。
-                result = self.mcr.command(command)
-                if result != '':
-                    print(f'result: {result}')
-                    break
-        else:
+
+        # コマンドごとに処理を切り替えます。
+        if 'data get' in command:   # dataコマンド専用
+            command_info = self._get_data_command(command, wanna_info_name)
+
+        elif 'locate' in command:   # locateコマンド専用
+            command_info = self._get_locate_command(command, wanna_info_name)
+
+        elif 'forceload query' in command:  # forceload queryコマンド専用
+            command_info = self._get_forceload_query_command(command, wanna_info_name)
+
+        else:   # 命令形コマンド
             result = self.mcr.command(command)
-            print(f'result: {result}')
+            print(f'command: {command}, result: {result}')
+            command_info = None
 
-        # 汎用性を高めるため、第二引数を省略した場合、ユーザー名かスタンド名を指定する。
-        if wanna_info_name is None: # 引数に名前指定がされていないなら
-            if f'{self.name} has' in result:
-                wanna_info_name = self.name     # コマンドの結果にプレイヤー名が含まれるならプレイヤー名
-            if f'{self.stand} has' in result:
-                wanna_info_name = self.stand    # コマンドの結果にスタンド名が含まれるならスタンド名
-            if 'name=' in command:    # commandのターゲットセレクタ引数からnameが指定されているならそれに変更。
-                name = re.findall(r'.*\[.*name=(.+?)[\]|,].*', command)
-                wanna_info_name = name[0]
+        return command_info
 
-        # dataコマンド以外で情報を取得したい場合はここより下に特別な記述が必要。
-        if 'locate ' in command:   # locateコマンド専用
-            wanna_info_name = "The nearest minecraft:"
-            command_result = self.heavy_processing_for_locate(result)
-            return command_result
+    def _get_data_command(self, command, wanna_info_name):
+        result = None
+        for _ in range(self.try_count): # 返り値を求めるコマンドを実行した時データが取得できる状況にもかかわらず稀に何も返ってこない場合がある。その対策。
+            result = self.mcr.command(command)
 
-        # 命令形コマンドまたはエンティティやエンティティのnbtが無い場合はすぐに返す処理。
-        # wanna_info_nameを設定する、上の処理を経てもNoneなら、命令形コマンドまたはエンティティやエンティティのnbtが無い可能性がある。
-        #! バグる
+            if result is None:  # 完全に空なのは稀なパターンにヒットしている可能性があるのでcontinue
+                print(f'command: {command}, result: {result}')
+                continue
+            elif wanna_info_name:   # 期待値がコマンド結果にあるか？まずはwanna_info_nameがある場合。
+                if f'{wanna_info_name} has' in result:
+                    break
+            elif f'{self.name} has' in result or f'{self.stand} has' in result: # 期待値がコマンド結果にあるか？
+                break
+            else:   # 期待値がコマンド結果にない。
+                # 実行結果に"プレイヤー名 has" と "スタンド名 has"のどちらも無いなら、
+                # 命令形コマンドまたはエンティティやエンティティのnbtが無い可能性がある。
+                # エンティティが居ない or 構文ミス。
+                if ('No player was found' or 'No entity was found' or 'Found no elements matching') in result:
+                    result = None
+                    break
+        if result is None:  # 最終的にコマンド結果がNoneのままだった場合。このifには基本入らないがentityが見つからないなど
+            return None
+
+        # フィルターとなるwanna_info_nameを決める。
         if wanna_info_name is None:
-            # エンティティが居ない or 構文ミス。
-            if ('No player was found' or 'No entity was found' or 'Found no elements matching') in result:
-                return None
-            else:
-                return  # 命令形。まあ命令形はreturnを読む必要はないはずなので問題はなさそうだが留意。
+            # data get  entity <player> hoge から決める。
+            if not ('data get entity @' in command):
+                wanna_info_name = re.findall(r'data get entity (\w+)', command)[0]
 
-        # _take_out_result関数で使用するフィルター用の文字列を生成します。
-        filter_str = self._make_filter_str()
+            # data get entity @?[name=] から決める。
+            elif 'name=' in command:    # commandのターゲットセレクタ引数からnameが指定されているならそれに変更。
+                wanna_info_name = re.findall(r'.*\[.*name=(\w+)[\]|,].*', command)[0]
+
+            # コマンド結果から決める。
+            else:
+                if f'{self.name} has' in result:
+                    wanna_info_name = self.name     # コマンドの結果にプレイヤー名が含まれるならプレイヤー名
+                if f'{self.stand} has' in result:
+                    wanna_info_name = self.stand    # コマンドの結果にスタンド名が含まれるならスタンド名
 
         # コマンド実行結果の生データから特定の結果を抽出します。
         # 例えば生データ(result)は以下のようになっており、そこからKASKA0511(wanna_info_name)の情報が欲しい場合、
         #   KASKA0511 has the following entity data: 20ARMZ1341 has the following entity data: 1
         # takeout_resultには以下のような結果が入ります。
         #   KASKA0511 has the following entity data: 20
-        takeout_result = self._take_out_result(result, wanna_info_name, filter_str)
+        takeout_result = self._take_out_result(result, wanna_info_name)
         return takeout_result
 
+    def _get_locate_command(self, command, wanna_info_name):
+        result = None
+        command_result = None
+        for _ in range(self.try_count): # 返り値を求めるコマンドを実行した時データが取得できる状況にもかかわらず稀に何も返ってこない場合がある。その対策。
+            result = self.mcr.command(command)
+            if result is None:  # 完全に空なのは稀なパターンにヒットしている可能性があるのでcontinue
+                print(f'command: {command}, result: {result}')
+                continue
+            elif "The nearest minecraft:" in result: # 正常取得
+                command_result = self.heavy_processing_for_locate(result)
+                break
+            else:   # resultが非期待値もう一回トライ
+                continue
+        else:
+            return None
+
+        return command_result
+
+    def _get_forceload_query_command(self, command, wanna_info_name):
+        result = None
+        command_result = None
+        for _ in range(self.try_count): # data getなど返り値を求めるコマンドを実行した時データが取得できる状況にもかかわらず稀に何も返ってこない場合がある。その対策。
+            result = self.mcr.command(command)
+            if result is None:  # 完全に空なのは稀なパターンにヒットしている可能性があるのでcontinue
+                #print(f'command: {command}, result: {result}')
+                continue
+            elif 'marked for force loading' in result: # 正常取得
+                command_result = self.heavy_processing_for_forceload(result)
+                break
+            else:   # resultが非期待値もう一回トライ
+                continue
+        else:
+            return None
+
+        return command_result
 
     def _make_filter_str(self):
         '''
