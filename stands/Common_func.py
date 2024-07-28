@@ -23,14 +23,14 @@ class Common_func:
         self.bonus_time = None
         self.bonus_cnt = 0
 
-    def right_mouse_detected(self, arg):
+    def right_mouse_detected(self):
         #print(f'右クリックを検知')
         #print('Minecraft' in get_active_window_title())マウスカーソルが選択しているアプリケーションがMinecraftなら
         if self.invisible_cursor() and self.is_Minecraftwindow()[0] == True:
             self.right_click = True
             # クリックしましたという記録を行う。
 
-    def left_mouse_detected(self, arg):
+    def left_mouse_detected(self):
         #print(f'左クリックを検知')
         #print('Minecraft' in get_active_window_title())    マウスカーソルが選択しているアプリケーションがMinecraftなら
         if self.invisible_cursor() and self.is_Minecraftwindow()[0] == True:
@@ -312,8 +312,7 @@ class Common_func:
                 地面に接触しているならTrue、接触していないならFalseを返します。
         '''
         OnG = self.ext.extention_command(f'data get entity {player} OnGround')
-        split_str = re.split(r' ', OnG)     # プレイヤーが浮いているかどうか
-        OnG = True if split_str[6] == '1b' else False
+        OnG = True if OnG == '1b' else False
         return OnG
 
     def get_rider(self):
