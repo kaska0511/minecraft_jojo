@@ -205,6 +205,42 @@ class Catch_The_Rainbow(Common_func):
         
         self.ext.extention_command(f'effect clear {self.name} minecraft:resistance')
 
+    def can_I_run_stand(self):
+        #import pdb;pdb.set_trace()
+        # 上から順にチェックしていく。
+        # 1.スタンドアイテムを付けているか？
+        id, tag = self.get_select_Inventory(self.name, "103")
+        if tag == "Rain" :
+            pass
+        else:
+            #print('!!stand')
+            return False
+
+        # 2.雨が降っているか？
+        rainny = self.check_amedas()
+        if rainny:  # 雨が降っている。
+            pass
+        elif rainny is None:    # アメダスが見つからない場合は再召喚
+            self.summon_amedas()
+            pass
+        else:
+            #print('!!rain')
+            return False
+
+        # 3.頭上に遮蔽物があるかチェック
+        if self.check_Shield(): # 紛らわしいがTrueの時遮蔽物がある。
+            #print('!!shield')
+            return False
+        else:
+            pass
+
+        # Fin.プレイヤーの現在地で雨が降る環境か調べる。
+        self.test_biome_new()
+        if self.ability_limit == 0 or self.ability_limit == 1:  # 能力発動可能なバイオームに居る
+            return True
+        else:                       # 能力発動不可なバイオームに居る
+            #print('!!biome')
+            return False
 
     def test_biome(self):
         """
@@ -250,22 +286,20 @@ class Catch_The_Rainbow(Common_func):
         プレイヤーが現在居るバイオームが雨の降るバイオームか調査する。\n
         バイオームによっては高度によって雨か雪が降るバイオームもあり、\n
         self.ability_limitに能力の発動状態が格納される。
-        どの高度でも雨が降る場合は0、高度次第で変化する場合は高度128ブロックまでを制限として1、雪しか降らないバイオームは2が格納される。
+        0 : どの高度でも雨が降る\n
+        1 : 高度次第で変化するバイオームで上昇を128ブロックまでに制限\n
+        2 : 降雪または雨が降らない
         """
         # self.ability_limitは能力の制限についての変数。{0:無制限, 1:高度128までの制限, 2:能力が発動できない}
         self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 positioned ~ 308 ~ run summon minecraft:villager ~ ~ ~')
         self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 positioned ~ 308 ~ run data modify entity @e[type=minecraft:villager,sort=nearest,limit=1] Tags set value ["biomechecker"]')
         self.ext.extention_command(f'effect give @e[tag=biomechecker,limit=1] minecraft:invisibility infinite 1 true')
-        result = self.ext.extention_command(f'data get entity @e[tag=biomechecker,limit=1] VillagerData.type')
+        biome = self.ext.extention_command(f'data get entity @e[tag=biomechecker,limit=1] VillagerData.type', 'Villager')
 
         #検索に使用する村人は情報取得後殺す。
         #self.ext.extention_command(f'execute as @e[tag=biomechecker] at @s run tp ~ -64 ~')    # 死亡時煙のようなエフェクトが出るので奈落に移動させて殺す。
         self.ext.extention_command(f'kill @e[tag=biomechecker]')
 
-        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        
-        split_data = re.split(r' ', result)
-        biome = None if split_data[0] == 'Found' or split_data[0] == 'No' else re.sub(reg, '', result).strip('"')    # uuidのエンティティがいないならNone
         # サバンナと砂漠バイオーム検索
         if biome == 'minecraft:savanna' or biome == 'minecraft:desert':    # savannna 又は desertなら能力発動できない。
             self.ability_limit = 2
@@ -273,8 +307,8 @@ class Catch_The_Rainbow(Common_func):
         
         # 降雪バイオーム検索
         if biome == 'minecraft:snow':
-            res = self.ext.extention_command(f'execute as {self.name} at @s if biome ~ ~ ~ minecraft:deep_frozen_ocean')
-            if res == 'Test passed':    # deep_frozen_oceanだけは高度制限で能力発動。
+            res = self.ext.extention_command(f'execute as {self.name} at @s if biome ~ ~ ~ minecraft:deep_frozen_ocean run run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')
+            if res == '0s':    # deep_frozen_oceanだけは高度制限で能力発動。
                 self.ability_limit = 1
                 return
             else:
@@ -295,51 +329,45 @@ class Catch_The_Rainbow(Common_func):
         雨が降っているならTrue、そうでないならFalse\n
         Noneが返ってくる場合はAmedasが壊れている。
         """
-        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        #reg = r'Snow Golem has the following entity data: '
         res = self.ext.extention_command(f'data get entity @e[tag=Amedas,limit=1] HurtTime')
-        split_res = re.split(r' ', res)
-        # エンティティが見つからない場合はNoneつまり再召喚が必要
-        sec = None if split_res[0] == 'No' else re.sub(reg, '', res).strip('"')
-        # エンティティが見つかり、0sなら雨が降っていない。
-        rainny = False if sec == '0s' else True
-        if sec == None:
-            rainny = None
 
-        self.ext.extention_command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 120 true')     # 体力を最大値まで回復させる。（即時回復）
+        # 体力を最大値まで回復させる。（即時回復）
+        self.ext.extention_command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 120 true')
+
+        # エンティティが見つからない場合はNoneつまり再召喚が必要
+        if res is None:
+            return None
+
+        # エンティティが見つかり、0sなら雨が降っていない。
+        rainny = False if res == '0s' else True
+
         return rainny
 
     def check_Shield(self):
         """
         頭上に遮蔽物がないか調査する。
+        何かあればTrue、何もなければFalse
         """
         shield_flag = True
-        reg = r', count: [0-9]+'
-        posdict = self.get_pos()
-        if posdict == {}:           # 誰もいないときは空となる。
-            return False
         
-        try:
-            pos = posdict[self.name]
-        except KeyError as e:       # スタンド使いが既にいない場合がある。この時はKeyError。
+        pos = self.ext.extention_command(f'data get entity {self.name} Pos')
+        if pos is None: # スタンド使いが居ない。処理終了。
             return False
 
-        now_y = round(float(pos[1]))
+        now_y = round(float(pos[1].rstrip('d')))    # pos[1] = '70.40762608459386d' →　70
+
         if now_y >= 63: # 海抜（＝高度63ブロック以上）より高い場所にいるなら
-            
-            res0 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ ~ ~ ~ 319 ~ {self.mask[0]} ~ {self.mask[2]} all')
-            edit0 = re.sub(reg, '', res0)
-            if edit0 == 'Test passed':
+            #import pdb; pdb.set_trace()
+            res0 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ ~ ~ ~ 319 ~ {self.mask[0]} ~ {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')
+            if res0 == '0s':
                 shield_flag = False
 
         else:           # 海抜以下にいるなら
             now_y = now_y + 257
-            res0 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ ~ ~ ~ 62 ~ {self.mask[0]} {now_y} {self.mask[2]} all')    # 海抜以下を検索
-            res1 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ 63 ~ ~ 319 ~ {self.mask[0]} 63 {self.mask[2]} all')       # 海抜超過の場所を検索
-            edit0 = re.sub(reg, '', res0)
-            edit1 = re.sub(reg, '', res1)
+            res0 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ ~ ~ ~ 62 ~ {self.mask[0]} {now_y} {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')    # 海抜以下を検索
+            res1 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ 63 ~ ~ 319 ~ {self.mask[0]} 63 {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')       # 海抜超過の場所を検索
 
-            if edit0 == 'Test passed' and edit1 == 'Test passed':
+            if res0 == '0s' and res1 == '0s':
                 shield_flag = False
 
         return shield_flag
