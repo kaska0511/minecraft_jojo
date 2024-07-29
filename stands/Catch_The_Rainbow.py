@@ -109,8 +109,8 @@ class Catch_The_Rainbow(Common_func):
             self.ext.extention_command(f'execute as {self.name} at @s run playsound minecraft:block.bubble_column.bubble_pop master @a[distance=..8] ~ ~ ~ 200 1')
         self.left_click = False
         self.ext.extention_command(f'execute as @e[tag=rain_knife] at @s run particle minecraft:splash ^ ^ ^ 0 0 0 0 0 force @a')
-        self.ext.extention_command(f'execute as @e[tag=rain_knife] at @s run damage @e[distance=..1,type=!item,type=!minecraft:armor_stand,limit=1] 5 minecraft:indirect_magic by {self.name}')
-        self.ext.extention_command(f'execute as @e[tag=rain_knife] at @s if entity @e[distance=..1,type=!item,type=!minecraft:armor_stand,tag=!rain_knife,limit=1] run kill @s')
+        self.ext.extention_command(f'execute as @e[tag=rain_knife] at @s run damage @e[distance=..1,name=!{self.name},type=!item,type=!minecraft:armor_stand,limit=1] 5 minecraft:indirect_magic by {self.name}')
+        self.ext.extention_command(f'execute as @e[tag=rain_knife] at @s if entity @e[distance=..1,name=!{self.name},type=!item,type=!minecraft:armor_stand,tag=!rain_knife,limit=1] run kill @s')
 
         if self.run_stand and self.double_spacekey:
             # マイクラウィンドウactive and カーソルが非表示。両方を満たしているか？
