@@ -339,17 +339,12 @@ class Common_func:
         Return
             ride : str
                 エンティティ名とUUIDを返します。\n
-                ex -> "minecraft:horse", "[I; 1963727455, 2072923448, -1958974380, 527210886]"
+                ex -> "minecraft:horse", "[1963727455, 2072923448, -1958974380, 527210886]"
         '''
-        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        res_name = self.ext.extention_command(f'data get entity {self.name} RootVehicle.Entity.id')
-        
-        split_ride = re.split(r' ', res_name)
-        ride_name = None if split_ride[0] == 'Found' or split_ride[0] == 'No' else re.sub(reg, '', res_name).strip('"')
 
-        res_uuid = self.ext.extention_command(f'data get entity {self.name} RootVehicle.Entity.UUID')
-        split_ride = re.split(r' ', res_uuid)
-        ride_uuid = None if split_ride[0] == 'Found' or split_ride[0] == 'No' else re.sub(reg, '', res_uuid).strip('"')
+        ride_name = self.ext.extention_command(f'data get entity {self.name} RootVehicle.Entity.id')
+
+        ride_uuid = self.ext.extention_command(f'data get entity {self.name} RootVehicle.Entity.UUID')
 
         return ride_name, ride_uuid
 
@@ -369,13 +364,10 @@ class Common_func:
                 動きのベクトルを返します。\n
                 何にも乗っていない場合はNoneを返します。
         '''
-        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
         res = self.ext.extention_command(f'data get entity {self.name} RootVehicle.Entity.Motion')
-        split_ride = re.split(r' ', res)
-        ride_motion = None if split_ride[0] == 'Found' or split_ride[0] == 'No' else re.sub(reg, '', res).strip('"')
-        if ride_motion is not None:
-            ride_motion_bool = True if ride_motion == "[0.0d, 0.0d, 0.0d]" else False
-            edit_result = ride_motion.strip('[d]')      # [d]のdはこの関数では必要。
+        if res is not None:
+            ride_motion_bool = True if res == "[0.0d, 0.0d, 0.0d]" else False
+            edit_result = res.strip('[d]')      # [d]のdはこの関数では必要。
             result = re.split('d, ', edit_result)       # pos = ['0.0', '0.0', '0.0']
 
         else:
@@ -384,29 +376,33 @@ class Common_func:
 
         return ride_motion_bool, result
 
-    def get_dimension(self,uuid):
+    def get_dimension(self, tag):
         '''
         UUIDを持つエンティティのディメンションを調べます。
 
         Parameter
-            uuid : str
-                エンティティのUUID
+            tag : str
+                エンティティのtag
 
         Return
             dimention : str
                 エンティティが見つかったら次の中から値が返されます。"minecraft:overworld", "minecraft:the_nether", "minecraft:the_end"\n
                 エンティティが見つからないならNoneを返します。
         '''
-        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
+        substituent = 'execute if entity @e[tag=_TAG_,limit=1,nbt={Dimension:"_DIMENTION_"}] run data get entity @e[name=_NAME_,limit=1] DeathTime'
+        substituent = substituent.replace(f'_TAG_', tag)    # Tusk_Target
+        substituent = substituent.replace(f'_NAME_', self.name)
+        dimentions = ("minecraft:overworld", "minecraft:the_nether", "minecraft:the_end")
         #!! Dimensionはプレイヤーしか持たない。
         #!! このため適当なmobを指定した場合、Foundにヒットするため停止はしないものの、あまり意味がない。
         #!! また現在はタスクAct4しか使わない関数のため再検討の余地あり。
-        result = self.ext.extention_command(f'data get entity @e[nbt={{UUID:{uuid}}},limit=1] Dimension') 
-
-        split_data = re.split(r' ', result)
-        dimention = None if split_data[0] == 'Found' or split_data[0] == 'No' else re.sub(reg, '', result).strip('"')
-
-        return dimention
+        for dimention in dimentions:
+            substituent = substituent.replace(f'_DIMENTION_', dimention)
+            dimention = self.ext.extention_command(f'{substituent}')
+            if dimention == '0s':
+                return dimention
+        else:   # 対象が居ない、DimentionNBTを持たないプレイヤーではないなど
+            return None
 
     def get_Inventory(self):
         '''
