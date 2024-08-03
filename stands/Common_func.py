@@ -253,26 +253,21 @@ class Common_func:
 
     def get_rot(self):
         '''
-        現在ワールドに参加しているプレイヤーの視線座標を取得します。
+        自分自身の視線座標を取得します。
 
         Parameter
             None
 
         Return
-            rot_dict : dict
-                各プレイヤーの座標を辞書型で返します。
-                ex -> {"KASKA0511":[0, 0]}
+            rot : list
+                ex -> [0, 0]
         '''
-        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        rot_dict = {}
-        # 参加者リストを取得
-        for new_player in self.get_login_user():
-            if new_player != '':
-                res = self.ext.extention_command(f'data get entity {new_player} Rotation')   # 視線
-                res = re.sub(reg, '', res).strip("[f]")
-                rot_dict[new_player] = re.split('f, ', res)     #{"KASKA0511":[0, 0]}
-
-        return rot_dict
+        res = self.ext.extention_command(f'data get entity {self.name} Rotation')   # 視線
+        if res is None:
+            return None
+        else:
+            rot = (res[0].rstrip("f"), res[1].rstrip("f"))
+            return rot
 
     def get_SelectedItemSlot(self):
         '''
