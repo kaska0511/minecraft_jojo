@@ -14,17 +14,19 @@ class TuskAct4(Common_func):
         if self.name == "1dummy" or self.get_logout():
             return
 
-        item, tag = self.get_SelectedItem()
-        ride_name, ride_uuid = self.get_rider()
-        #ride_motion_b, vec = self.get_rider_motion()
-        if ride_uuid is not None:
-            self.ride_uuid = f'[I; {ride_uuid[0]}, {ride_uuid[1]}, {ride_uuid[2]}]'   # ride_uuidは[num0, num1, num2]で返るので、[I; num0, num1, num2]に整形
-
+        tag = None
         ride_motion = False
-        #if ride_name == "minecraft:horse" and ride_motion_b:
-        if ride_name == "minecraft:horse":
-            # 馬に騎乗していて動いていれば。できれば走っているのを判定したいが・・・→ ride_motion_bがその役割だったが上手く行かない。。。
-            ride_motion = True
+        if not self.run_stand:
+            item, tag = self.get_SelectedItem()
+            ride_name, ride_uuid = self.get_rider()
+            #ride_motion_b, vec = self.get_rider_motion()
+            if ride_uuid is not None:
+                self.ride_uuid = f'[I; {ride_uuid[0]}, {ride_uuid[1]}, {ride_uuid[2]}]'   # ride_uuidは[num0, num1, num2]で返るので、[I; num0, num1, num2]に整形
+
+            #if ride_name == "minecraft:horse" and ride_motion_b:
+            if ride_name == "minecraft:horse":
+                # 馬に騎乗していて動いていれば。できれば走っているのを判定したいが・・・→ ride_motion_bがその役割だったが上手く行かない。。。
+                ride_motion = True
 
         if tag == "Saint" and ride_motion:
             if self.right_click and self.run_stand == False:
@@ -129,7 +131,6 @@ class TuskAct4(Common_func):
         return found_target
 
     def follow_entity(self):
-        # entity @e[nbt={UUID:[I;hoge, fuga, -foo]},limit=1]
         if self.summon_flag == False and self.target:
             self.ext.extention_command(f'execute as {self.name} at @s run playsound minecraft:block.beacon.activate master @a ~ ~ ~ 4 2')
             # アマスタを召喚。見えない、無敵、ちょっと小さい。
@@ -143,7 +144,7 @@ class TuskAct4(Common_func):
         self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s run playsound minecraft:item.trident.riptide_2 master @a ~ ~ ~ 1 1.8')
         #print(f'execute as @e[name=TuskAct4,limit=1] at @s run tp @e[name=TuskAct4,limit=1] ~ ~ ~ facing entity @e[nbt={{UUID:{self.target}}},limit=1]')
         self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s run tp @e[name=TuskAct4,limit=1] ~ ~ ~ facing entity @e[tag=Tusk_Target,limit=1]')   # ターゲットに対して顔を向ける
-        self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s run tp @e[name=TuskAct4,limit=1] ^ ^ ^1')  # 顔が向いている方向に前進。0.7は速度。0に近づくほど遅くなる。
+        self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s run tp @e[name=TuskAct4,limit=1] ^ ^ ^2')  # 顔が向いている方向に前進。2は速度。0に近づくほど遅くなる。
 
         # ターゲットのディメンション確認。DimentionのNBTは現状プレイヤーしか持たず、ターゲットのディメンションに合わせて移動させる。
         target_dimention = self.get_dimension("Tusk_Target")
