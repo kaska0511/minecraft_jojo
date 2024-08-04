@@ -50,7 +50,7 @@ class Extension:
 
             # stand_list.jsonのstand名を元にStandlistにスタンド名をtag付けする。
             for standname in list(stand_list.keys()):
-                self.mcr.command(f'tag @e[name=Standlist,type=minecraft:armor_stand,limit=1] add {standname}')  #! 現在TuskAct4のタグをつけると重複により、問題が発生する。よって、タスクのコード内にあるtag=TuskAct4を別名に変える。
+                self.mcr.command(f'tag @e[name=Standlist,type=minecraft:armor_stand,limit=1] add {standname}')
 
 
     def get_newjoinner_list(self):

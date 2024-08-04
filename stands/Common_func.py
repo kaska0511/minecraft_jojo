@@ -80,7 +80,7 @@ class Common_func:
 
         Return
             result : list[str]
-                各プレイヤーの座標を辞書型で返します。
+                各プレイヤーの名前のリスト。
                 ex -> ['KASKA0511', 'hoge', 'fuga']
         '''
         result = self.ext.extention_command('data get entity @e[type=minecraft:armor_stand,limit=1,name=List] Tags')
@@ -251,7 +251,7 @@ class Common_func:
 
         return pos_dict
 
-    def get_rot(self):
+    def get_rot(self, name=None):
         '''
         自分自身の視線座標を取得します。
 
@@ -262,7 +262,9 @@ class Common_func:
             rot : list
                 ex -> [0, 0]
         '''
-        res = self.ext.extention_command(f'data get entity {self.name} Rotation')   # 視線
+        if name is None:
+            name = self.name
+        res = self.ext.extention_command(f'data get entity {name} Rotation')   # 視線
         if res is None:
             return None
         else:

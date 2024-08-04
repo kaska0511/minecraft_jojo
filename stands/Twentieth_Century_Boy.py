@@ -6,7 +6,7 @@ from stands.Common_func import Common_func
 class Twentieth_Century_Boy(Common_func):
     def __init__(self, name, ext, controller) -> None:
         super().__init__(name, ext, controller)
-        self.rot = None
+        self.rot = []
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
@@ -26,19 +26,15 @@ class Twentieth_Century_Boy(Common_func):
 
         self.right_click = False
 
-        # 視線検知。能力発動中で視線が動いていたらスタンドを解除する。
-        if self.run_stand:  # ネストを深くしないとself.get_my_rotでKeyErrorが発生することがある。
-            if self.rot != self.get_my_rot():
-                self.run_stand = False
-                self.kill_stand()
-                self.clear_effect()
-
         if self.left_click: # 左クリックしたら能力を解除する。
             self.cancel_stand()
         self.left_click = False
 
         # 動いているかどうかのチェックや能力を解除していないか
         if self.run_stand:
+            if self.rot != self.get_my_rot():   # 視線検知。能力発動中で視線が動いていたらスタンドを解除する。
+                self.cancel_stand()
+
             type, uuid = self.get_rider()
             if type == 'minecraft:armor_stand':  # 防具立てに乗っているなら能力発動中
                 pass
