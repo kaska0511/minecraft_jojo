@@ -20,22 +20,13 @@ class The_World(Common_func):
         item, tag = self.get_SelectedItem()
         #import pdb;pdb.set_trace()
         if tag == "DIO" and self.run_stand == False:
-            #self.ext.extention_command(f'execute as {self.name} at @s run tp @e[tag=DIOinter,limit=1] ^ ^ ^1')
-            self.ext.extention_command(f'data modify block 0 -64 0 auto set value 1')
-            inter = self.ext.extention_command(f'data get entity @e[tag=DIOinter,limit=1] interaction.player') # Interaction has the following entity data: [I; 123, -1234, -1234, 1234]
-            inter_uuid = re.sub(r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: ', '', inter)
-            self.ext.extention_command(f'data remove entity @e[tag=DIOinter,limit=1] interaction')
-            
-            if self.uuid == inter_uuid and self.run_stand == False and self.timer != 0:
+            if self.right_click and self.run_stand == False and self.timer != 0:
                 # 右クリックした人が本人なら能力発動
                 self.run_stand = True
                 self.stop_time()
-                self.controller.run_The_World = True
+                #self.controller.run_The_World = True
 
-        else:
-            # killしてもいいけど今のところはスタンドアイテムを持っていないときは元の場所に戻す。
-            self.ext.extention_command(f'data modify block 0 -64 0 auto set value 0')
-            self.ext.extention_command(f'tp @e[tag=DIOinter,limit=1] 0 -64 0')
+        self.right_click = False
 
         if self.run_stand:
             self.fix_player()
@@ -45,7 +36,7 @@ class The_World(Common_func):
             # 矢を追跡する。
             #self.while_arrow_effect()
 
-         # チケットアイテム獲得によるターゲット該当者処理
+        """# チケットアイテム獲得によるターゲット該当者処理
         # チケットアイテムを持っていないならFalse。死んだりチェストにしまうとFalseになる。
         self.ticket_target = True if self.controller.check_ticket_item(self.name, self.ticket_item[0], self.ticket_item[1]) else False
         # チケットアイテムを持ち、既にチェックポイント開放がされているならボーナス処理
@@ -102,7 +93,7 @@ class The_World(Common_func):
         # 誰かがチケットアイテムを手に入れたのでチケットコンパスを更新させる。
         #? しかしこのままだと随時更新されてしまう。気がする。。。
         if self.controller.get_someone_get_ticket():
-            self.create_ticket_compass()
+            self.create_ticket_compass()"""
 
     def create_ticket_compass(self):
         self.controller.create_ticket_compass(self.name, self.pass_point, self.ticket_item, self.point_pos)
@@ -115,9 +106,7 @@ class The_World(Common_func):
         self.start_time()
         self.timer = 5
 
-
     def stop_time(self):
-        self.ext.extention_command(f'tp @e[type=interaction,tag!=attackinter,limit=1] 0 -64 0')
         self.ext.extention_command(f'execute as {self.name} at @s run tick freeze')
         self.ext.extention_command(f'playsound minecraft:block.bell.resonate master @a ~ ~ ~ 1 1 1')
         self.ext.extention_command(f'playsound minecraft:entity.bee.death master @a ~ ~ ~ 4 0 1')
@@ -126,7 +115,7 @@ class The_World(Common_func):
 
         self.stop_player_effect_list()
 
-        for player in self.get_login_user():
+        for player in self.ext.get_joinner_list():
             if player == self.name: # ザ・ワールド能力者の自分を除外
                 #pass
                 continue
@@ -194,21 +183,29 @@ class The_World(Common_func):
         # 能力発動中にワールドへ参加した人間にも例外なく停止効果を付与。
         self.stop_player_effect_list()
         # whileで視線と場所を固定する。
-        # アマスタを重なるように配置し行動を制限。
+
+        #! 時が止まっているときに新規参加者は視線を固定することができない。
         if not self.fix_flag:
-            self.rots = self.get_rot()
-            if self.rots == {}:
+            rots = []
+            for player in self.ext.get_joinner_list():
+                get_rot = self.get_rot(player)
+                if get_rot is None:
+                    get_rot = "None"    # プレイヤーが居ない場合はNoneが返るはず。なので文字列にして納める。
+                rots.append(get_rot)
+            if rots == []:
                 return
+            else:
+                self.rots = rots
             self.fix_flag = True
-        for player in self.get_login_user():
+
+        # アマスタを重なるように配置し行動を制限。
+        for player, rot in zip(self.ext.get_joinner_list(), self.rots):
             if player == self.name: # 自分の時は固定しない。
                 #pass
                 continue
 
-            rot_list = self.rots.get(player, None)    # 視線座標取得
-
-            if rot_list is not None:
-                self.ext.extention_command(f'execute as @e[tag={player},limit=1] at @s run tp {player} ~ ~ ~ {rot_list[0]} {rot_list[1]}')
+            if rot != "None":
+                self.ext.extention_command(f'execute as @e[tag={player},limit=1] at @s run tp {player} ~ ~ ~ {rot[0]} {rot[1]}')
 
     def prepare_arrow_effect(self):
         self.ext.extention_command('execute as @e[type=minecraft:arrow] at @s unless data entity @s Passengers if entity @a[name='+self.name+',distance=..2] run summon armor_stand ~ ~ ~ {Invisible:0b,Invulnerable:1b,NoGravity:1b,Tags:["DIOarrow"],Attributes:[{Name:"generic.scale", Base:0.0625}]}')
