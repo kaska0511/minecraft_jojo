@@ -763,6 +763,9 @@ def main(mcr, is_server):
 
     stand_list = open_json('./json_list/stand_list.json')
     
+    #ファイルの最終更新日時を取得
+    lastModificationTime = os.path.getmtime('./json_list/stand_list.json')
+    
     controller = GameController(mcr)
     # ゲーム全体の進捗を読み込む。
     controller.get_progress()
@@ -809,7 +812,15 @@ def main(mcr, is_server):
         
         if is_server:
             stand_list_json_rewrite_for_new_joinner()
-
+            
+            #ファイルの更新日時を元にファイルが変更されたかをチェック
+            if lastModificationTime != os.path.getmtime('./json_list/stand_list.json'):
+                
+                #スタンド能力と使用者を紐づけるアマスタを更新
+                summon_stand_user_info(mcr) 
+                
+                 #ファイルの更新日時を更新
+                lastModificationTime = os.path.getmtime('./json_list/stand_list.json')
 
         # スタンド能力を付与。
         gift_stand()
