@@ -657,7 +657,7 @@ def main(ext, is_server):
     
     controller = GameController(ext)
     # ゲーム全体の進捗を読み込む。
-    controller.get_progress()
+    """controller.get_progress()
 
     controller.start()
     controller.ticket_start()
@@ -667,7 +667,7 @@ def main(ext, is_server):
 
     controller.add_bossbar("ticket", "チェックポイント解放まで", "blue", 300)
     controller.set_bonus_bossbar("ticket")
-    controller.set_bonus_bossbar_visible("ticket", True)
+    controller.set_bonus_bossbar_visible("ticket", True)"""
 
     ext.stand = ext.extention_command(f'data get entity @e[name={ext.name},type=armor_stand,limit=1] Tags')[0]
     my_stand = ext.stand #　テスト用（自分の名前の防具立てに付与されているスタンド名を取得する関数に置き換えられる。）
