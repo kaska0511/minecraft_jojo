@@ -436,56 +436,13 @@ def checkpoint_prepare():
     if not is_file:
         make_checkpointrecoder_json()
 
-
-def name_registration(world,tusk,kqeen,rain,boy,feat):
-    stand_list = open_json('./json_list/stand_list.json')
-    world.name = stand_list["The_World"]   #DnD_sk
-    #world.name = "KASKA0511"
-    tusk.name = stand_list["TuskAct4"]
-    #tusk.name = "KASKA0511"
-    kqeen.name = stand_list["Killer_Qeen"]
-    rain.name = stand_list["Catch_The_Rainbow"]
-    #rain.name = "KASKA0511"
-    boy.name = stand_list["Twentieth_Century_Boy"]
-    #boy.name = "KASKA0511"
-    feat.name = stand_list["Little_Feat"]
-
-def test_set_uuid(stand):
+def set_uuid(stand):
     if stand.name != "1dummy":
         stand.uuid = stand.get_uuid()
 
-def set_uuid(world,tusk,kqeen,rain,boy,feat):
-    if world.name != "1dummy":
-        world.uuid = world.get_uuid()
-    if tusk.name != "1dummy":
-        tusk.uuid = tusk.get_uuid()
-        #ext.extention_command('give ' + tusk.name + 'saddle')     # tusk最初に能力が付与されたタイミングだけサドルを与える。
-    if kqeen.name != "1dummy":
-        kqeen.uuid = kqeen.get_uuid()
-    if rain.name != "1dummy":
-        rain.uuid = rain.get_uuid()
-    if boy.name != "1dummy":
-        boy.uuid = boy.get_uuid()
-    if feat.name != "1dummy":
-        feat.uuid = feat.get_uuid()
-
-def test_death_or_logout_check(stand):
-    if (stand.get_logout() or stand.get_player_Death()) and stand.run_stand:
+def death_or_logout_check(stand):
+    if stand.get_player_Death() != False:
         stand.cancel_stand()
-
-def death_or_logout_check(world,tusk,kqeen,rain,boy,feat):
-    if (world.get_logout() or world.get_player_Death()) and world.run_stand:
-        world.cancel_stand()
-    if (tusk.get_logout() or tusk.get_player_Death()) and tusk.run_stand:
-        tusk.cancel_stand()
-    if (kqeen.get_logout() or kqeen.get_player_Death()) and kqeen.run_stand:
-        kqeen.cancel_stand()
-    if (rain.get_logout() or rain.get_player_Death()) and rain.run_stand:
-        rain.cancel_stand()
-    if (boy.get_logout() or boy.get_player_Death()) and boy.run_stand:
-        boy.cancel_stand()
-    if (feat.get_logout() or feat.get_player_Death()) and feat.run_stand:
-        feat.cancel_stand()
 
 def test_stand_lost_check(stand, my_stand):
     item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート")
@@ -576,30 +533,6 @@ def stand_lost_check(world,tusk,kqeen,rain,boy,feat):
         feat.create_ticket_compass()
         feat.create_target_compass()
 
-def set_commandblock(world,tusk,kqeen,rain,boy,feat):
-    ext.extention_command(f'forceload add 0 0 16 16')
-    command = f'execute as {world.name} at @s run tp @e[tag=DIOinter,limit=1] ^ ^ ^1'
-
-    ext.extention_command(f'setblock 0 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
-    command = f'execute as {tusk.name} at @s run tp @e[tag=tuskinter,limit=1] ^ ^ ^1'
-    ext.extention_command(f'setblock 1 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
-    command = f'execute as @e[tag=TuskAct4,limit=1] at @s run tp @e[tag=TuskAct4,limit=1] ^ ^ ^0.8'
-    ext.extention_command(f'setblock 1 -64 1 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
-
-    command = f'execute as {kqeen.name} at @s run tp @e[tag=kqeeninter,limit=1] ^ ^ ^1'
-    ext.extention_command(f'setblock 2 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
-    command = f'execute as @e[tag=air_bomb] at @s run tp ^ ^ ^0.5'
-    ext.extention_command(f'setblock 2 -64 1 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
-
-    command = f'execute as {rain.name} at @s run tp @e[tag=raininter,limit=1] ^ ^ ^1'
-    ext.extention_command(f'setblock 3 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
-
-    command = f'execute as {boy.name} at @s run tp @e[tag=boyinter,limit=1] ^ ^ ^1'
-    ext.extention_command(f'setblock 4 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
-
-    command = f'execute as {feat.name} at @s run tp @e[tag=featinter,limit=1] ^ ^ ^1'
-    ext.extention_command(f'setblock 5 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
-
 def find_target(controller,world,tusk,kqeen,rain,boy,feat):
     player = []
 
@@ -629,16 +562,8 @@ def find_target(controller,world,tusk,kqeen,rain,boy,feat):
 
     return player
 
-def test_update_all_ticketcompass(stand):
+def update_all_ticketcompass(stand):
     stand.create_ticket_compass()
-
-def update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat):
-    world.create_ticket_compass()
-    tusk.create_ticket_compass()
-    kqeen.create_ticket_compass()
-    rain.create_ticket_compass()
-    boy.create_ticket_compass()
-    feat.create_ticket_compass()
 
 def stand_list_json_rewrite_for_new_joinner(ext):
     '''
@@ -717,14 +642,14 @@ def new_joinner_func(ext, myname):
 
 def main(ext, is_server):
     
-    myname = get_self_playername()
+    ext.name = get_self_playername()
     
     if is_server:
         ext.summon_joinner_armor(is_server)
         #スタンド能力と使用者を紐づけるアマスタを生成
         summon_stand_user_info(ext) 
 
-    new_joinner_func(ext, myname)
+    new_joinner_func(ext, ext.name)
     
     ext.extention_command("gamerule sendCommandFeedback false")
 
@@ -741,43 +666,20 @@ def main(ext, is_server):
     # ゲーム全体の進捗を読み込む。
     controller.get_progress()
 
-    world = The_World(name=stand_list["The_World"], ext=ext, controller=controller, pos="[0,0,0]", timer=5)    # 初回5秒
-    #world = The_World(name="KASKA0511", ext=ext, pos="[0,0,0]", timer=5)    # 初回5秒
-    ext.extention_command('kill @e[tag=DIOinter]')
-    ext.extention_command('summon interaction 0 -64 0 {Tags:["DIOinter"],height:2,width:1}')
-
-    tusk = TuskAct4(name=stand_list["TuskAct4"], ext=ext, controller=controller)
-    ext.extention_command('kill @e[tag=tuskinter]')
-    ext.extention_command('summon interaction 0 -64 0 {Tags:["tuskinter"],height:2,width:1}')
-
-    kqeen = Killer_Qeen(name=stand_list["Killer_Qeen"], ext=ext, controller=controller)
-    ext.extention_command('kill @e[tag=kqeeninter]')
-    ext.extention_command('summon interaction 0 -64 0 {Tags:["kqeeninter"],height:2,width:1}')
-
-    rain = Catch_The_Rainbow(name=stand_list["Catch_The_Rainbow"], ext=ext, controller=controller)
-    rain.set_scoreboard()
-    rain.summon_amedas()
-    rain.mask_air()
-
-    boy = Twentieth_Century_Boy(name=stand_list["Twentieth_Century_Boy"], ext=ext, controller=controller)
-    ext.extention_command('kill @e[tag=boyinter]')
-    ext.extention_command('summon interaction 0 -64 0 {Tags:["boyinter"],height:2,width:1}')
-
-    feat = Little_Feat(name=stand_list["Little_Feat"], ext=ext, controller=controller)
-    ext.extention_command('kill @e[tag=featinter]')
-    ext.extention_command('summon interaction 0 -64 0 {Tags:["featinter"],height:2,width:1}')
-
     controller.start()
     controller.ticket_start()
 
-    set_commandblock(world,tusk,kqeen,rain,boy,feat)
-
-    controller.participant = (world.name,tusk.name,kqeen.name,rain.name,boy.name,feat.name)
+    #controller.participant = (world.name,tusk.name,kqeen.name,rain.name,boy.name,feat.name)
     controller.make_bonus_bar()
 
     controller.add_bossbar("ticket", "チェックポイント解放まで", "blue", 300)
     controller.set_bonus_bossbar("ticket")
     controller.set_bonus_bossbar_visible("ticket", True)
+
+    ext.stand = ext.extention_command(f'data get entity @e[name={ext.name},type=armor_stand,limit=1] Tags')[0]
+    my_stand = ext.stand #　テスト用（自分の名前の防具立てに付与されているスタンド名を取得する関数に置き換えられる。）
+
+    stand = None    #while内でインスタンスが入る。
 
     while True:
         
@@ -793,51 +695,56 @@ def main(ext, is_server):
                  #ファイルの更新日時を更新
                 lastModificationTime = os.path.getmtime('./json_list/stand_list.json')
 
-        # スタンド能力を付与。
-        gift_stand()
+            # スタンド能力を付与。
+            gift_stand()
 
-        # スタンド使いの名前を登録する。
-        name_registration(world,tusk,kqeen,rain,boy,feat)
+        if stand is None:   #インスタンスが入ると再度インスタンス化されることは無くなる。#!!スタンドを変えたい場合はそれ用の関数を作るべき。
+            if my_stand == 'The_World':
+                stand = The_World(name=ext.name, ext=ext, controller=controller)
+
+            elif my_stand == 'TuskAct4':
+                stand = TuskAct4(name=ext.name, ext=ext, controller=controller)
+
+            elif my_stand == 'Killer_Qeen':
+                stand = Killer_Qeen(name=ext.name, ext=ext, controller=controller)
+
+            elif my_stand == 'Catch_The_Rainbow':
+                stand = Catch_The_Rainbow(name=ext.name, ext=ext, controller=controller)
+
+            elif my_stand == 'Twentieth_Century_Boy':
+                stand = Twentieth_Century_Boy(name=ext.name, ext=ext, controller=controller)
+
+            elif my_stand == 'Little_Feat':
+                stand = Little_Feat(name=ext.name, ext=ext, controller=controller)
 
         # プレイヤーが入ってきたときuuidを設定しなくてはならない。
-        set_uuid(world,tusk,kqeen,rain,boy,feat)
+        set_uuid(stand)
 
         # 能力者が死んでいたり、ログアウトしていたりしたら能力を解除
-        death_or_logout_check(world,tusk,kqeen,rain,boy,feat)
+        death_or_logout_check(stand)
 
         # スタンドアイテムを付与。死亡時やスタンドアイテムをなくした場合自動で与えられる。
-        stand_lost_check(world,tusk,kqeen,rain,boy,feat)
+        stand_lost_check(stand)
 
         # 作成したbossbarを見られるようにする。一度ワールドを離れたプレイヤーはこれを実行しないとみることができないのでwhile内で実行する。
-        if not controller.prepare:
+        """if not controller.prepare:
             controller.set_bonus_bossbar("ticket")
             controller.set_bonus_bossbar_visible("ticket", True)
-            controller.set_bossbar_value("ticket", controller.elapsed_time)
+            controller.set_bossbar_value("ticket", controller.elapsed_time)"""
         #indicate_bonus_bossbar(True,controller,world,tusk,kqeen,rain,boy)
 
-        target = find_target(controller,world,tusk,kqeen,rain,boy,feat)
+        #target = find_target(controller,stand)
 
         # 能力管理。ここで能力を発動させる。
         # スタンドを追加したらここにスタンド名.loop()を追加するイメージ。
         # 時を止めているときに能力が止まるタイプのスタンドの場合はifの中に、止まらない場合はifの外に配置する。
         # 基本的にはifの中に配置するでしょう。
-        world.loop()
-        tusk.loop()
-        if not world.run_stand:
-            kqeen.loop()
-            rain.loop()
-            boy.loop()
-            feat.loop()
-        else:   # ザ・ワールドが起動していたら
-            ext.extention_command(f'data modify block 2 -64 0 auto set value 0')
-            ext.extention_command(f'data modify block 3 -64 0 auto set value 0')
-            ext.extention_command(f'data modify block 4 -64 0 auto set value 0')
-            ext.extention_command(f'data modify block 5 -64 0 auto set value 0')
+        stand.loop()
 
 
         # ザ・ワールドが発動中は基準値の更新を止める。＝時間計測が一時的に止める。
         # targetによりチケットアイテム所持者がいれば5分計測が始まる。
-        if not world.run_stand:
+        """if not world.run_stand:
             if target and not controller.prepare:
                 controller.stop()
             #print(controller.elapsed_time)
@@ -853,7 +760,7 @@ def main(ext, is_server):
 
         if controller.ticket_update_flag:
             controller.ticket_update_flag = False
-            update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat)
+            update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat)"""
 
 #初期セットアップ
 if __name__ == '__main__':
