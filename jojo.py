@@ -320,7 +320,7 @@ def edit_entity_tag_data(mcr, types, name, old_tags, new_tag):
         コマンドの実行結果(list型)
     '''
     #コマンドの基本構文を生成
-    cmd = f'/tag @e[limit=1,%types%%name%] %command% %tag%'    
+    cmd = f'/tag @e[limit=1,%types%%name%] %command% %tag%'
     
     #「%types%」箇所の置換
     cmd = cmd.replace(f'%types%', '') if types is None else cmd.replace(f'%types%', f'type={types},')
@@ -644,14 +644,35 @@ def get_active_window_title():
     return title
 
 
+def new_joinner_func(mcr, myname):
+    '''
+    新規参入者処理
+
+    Parameter
+        myname : str
+        自身の名前
+        
+        mcr : MCRcon
+            Rconのサーバ情報
+
+    Return
+        なし
+    '''
+    mcr.command(f'execute unless entity @e[name=List,type=minecraft:armor_stand,tag={myname}] run tag @e[name=NEW,type=minecraft:armor_stand,limit=1] add {myname}')
+    mcr.command(f'execute unless entity @e[name=List,type=minecraft:armor_stand,tag={myname}] run tag @e[name=List,type=minecraft:armor_stand,limit=1] add {myname}')
+    
+
 def main(mcr, is_server):
     
     myname = get_self_playername()
     
     if is_server:
+        summon_joinner_armor(self, is_server)
         #スタンド能力と使用者を紐づけるアマスタを生成
         summon_stand_user_info(mcr) 
 
+    new_joinner_func(mcr,myname)
+    
     mcr.command("gamerule sendCommandFeedback false")
 
     #checkpoint_prepare()
