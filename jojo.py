@@ -113,6 +113,87 @@ def open_json(json_file):
         df = json.load(f)
     return df
 
+def save_json(dictionary, filePath):
+    '''
+    jsonファイルの保存を行う
+
+    Parameter
+        dictionary : dict
+            jsonファイルの中身
+        filePath : str
+            保存するjsonファイルのパス
+
+    Return
+        なし
+    '''
+    with open(filePath, 'w', encoding='utf-8') as f:
+        json.dump(dictionary, f, ensure_ascii=False, indent=4)
+
+
+def find_value(dictionary, key):
+    """
+    ネストされた辞書から指定したキーに対応する値を再帰的に取得する関数
+
+    Parameters:
+    dictionary (dict): キーと値のペアを含む辞書（値は辞書型も可能）
+    key : 取得したい値に対応するキー
+
+    Returns:
+    value : キーに対応する値。キーが辞書に存在しない場合はNoneを返す。
+    """
+    if key in dictionary:
+        return dictionary[key]
+    for k, v in dictionary.items():
+        if isinstance(v, dict):
+            item = find_value(v, key)
+            if item is not None:
+                return item
+    return None
+
+
+def find_keys(d, target_value):
+    """
+    ネストされた辞書から指定した値に対応するすべてのキーを再帰的に取得する関数
+
+    Parameter
+        d : dict or str or bool
+            jsonファイルの中身
+        target_value : str
+            検索対象のValue値
+
+    Returns:
+        list: 指定した値に対応するすべてのキーのリスト
+    """
+    def recursive_search(d, target_value, keys):
+        if isinstance(d, dict):
+            for k, v in d.items():
+                if v == target_value:
+                    keys.append(k)
+                elif isinstance(v, dict):
+                    recursive_search(v, target_value, keys)
+        return keys
+
+    return recursive_search(d, target_value, [])
+
+
+def update_dict_value(dictionary, key, new_value):
+    """
+    指定したkeyに対応するvalueを指定した文字列に書き換える
+
+    Parameters:
+        dictionary : dict
+            jsonファイルの中身
+        key: str
+            更新するキー
+        new_value: str
+            書き換える用の新しい値
+
+    Returns:
+        dict: 更新された辞書
+    """
+    dictionary[key] = new_value
+    return dictionary
+
 
 def summon_stand_user_info(mcr):
     '''
@@ -173,7 +254,7 @@ def get_entity_data(mcr, types, tag, name, target=None):
         targetに指定した情報。エンティティが存在しない場合はNone。
     '''
     #コマンドの基本構文を生成
-    cmd = f'/data get entity @e[limit=1,%types%%tag%%name%] %target%'
+    cmd = f'data get entity @e[limit=1,%types%%tag%%name%] %target%'
     
     #「%types%」箇所の置換
     cmd = cmd.replace(f'%types%', '') if types is None else cmd.replace(f'%types%', f'type={types},')
@@ -217,7 +298,7 @@ def set_entity_data(mcr, types, X, Y, Z, invulnerable, nogravity, tags, name):
         コマンドの実行結果
     '''
     #コマンドの基本構文を生成
-    cmd = f'/summon %types% %X% %Y% %Z% {{%invulnerable%%nogravity%%tag%%name%}}'
+    cmd = f'summon %types% %X% %Y% %Z% {{%invulnerable%%nogravity%%tag%%name%}}'
     
     #「%types%」箇所の置換
     cmd = cmd.replace(f'%types%', '') if types is None else cmd.replace(f'%types%', f'{types}')
@@ -238,7 +319,7 @@ def set_entity_data(mcr, types, X, Y, Z, invulnerable, nogravity, tags, name):
     cmd = cmd.replace(f'%nogravity%', '') if nogravity is None else cmd.replace(f'%nogravity%', f'NoGravity:1,') if nogravity else cmd.replace(f'%nogravity%', f'NoGravity:0,')
 
     #「%tag%」箇所の置換
-    cmd = cmd.replace(f'%tag%', '') if tags is None else cmd.replace(f'%tag%', f'Tags:[{(", ").join(tags)}],')
+    cmd = cmd.replace(f'%tag%', '') if tags is None else cmd.replace(f'%tag%', f'Tags:[{(",").join(tags)}],')
 
     #「%name%」箇所の置換
     cmd = cmd.replace(f'%name%', '') if name is None else cmd.replace(f'%name%', f'CustomName:\'{name}\'')
@@ -265,7 +346,7 @@ def edit_entity_tag_data(mcr, types, name, old_tags, new_tag):
         コマンドの実行結果(list型)
     '''
     #コマンドの基本構文を生成
-    cmd = f'/tag @e[limit=1,%types%%name%] %command% %tag%'    
+    cmd = f'tag @e[limit=1,%types%%name%] %command% %tag%'
     
     #「%types%」箇所の置換
     cmd = cmd.replace(f'%types%', '') if types is None else cmd.replace(f'%types%', f'type={types},')
@@ -288,6 +369,22 @@ def edit_entity_tag_data(mcr, types, name, old_tags, new_tag):
     addtag_resp = mcr.command(cmd.replace(f'%command%', 'add').replace(f'%tag%', '') if new_tag is None else cmd.replace(f'%command%', 'add').replace(f'%tag%', f'{new_tag}'))
 
     return [remove_resp, addtag_resp]
+
+
+def get_self_playername():
+    '''
+    自身のプレイヤー名を取得します。
+
+    Parameter
+        なし
+    Return
+        自身のプレイヤー名
+    '''
+    str_dir = os.getenv('APPDATA') + '\\.minecraft'
+    str_file = 'launcher_accounts_microsoft_store.json'
+    contents = open_json(f'{str_dir}\\{str_file}')
+    
+    return find_value(contents, 'name')
 
 
 def gift_stand():
@@ -543,6 +640,62 @@ def update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat):
     boy.create_ticket_compass()
     feat.create_ticket_compass()
 
+def stand_list_json_rewrite_for_new_joinner(mcr):
+    '''
+    スタンドを持っていない新規参入者のためにstand_list.jsonを読み取り、空きがあれば書き込む処理
+
+    Parameter
+        mcr : MCRcon
+            Rconのサーバ情報
+
+    Return
+        bool
+    '''
+    #スタンドリストの格納場所
+    str_dir = 'json_list'
+    str_stand_file = 'stand_list.json'
+    
+    #「NEW」が付与されているアマスタのTag(プレイヤー名)を取得
+    newList = ext.get_newjoinner_list()
+    
+    #該当アマスタが存在する場合
+    if not newList is None: 
+        
+        #スタンドリストを取得
+        contents = open_json(f'{str_dir}/{str_stand_file}')
+        
+        #空きスタンドの取得
+        vacantStand = find_keys(contents, "1dummy")
+        
+        #空きスタンドがない場合は失敗で返す
+        if vacantStand is None:
+            return False
+        
+        #空きスタンド数の取得
+        vacantStandNum = len(vacantStand)
+        
+        for i in range(len(newList)):
+            
+            #空きスタンド数 - for文のループ回数が0以下になったらreturn
+            if vacantStandNum - i <= 0:
+                return False
+            
+            #空きスタンドの個数-1(index準拠)でランダム値を生成
+            rand = random.randint(0,len(vacantStand) - 1)
+            
+            #空きスタンド能力(key)に対応するプレイヤー(value)を紐づける
+            contents = update_dict_value(contents, vacantStand[rand], newList[i])
+                
+            #ファイルを保存する
+            save_json(contents, f'{str_dir}/{str_stand_file}')
+            
+            #割り当てたスタンドを削除
+            del vacantStand[rand]
+                
+            #「NEW」が付与されているアマスタから新規参入者の名前を削除
+            mcr.command(f'tag @e[limit=1,type=minecraft:armor_stand,name=NEW] remove {newList[i]}')
+    return True
+
 
 def key_detected(e):
     print(f'キー{e.name}が押されました')
@@ -573,12 +726,35 @@ def get_active_window_title():
     return title
 
 
+def new_joinner_func(mcr, myname):
+    '''
+    新規参入者処理
+
+    Parameter
+        myname : str
+        自身の名前
+        
+        mcr : MCRcon
+            Rconのサーバ情報
+
+    Return
+        なし
+    '''
+    mcr.command(f'execute unless entity @e[name=List,type=minecraft:armor_stand,tag={myname}] run tag @e[name=NEW,type=minecraft:armor_stand,limit=1] add {myname}')
+    mcr.command(f'execute unless entity @e[name=List,type=minecraft:armor_stand,tag={myname}] run tag @e[name=List,type=minecraft:armor_stand,limit=1] add {myname}')
+    
+
 def main(mcr, is_server):
     
+    myname = get_self_playername()
+    
     if is_server:
+        ext.summon_joinner_armor(is_server)
         #スタンド能力と使用者を紐づけるアマスタを生成
         summon_stand_user_info(mcr) 
 
+    new_joinner_func(mcr, myname)
+    
     mcr.command("gamerule sendCommandFeedback false")
 
     #checkpoint_prepare()
@@ -586,6 +762,9 @@ def main(mcr, is_server):
     #gift_stand()
 
     stand_list = open_json('./json_list/stand_list.json')
+    
+    #ファイルの最終更新日時を取得
+    lastModificationTime = os.path.getmtime('./json_list/stand_list.json')
     
     controller = GameController(mcr)
     # ゲーム全体の進捗を読み込む。
@@ -630,6 +809,19 @@ def main(mcr, is_server):
     controller.set_bonus_bossbar_visible("ticket", True)
 
     while True:
+        
+        if is_server:
+            stand_list_json_rewrite_for_new_joinner()
+            
+            #ファイルの更新日時を元にファイルが変更されたかをチェック
+            if lastModificationTime != os.path.getmtime('./json_list/stand_list.json'):
+                
+                #スタンド能力と使用者を紐づけるアマスタを更新
+                summon_stand_user_info(mcr) 
+                
+                 #ファイルの更新日時を更新
+                lastModificationTime = os.path.getmtime('./json_list/stand_list.json')
+
         # スタンド能力を付与。
         gift_stand()
 
