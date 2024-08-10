@@ -440,36 +440,36 @@ def test_stand_lost_check(stand, my_stand):
 def stand_lost_check(world,tusk,kqeen,rain,boy,feat):
     item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート")
 
-    if not world.bool_have_a_stand('DIO') and world.name != '1dummy':
+    if not world.bool_have_a_stand('clock', tag='DIO') and world.name != '1dummy':
         mcr.command('kill @e[tag=DIOinter]')
         mcr.command('summon interaction 0 -64 0 {Tags:["DIOinter"],height:2,width:1}')
-        mcr.command('give ' + world.name + " clock{Tags:DIO,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[0] + '"}]'+"'}}")
+        mcr.command('give ' + world.name + ' clock[minecraft:custom_name="' +item_name_list[0]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:DIO}")
         world.create_ticket_compass()
         world.create_target_compass()
-    if not tusk.bool_have_a_stand('Saint') and tusk.name != '1dummy':
+    if not tusk.bool_have_a_stand('bone', tag='Saint') and tusk.name != '1dummy':
         mcr.command('kill @e[tag=tuskinter]')
         mcr.command('summon interaction 0 -64 0 {Tags:["tuskinter"],height:2,width:1}')
         mcr.command('give ' + tusk.name + ' saddle')
         mcr.command('give ' + tusk.name + ' lead')
-        mcr.command('give ' + tusk.name + " bone{Tags:Saint,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[1] + '"}]'+"'}}")
+        mcr.command('give ' + tusk.name + ' bone[minecraft:custom_name="' +item_name_list[1]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Saint}")
         tusk.create_ticket_compass()
         tusk.create_target_compass()
-    if not kqeen.bool_have_a_stand('Killer') and kqeen.name != '1dummy':   # 全て失わないと再取得できないので注意
+    if not kqeen.bool_have_a_stand('gunpowder','flint','fire_charge', tag='Killer') and kqeen.name != '1dummy':   # 全て失わないと再取得できないので注意
         mcr.command('kill @e[tag=kqeeninter]')
         mcr.command('summon interaction 0 -64 0 {Tags:["kqeeninter"],height:2,width:1}')
-        mcr.command('give ' + kqeen.name + " gunpowder{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][0] + '"}]'+"'}}")
-        mcr.command('give ' + kqeen.name + " flint{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][1] + '"}]'+"'}}")
-        mcr.command('give ' + kqeen.name + " fire_charge{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][2] + '"}]'+"'}}")
+        mcr.command('give ' + kqeen.name + ' gunpowder[minecraft:custom_name="' +item_name_list[2][0]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Killer}")
+        mcr.command('give ' + kqeen.name + ' flint[minecraft:custom_name="' +item_name_list[2][1]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Killer}")
+        mcr.command('give ' + kqeen.name + ' fire_charge[minecraft:custom_name="' +item_name_list[2][2]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Killer}")
         kqeen.create_ticket_compass()
         kqeen.create_target_compass()
-    if not rain.bool_have_a_stand('Rain') and rain.name != '1dummy':
-        mcr.command('give ' + rain.name + " skeleton_skull{Tags:Rain,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[3] + '"}]'+"'}}")
+    if not rain.bool_have_a_stand('skeleton_skull', tag='Rain') and rain.name != '1dummy':
+        mcr.command('give ' + rain.name + ' skeleton_skull[minecraft:custom_name="' +item_name_list[3]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Rain}")
         rain.create_ticket_compass()
         rain.create_target_compass()
-    if not boy.bool_have_a_stand('Boy') and boy.name != '1dummy':
+    if not boy.bool_have_a_stand('snowball', tag='Boy') and boy.name != '1dummy':
         mcr.command('kill @e[tag=boyinter]')
         mcr.command('summon interaction 0 -64 0 {Tags:["boyinter"],height:2,width:1}')
-        mcr.command('give ' + boy.name + " snowball{Tags:Boy,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[4] + '"}]'+"'}}")
+        mcr.command('give ' + boy.name + ' snowball[minecraft:custom_name="' +item_name_list[4]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Boy}")
         boy.create_ticket_compass()
         boy.create_target_compass()
     if not feat.bool_have_a_stand('Feat') and feat.name != '1dummy':

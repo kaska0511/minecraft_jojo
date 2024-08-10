@@ -114,11 +114,13 @@ class Common_func:
         else:
             return True
 
-    def bool_have_a_stand(self, tag):
+    def bool_have_a_stand(self, *items, tag):
         '''
         自分がスタンド能力を表すアイテムを持っているかチェックします。
 
         Parameter
+            item : str
+                スタンドアイテムを表すitem名
             tag : str
                 スタンドアイテムが持つtag名
 
@@ -131,6 +133,7 @@ class Common_func:
 
         # runの後は何でもよかった。メインは「nbt=」の部分で特定のタグ名を持つアイテムを所持しているならrunの後が実行される。
         # 持っていないなら空文字が返される。
+
         if self.get_player_Death() == False or self.get_logout() == False:
         #if self.get_player_Death() != True:
             # execute if entity @a[name=KASKA0511,nbt={Inventory:[{tag:{Tags:["DIO"]}}]}] run data get entity KASKA0511 DeathTime # DIOタグのアイテムを持っていたらrun以降が実行される。持っていなかったら空文字が返る。
@@ -301,6 +304,7 @@ class Common_func:
                 アイテム名とそれ付与されているタグが返されます。
                 ex -> ("minecraft.clock", "DIO") or ("minecraft.clock", ["DIO","b"])
         '''
+
         id = self.ext.extention_command(f'data get entity {self.name} SelectedItem.id')
         tag = self.ext.extention_command(f'data get entity {self.name} SelectedItem.tag.Tags')     # tag取得はこれがいいかも
         
@@ -439,6 +443,7 @@ class Common_func:
             tag : str | list[str]
                 そのアイテムが持つtag
         '''
+
         id = self.ext.extention_command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].id')     # KASKA0511 has the following entity data: "minecraft:flint"
         # tagに関して
         #   単一    KASKA0511 has the following entity data: "Killer"
