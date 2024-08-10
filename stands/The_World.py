@@ -205,7 +205,7 @@ class The_World(Common_func):
                 continue
 
             if rot != "None":
-                self.ext.extention_command(f'execute as @e[tag={player},limit=1] at @s run tp {player} ~ ~ ~ {rot[0]} {rot[1]}')
+                self.ext.extention_command(f'execute as @e[tag={player},tag=The_World,limit=1] at @s run tp {player} ~ ~ ~ {rot[0]} {rot[1]}')
 
     def prepare_arrow_effect(self):
         self.ext.extention_command('execute as @e[type=minecraft:arrow] at @s unless data entity @s Passengers if entity @a[name='+self.name+',distance=..2] run summon armor_stand ~ ~ ~ {Invisible:0b,Invulnerable:1b,NoGravity:1b,Tags:["DIOarrow"],Attributes:[{Name:"generic.scale", Base:0.0625}]}')
