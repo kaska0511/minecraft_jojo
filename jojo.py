@@ -148,39 +148,25 @@ def get_json_value(contents, search_key, cond):
     return res
 
 
-def has_key(contents, search_key):
-    '''
-    contentsの中に検索対象のKey値が存在するか判定する
+def get_value_from_nested_dict(dictionary, key):
+    """
+    ネストされた辞書から指定したキーに対応する値を再帰的に取得する関数
 
-    Parameter
-        contents : dict
-            jsonファイルの中身
-        search_key : str
-            検索対象のKey値
+    Parameters:
+    dictionary (dict): キーと値のペアを含む辞書（値は辞書型も可能）
+    key : 取得したい値に対応するキー
 
-    Return
-        判定結果(True：存在する　False：存在しない)
-    '''
-    #contentsに検索対象のKey値が存在するか判定する
-    if isinstance(contents, dict):
-        return True if contents.keys == search_key else search_key in contents
-    return False
-
-
-def search_json(contents, search_key):
-    '''
-    jsonファイルの検索をコントロールする
-
-    Parameter
-        contents : dict
-            jsonファイルの中身
-        search_key : str
-            検索対象のKey値
-
-    Return
-        検索対象のKey値に対するValue値。存在しない場合はNone。
-    '''
-    return get_json_value(contents, search_key, has_key)
+    Returns:
+    value : キーに対応する値。キーが辞書に存在しない場合はNoneを返す。
+    """
+    if key in dictionary:
+        return dictionary[key]
+    for k, v in dictionary.items():
+        if isinstance(v, dict):
+            item = get_value_from_nested_dict(v, key)
+            if item is not None:
+                return item
+    return None
 
 
 def summon_stand_user_info(mcr):
@@ -372,7 +358,7 @@ def get_self_playername():
     str_file = 'launcher_accounts_microsoft_store.json'
     contents = open_json(f'{str_dir}\\{str_file}')
     
-    return search_json(contents, 'name')
+    return get_value_from_nested_dict(contents, 'name')
 
 
 def gift_stand():
