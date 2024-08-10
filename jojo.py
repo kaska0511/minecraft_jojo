@@ -4,9 +4,6 @@ import random
 import time
 import json
 import os
-import keyboard
-import mouse
-import win32gui
 from extension import Extension
 from mcrcon import MCRcon
 
@@ -20,8 +17,6 @@ from stands.Killer_Qeen import Killer_Qeen
 from stands.Catch_The_Rainbow import Catch_The_Rainbow
 from stands.Twentieth_Century_Boy import Twentieth_Century_Boy
 from stands.Little_Feat import Little_Feat
-
-# server.propertiesのcommandblockを許可する必要がありそう。
 
 def get_rcon_info(is_server):
     '''
@@ -93,8 +88,6 @@ def make_stand_list():
     '''
     first = {"The_World": "1dummy", "TuskAct4": "1dummy", "Killer_Qeen": "1dummy", "Catch_The_Rainbow": "1dummy", "Twentieth_Century_Boy": "1dummy", "Little_Feat": "1dummy"}
     with open('./json_list/stand_list.json', 'w', encoding='utf-8') as f:
-        json.dump(first, f, ensure_ascii=False)
-    with open('./json_list/stand_list.json.bak', 'w', encoding='utf-8') as f:   #バックアップ用
         json.dump(first, f, ensure_ascii=False)
 
 
@@ -491,47 +484,47 @@ def test_stand_lost_check(stand, my_stand):
             ext.extention_command('give ' + stand.name + " music_disc_13{Tags:Feat,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[5] + '"}]'+"'}}")
 
 
-def stand_lost_check(world,tusk,kqeen,rain,boy,feat):
+def stand_lost_check(stand, my_stand):
     item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート")
 
-    if not world.bool_have_a_stand('clock', tag='DIO') and world.name != '1dummy':
-        ext.extention_command('kill @e[tag=DIOinter]')
-        ext.extention_command('summon interaction 0 -64 0 {Tags:["DIOinter"],height:2,width:1}')
-        ext.extention_command('give ' + world.name + ' clock[minecraft:custom_name="' +item_name_list[0]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:DIO}")
-        world.create_ticket_compass()
-        world.create_target_compass()
-    if not tusk.bool_have_a_stand('bone', tag='Saint') and tusk.name != '1dummy':
-        ext.extention_command('kill @e[tag=tuskinter]')
-        ext.extention_command('summon interaction 0 -64 0 {Tags:["tuskinter"],height:2,width:1}')
-        ext.extention_command('give ' + tusk.name + ' saddle')
-        ext.extention_command('give ' + tusk.name + ' lead')
-        ext.extention_command('give ' + tusk.name + ' bone[minecraft:custom_name="' +item_name_list[1]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Saint}")
-        tusk.create_ticket_compass()
-        tusk.create_target_compass()
-    if not kqeen.bool_have_a_stand('gunpowder','flint','fire_charge', tag='Killer') and kqeen.name != '1dummy':   # 全て失わないと再取得できないので注意
-        ext.extention_command('kill @e[tag=kqeeninter]')
-        ext.extention_command('summon interaction 0 -64 0 {Tags:["kqeeninter"],height:2,width:1}')
-        ext.extention_command('give ' + kqeen.name + ' gunpowder[minecraft:custom_name="' +item_name_list[2][0]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Killer}")
-        ext.extention_command('give ' + kqeen.name + ' flint[minecraft:custom_name="' +item_name_list[2][1]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Killer}")
-        ext.extention_command('give ' + kqeen.name + ' fire_charge[minecraft:custom_name="' +item_name_list[2][2]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Killer}")
-        kqeen.create_ticket_compass()
-        kqeen.create_target_compass()
-    if not rain.bool_have_a_stand('skeleton_skull', tag='Rain') and rain.name != '1dummy':
-        ext.extention_command('give ' + rain.name + ' skeleton_skull[minecraft:custom_name="' +item_name_list[3]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Rain}")
-        rain.create_ticket_compass()
-        rain.create_target_compass()
-    if not boy.bool_have_a_stand('snowball', tag='Boy') and boy.name != '1dummy':
-        ext.extention_command('kill @e[tag=boyinter]')
-        ext.extention_command('summon interaction 0 -64 0 {Tags:["boyinter"],height:2,width:1}')
-        ext.extention_command('give ' + boy.name + ' snowball[minecraft:custom_name="' +item_name_list[4]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Boy}")
-        boy.create_ticket_compass()
-        boy.create_target_compass()
-    if not feat.bool_have_a_stand('Feat') and feat.name != '1dummy':
-        ext.extention_command('kill @e[tag=featinter]')
-        ext.extention_command('summon interaction 0 -64 0 {Tags:["featinter"],height:2,width:1}')
-        ext.extention_command('give ' + feat.name + " music_disc_13{Tags:Feat,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[5] + '"}]'+"'}}")
-        feat.create_ticket_compass()
-        feat.create_target_compass()
+    if my_stand == 'The_World':
+        if not stand.bool_have_a_stand('DIO') and stand.name != '1dummy':
+            ext.extention_command('give ' + stand.name + " clock{Tags:DIO,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[0] + '"}]'+"'}}")
+            #stand.create_ticket_compass()
+            #stand.create_target_compass()
+
+    elif my_stand == 'TuskAct4':
+        if not stand.bool_have_a_stand('Saint') and stand.name != '1dummy':
+            ext.extention_command('give ' + stand.name + ' saddle')
+            ext.extention_command('give ' + stand.name + ' lead')
+            ext.extention_command('give ' + stand.name + " bone{Tags:Saint,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[1] + '"}]'+"'}}")
+            #stand.create_ticket_compass()
+            #stand.create_target_compass()
+
+    elif my_stand == 'Killer_Qeen':
+        if not stand.bool_have_a_stand('Killer') and stand.name != '1dummy':   # 全て失わないと再取得できないので注意
+            ext.extention_command('give ' + stand.name + " gunpowder{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][0] + '"}]'+"'}}")
+            ext.extention_command('give ' + stand.name + " flint{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][1] + '"}]'+"'}}")
+            ext.extention_command('give ' + stand.name + " fire_charge{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][2] + '"}]'+"'}}")
+            #stand.create_ticket_compass()
+            #stand.create_target_compass()
+
+    elif my_stand == 'Catch_The_Rainbow':
+        if not stand.bool_have_a_stand('Rain') and stand.name != '1dummy':
+            ext.extention_command('give ' + stand.name + " skeleton_skull{Tags:Rain,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[3] + '"}]'+"'}}")
+            #stand.create_ticket_compass()
+            #stand.create_target_compass()
+
+    elif my_stand == 'Twentieth_Century_Boy':
+        if not stand.bool_have_a_stand('Boy') and stand.name != '1dummy':
+            ext.extention_command('give ' + stand.name + " snowball{Tags:Boy,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[4] + '"}]'+"'}}")
+            #stand.create_ticket_compass()
+            #stand.create_target_compass()
+
+    elif my_stand == 'Little_Feat':
+        if not stand.bool_have_a_stand('Feat') and stand.name != '1dummy':
+            ext.extention_command('give ' + stand.name + " music_disc_13{Tags:Feat,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[5] + '"}]'+"'}}")
+
 
 def find_target(controller,world,tusk,kqeen,rain,boy,feat):
     player = []
