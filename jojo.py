@@ -254,7 +254,7 @@ def get_entity_data(mcr, types, tag, name, target=None):
         targetに指定した情報。エンティティが存在しない場合はNone。
     '''
     #コマンドの基本構文を生成
-    cmd = f'/data get entity @e[limit=1,%types%%tag%%name%] %target%'
+    cmd = f'data get entity @e[limit=1,%types%%tag%%name%] %target%'
     
     #「%types%」箇所の置換
     cmd = cmd.replace(f'%types%', '') if types is None else cmd.replace(f'%types%', f'type={types},')
@@ -298,7 +298,7 @@ def set_entity_data(mcr, types, X, Y, Z, invulnerable, nogravity, tags, name):
         コマンドの実行結果
     '''
     #コマンドの基本構文を生成
-    cmd = f'/summon %types% %X% %Y% %Z% {{%invulnerable%%nogravity%%tag%%name%}}'
+    cmd = f'summon %types% %X% %Y% %Z% {{%invulnerable%%nogravity%%tag%%name%}}'
     
     #「%types%」箇所の置換
     cmd = cmd.replace(f'%types%', '') if types is None else cmd.replace(f'%types%', f'{types}')
@@ -346,7 +346,7 @@ def edit_entity_tag_data(mcr, types, name, old_tags, new_tag):
         コマンドの実行結果(list型)
     '''
     #コマンドの基本構文を生成
-    cmd = f'/tag @e[limit=1,%types%%name%] %command% %tag%'
+    cmd = f'tag @e[limit=1,%types%%name%] %command% %tag%'
     
     #「%types%」箇所の置換
     cmd = cmd.replace(f'%types%', '') if types is None else cmd.replace(f'%types%', f'type={types},')
@@ -656,43 +656,31 @@ def stand_list_json_rewrite_for_new_joinner(mcr):
     str_stand_file = 'stand_list.json'
     
     #「NEW」が付与されているアマスタのTag(プレイヤー名)を取得
-    resp = mcr.command(f'/data get entity @e[limit=1,type=minecraft:armor_stand, name=NEW] Tags')
+    newList = ext.get_newjoinner_list()
     
     #該当アマスタが存在する場合
-    if not resp is None: 
-        
-        #プレイヤー名でリスト化
-        newList = resp.split(',')
-        
-        for tag in newList:
+    if not newList is None: 
             
-            #新規参入者名リストを取得する
-            new_joinner = ext.get_newjoinner_list()
+        #スタンドリストを取得
+        contents = open_json(f'{str_dir}/{str_stand_file}')
+                
+        #空きスタンドの取得
+        vacantStand = find_keys(contents, "1dummy")
+                
+        #空きスタンドがない場合は失敗で返す
+        if vacantStand is None:
+            return False
             
-            #新規参入者はいないので終了
-            if new_joinner is None:
-                return True
-            
-            #スタンドリストを取得
-            contents = open_json(f'{str_dir}/{str_stand_file}')
-            
-            for player_name in new_joinner: 
+        for player_name in newList: 
                 
-                #空きスタンドの取得
-                vacantStand = find_keys(contents, "1dummy")
+            #空きスタンドの個数-1(index準拠)でランダム値を生成
+            rand = random.randint(0,len(vacantStand) - 1)
                 
-                #空きスタンドがない場合は失敗で返す
-                if vacantStand is None:
-                    return False
+            #空きスタンド能力(key)に対応するプレイヤー(value)を紐づけ、ファイルを保存する
+            save_json(update_dict_value(contents, vacantStand[rand], player_name), f'{str_dir}/{str_stand_file}')
                 
-                #空きスタンドの個数-1(index準拠)でランダム値を生成
-                rand = random.randint(0,len(vacantStand) - 1)
-                
-                #空きスタンド能力(key)に対応するプレイヤー(value)を紐づけ、ファイルを保存する
-                save_json(update_dict_value(contents, vacantStand[rand], player_name), f'{str_dir}/{str_stand_file}')
-                
-                #「NEW」が付与されているアマスタから新規参入者の名前を削除
-                mcr.command(f'/tag @e[limit=1, type=minecraft:armor_stand, name=NEW] remove {tag}')
+            #「NEW」が付与されているアマスタから新規参入者の名前を削除
+            mcr.command(f'tag @e[limit=1, type=minecraft:armor_stand, name=NEW] remove {player_name}')
     return True   
 
 
@@ -748,11 +736,11 @@ def main(mcr, is_server):
     myname = get_self_playername()
     
     if is_server:
-        summon_joinner_armor(self, is_server)
+        ext.summon_joinner_armor(is_server)
         #スタンド能力と使用者を紐づけるアマスタを生成
         summon_stand_user_info(mcr) 
 
-    new_joinner_func(mcr,myname)
+    new_joinner_func(mcr, myname)
     
     mcr.command("gamerule sendCommandFeedback false")
 
