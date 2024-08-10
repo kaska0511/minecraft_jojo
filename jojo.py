@@ -640,6 +640,61 @@ def update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat):
     boy.create_ticket_compass()
     feat.create_ticket_compass()
 
+def stand_list_json_rewrite_for_new_joinner(mcr):
+    '''
+    スタンドを持っていない新規参入者のためにstand_list.jsonを読み取り、空きがあれば書き込む処理
+
+    Parameter
+        mcr : MCRcon
+            Rconのサーバ情報
+
+    Return
+        bool
+    '''
+    #スタンドリストの格納場所
+    str_dir = 'json_list'
+    str_stand_file = 'stand_list.json'
+    
+    #「NEW」が付与されているアマスタのTag(プレイヤー名)を取得
+    resp = mcr.command(f'/data get entity @e[limit=1,type=minecraft:armor_stand, name=NEW] Tags')
+    
+    #該当アマスタが存在する場合
+    if not resp is None: 
+        
+        #プレイヤー名でリスト化
+        newList = resp.split(',')
+        
+        for tag in newList:
+            
+            #新規参入者名リストを取得する
+            new_joinner = ext.get_newjoinner_list()
+            
+            #新規参入者はいないので終了
+            if new_joinner is None:
+                return True
+            
+            #スタンドリストを取得
+            contents = open_json(f'{str_dir}/{str_stand_file}')
+            
+            for player_name in new_joinner: 
+                
+                #空きスタンドの取得
+                vacantStand = find_keys(contents, "1dummy")
+                
+                #空きスタンドがない場合は失敗で返す
+                if vacantStand is None:
+                    return False
+                
+                #空きスタンドの個数-1(index準拠)でランダム値を生成
+                rand = random.randint(0,len(vacantStand) - 1)
+                
+                #空きスタンド能力(key)に対応するプレイヤー(value)を紐づけ、ファイルを保存する
+                save_json(update_dict_value(contents, vacantStand[rand], player_name), f'{str_dir}/{str_stand_file}')
+                
+                #「NEW」が付与されているアマスタから新規参入者の名前を削除
+                mcr.command(f'/tag @e[limit=1, type=minecraft:armor_stand, name=NEW] remove {tag}')
+    return True   
+
 
 def key_detected(e):
     print(f'キー{e.name}が押されました')
@@ -750,6 +805,11 @@ def main(mcr, is_server):
     controller.set_bonus_bossbar_visible("ticket", True)
 
     while True:
+        
+        if is_server:
+            stand_list_json_rewrite_for_new_joinner()
+
+
         # スタンド能力を付与。
         gift_stand()
 
