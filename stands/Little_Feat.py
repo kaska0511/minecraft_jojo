@@ -1,12 +1,11 @@
 import re
 import time
-from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_EVEN
 from stands.Common_func import Common_func
 
-class Twentieth_Century_Boy(Common_func):
-    def __init__(self, name, ext, controller) -> None:
+class Little_Feat(Common_func):
+    def __init__(self, name, ext , controller) -> None:
         super().__init__(name, ext, controller)
-        self.rot = []
+        self.target_uuid = None
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
@@ -14,8 +13,17 @@ class Twentieth_Century_Boy(Common_func):
 
         item, tag = self.get_SelectedItem()
 
-        if tag == "Boy":
-            if self.right_click and self.run_stand == False:
+        if tag == "Feat":
+            if self.run_stand:
+                self.ext.extention_command(f'data modify block 5 -64 0 auto set value 1')
+            else:
+                self.ext.extention_command(f'data modify block 5 -64 0 auto set value 0')
+                self.ext.extention_command(f'execute as {self.name} at @s run tp @e[tag=featinter,limit=1] ^ ^ ^1')
+            inter = self.ext.extention_command(f'data get entity @e[tag=featinter,limit=1] interaction.player') # Interaction has the following entity data: [I; 123, -1234, -1234, 1234]
+            inter_uuid = re.sub(r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: ', '', inter)
+            self.ext.extention_command(f'data remove entity @e[tag=featinter,limit=1] interaction')
+            
+            if self.uuid == inter_uuid and self.run_stand == False:
                 # 右クリックした人が本人なら能力発動
                 # 能力発動の準備と無敵化付与
                 self.run_stand = True
@@ -24,24 +32,28 @@ class Twentieth_Century_Boy(Common_func):
                 self.effect_stand()
                 self.rot = self.get_my_rot()
 
-        self.right_click = False
+        else:
+            # killしてもいいけど今のところはスタンドアイテムを持っていないときは元の場所に戻す。
+            self.ext.extention_command(f'tp @e[tag=featinter,limit=1] 0 -64 0')
 
-        if self.left_click: # 左クリックしたら能力を解除する。
-            self.cancel_stand()
-        self.left_click = False
+        # 視線検知。能力発動中で視線が動いていたらスタンドを解除する。
+        if self.run_stand:  # ネストを深くしないとself.get_my_rotでKeyErrorが発生することがある。
+            if self.rot != self.get_my_rot():
+                self.run_stand = False
+                self.kill_stand()
+                self.clear_effect()
 
         # 動いているかどうかのチェックや能力を解除していないか
         if self.run_stand:
-            if self.rot != self.get_my_rot():   # 視線検知。能力発動中で視線が動いていたらスタンドを解除する。
-                self.cancel_stand()
-
             type, uuid = self.get_rider()
             if type == 'minecraft:armor_stand':  # 防具立てに乗っているなら能力発動中
                 pass
+                #self.ext.extention_command(f'execute as @e[tag=boy,type=turtle,limit=1] at @s run tp @e[tag=boystand,type=armor_stand,limit=1]')
+                #self.ext.extention_command(f'data modify entity @e[tag=boy,type=turtle,limit=1] Age set value -999999999') # 子供である時間をリセットする。
             else:                           # 少なくとも能力を解除している。
                 self.cancel_stand()
 
-        """# チケットアイテム獲得によるターゲット該当者処理
+        # チケットアイテム獲得によるターゲット該当者処理
         # チケットアイテムを持っていないならFalse。死んだりチェストにしまうとFalseになる。
         self.ticket_target = True if self.controller.check_ticket_item(self.name, self.ticket_item[0], self.ticket_item[1]) else False
         # チケットアイテムを持ち、既にチェックポイント開放がされているならボーナス処理
@@ -98,7 +110,7 @@ class Twentieth_Century_Boy(Common_func):
         # 誰かがチケットアイテムを手に入れたのでチケットコンパスを更新させる。
         #? しかしこのままだと随時更新されてしまう。気がする。。。
         if self.controller.get_someone_get_ticket():
-            self.create_ticket_compass()"""
+            self.create_ticket_compass()
 
     def create_ticket_compass(self):
         self.controller.create_ticket_compass(self.name, self.pass_point, self.ticket_item, self.point_pos)
@@ -110,38 +122,3 @@ class Twentieth_Century_Boy(Common_func):
         self.run_stand = False
         self.kill_stand()
         self.clear_effect()
-
-
-    def get_my_rot(self):
-        rot = self.get_rot()
-
-        x = Decimal(rot[0]).quantize(Decimal('0'), ROUND_HALF_UP)
-        z = Decimal(rot[1]).quantize(Decimal('0'), ROUND_HALF_UP)
-
-        rrot = [str(x), str(z)]
-        return rrot
-
-    def prepare_stand(self):
-        self.ext.extention_command(f'execute as {self.name} at @s run summon minecraft:armor_stand ~ ~ ~ {{Attributes:[{{Name:"generic.scale",Base:0.0625}}],Tags:[boystand],Silent:1,Invulnerable:1,Invisible:1}}')
-
-    def ride_stand(self):
-        self.ext.extention_command(f'ride {self.name} mount @e[tag=boystand,limit=1]')
-
-    def effect_stand(self):
-        self.ext.extention_command(f'effect give {self.name} minecraft:resistance infinite 255 true')          # 耐性
-        self.ext.extention_command(f'effect give {self.name} minecraft:fire_resistance infinite 255 true')     # 火炎耐性
-        self.ext.extention_command(f'effect give {self.name} minecraft:water_breathing infinite 255 true')     # 水中呼吸
-        #self.ext.extention_command(f'effect give {self.name} minecraft:saturation infinite 1 true')          # 満腹度回復（本当は止めたかった）
-
-    def clear_effect(self):
-        self.ext.extention_command(f'effect clear {self.name} minecraft:resistance')          # 耐性
-        self.ext.extention_command(f'effect clear {self.name} minecraft:fire_resistance')     # 火炎耐性
-        self.ext.extention_command(f'effect clear {self.name} minecraft:water_breathing')     # 水中呼吸
-        #self.ext.extention_command(f'effect clear {self.name} minecraft:saturation')          # 満腹度回復
-
-    def kill_stand(self):
-        ride_name, self.ride_uuid = self.get_rider()
-        if ride_name == "minecraft:armor_stand":     # このifを施していないと馬に乗れなくなる。
-            self.ext.extention_command(f'ride {self.name} dismount')
-        self.ext.extention_command(f'execute as @e[tag=boystand] at @s run tp ~ -64 ~')    # 死亡時煙のようなエフェクトが出るので奈落に移動させて殺す。
-        self.ext.extention_command(f'kill @e[tag=boystand]')
