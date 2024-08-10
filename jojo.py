@@ -113,42 +113,24 @@ def open_json(json_file):
         df = json.load(f)
     return df
 
-
-def get_json_value(contents, search_key, cond):
+def save_json(dictionary, filePath):
     '''
-    jsonファイルの中身を再帰的に検索する
+    jsonファイルの保存を行う
 
     Parameter
-        contents : dict or str or bool
+        dictionary : dict
             jsonファイルの中身
-        search_key : str
-            検索対象のKey値
-        cond : def
-            has_keyメソッド
+        filePath : str
+            保存するjsonファイルのパス
 
     Return
-        検索対象のValue値。存在しない場合はNone。
+        なし
     '''
-    res = ""
-    
-    #has_keyメソッドでcontentsに検索対象のKey値が存在するか判定する
-    if cond(contents, search_key):
-        #存在した場合、Returnに設定
-        res = contents.get(search_key)
-    
-    #contentsがdictだった場合
-    elif isinstance(contents, dict):
-        
-        #Key値でループする
-        for key in contents.keys():
-            
-            #contentsを元に再帰的に検索する
-            res += str(get_json_value(contents.get(key), search_key, has_key))
-            
-    return res
+    with open(filePath, 'w', encoding='utf-8') as f:
+        json.dump(dictionary, f, ensure_ascii=False, indent=4)
 
 
-def get_value_from_nested_dict(dictionary, key):
+def find_value(dictionary, key):
     """
     ネストされた辞書から指定したキーに対応する値を再帰的に取得する関数
 
@@ -163,10 +145,54 @@ def get_value_from_nested_dict(dictionary, key):
         return dictionary[key]
     for k, v in dictionary.items():
         if isinstance(v, dict):
-            item = get_value_from_nested_dict(v, key)
+            item = find_value(v, key)
             if item is not None:
                 return item
     return None
+
+
+def find_keys(d, target_value):
+    """
+    ネストされた辞書から指定した値に対応するすべてのキーを再帰的に取得する関数
+
+    Parameter
+        d : dict or str or bool
+            jsonファイルの中身
+        target_value : str
+            検索対象のValue値
+
+    Returns:
+        list: 指定した値に対応するすべてのキーのリスト
+    """
+    def recursive_search(d, target_value, keys):
+        if isinstance(d, dict):
+            for k, v in d.items():
+                if v == target_value:
+                    keys.append(k)
+                elif isinstance(v, dict):
+                    recursive_search(v, target_value, keys)
+        return keys
+
+    return recursive_search(d, target_value, [])
+
+
+def update_dict_value(dictionary, key, new_value):
+    """
+    指定したkeyに対応するvalueを指定した文字列に書き換える
+
+    Parameters:
+        dictionary : dict
+            jsonファイルの中身
+        key: str
+            更新するキー
+        new_value: str
+            書き換える用の新しい値
+
+    Returns:
+        dict: 更新された辞書
+    """
+    dictionary[key] = new_value
+    return dictionary
 
 
 def summon_stand_user_info(mcr):
@@ -358,7 +384,7 @@ def get_self_playername():
     str_file = 'launcher_accounts_microsoft_store.json'
     contents = open_json(f'{str_dir}\\{str_file}')
     
-    return get_value_from_nested_dict(contents, 'name')
+    return find_value(contents, 'name')
 
 
 def gift_stand():
