@@ -195,13 +195,13 @@ def update_dict_value(dictionary, key, new_value):
     return dictionary
 
 
-def summon_stand_user_info(mcr):
+def summon_stand_user_info(ext):
     '''
     スタンド能力と使用者を紐づけるアマスタを生成します。
     外部ファイルの設定を優先とし、既に生成されている場合はスキップします。
 
     Parameter
-        mcr : MCRcon
+        ext : MCRcon
             Rconのサーバ情報
     '''
     str_dir = 'json_list'
@@ -217,29 +217,29 @@ def summon_stand_user_info(mcr):
     for stand_name in contents.keys():
         
         #ワールドのエンティティの情報を取得
-        resp = get_entity_data(mcr, entity_name, None, stand_name, 'Tags')
+        resp = get_entity_data(ext, entity_name, None, stand_name, 'Tags')
         
         #ワールドのエンティティが存在しない場合
         if resp is None:
             #エンティティを新規で生成する
-            _ = set_entity_data(mcr, entity_name, X, Y, Z, invulnerable, nogravity, contents.get(stand_name) , stand_name)
+            _ = set_entity_data(ext, entity_name, X, Y, Z, invulnerable, nogravity, contents.get(stand_name) , stand_name)
 
         #外部ファイルとワールドのエンティティが一致しない場合  
         elif resp != contents.get(stand_name):
             #外部ファイルを踏襲
-            _ = edit_entity_tag_data(mcr, entity_name, stand_name, resp, contents.get(stand_name))
+            _ = edit_entity_tag_data(ext, entity_name, stand_name, resp, contents.get(stand_name))
 
         #外部ファイルとエンティティが一致する場合
         else:
             pass
 
 
-def get_entity_data(mcr, types, tag, name, target=None):
+def get_entity_data(ext, types, tag, name, target=None):
     '''
     指定されたエンティティの情報を取得します。
 
     Parameter
-        mcr : MCRcon
+        ext : MCRcon
             Rconのサーバ情報
         types : str
             検索対象のオブジェクト名
@@ -268,15 +268,15 @@ def get_entity_data(mcr, types, tag, name, target=None):
     #「%target%」箇所の置換
     cmd = cmd.replace(f'%target%', '') if target is None else cmd.replace(f'%target%', f'{target}')
 
-    return mcr.command(cmd)
+    return ext.extention_command(cmd)
 
 
-def set_entity_data(mcr, types, X, Y, Z, invulnerable, nogravity, tags, name):
+def set_entity_data(ext, types, X, Y, Z, invulnerable, nogravity, tags, name):
     '''
     指定されたエンティティを作成します。
 
     Parameter
-        mcr : MCRcon
+        ext : MCRcon
             Rconのサーバ情報
         types : str
             検索対象のオブジェクト名
@@ -324,15 +324,15 @@ def set_entity_data(mcr, types, X, Y, Z, invulnerable, nogravity, tags, name):
     #「%name%」箇所の置換
     cmd = cmd.replace(f'%name%', '') if name is None else cmd.replace(f'%name%', f'CustomName:\'{name}\'')
     
-    return mcr.command(cmd)
+    return ext.extention_command(cmd)
 
 
-def edit_entity_tag_data(mcr, types, name, old_tags, new_tag):
+def edit_entity_tag_data(ext, types, name, old_tags, new_tag):
     '''
     指定されたエンティティのタグ名を変更します。
 
     Parameter
-        mcr : MCRcon
+        ext : MCRcon
             Rconのサーバ情報
         types : str
             検索対象のオブジェクト名
@@ -365,8 +365,8 @@ def edit_entity_tag_data(mcr, types, name, old_tags, new_tag):
             break
 
     #「%command%」、「%tag%」箇所を置換しコマンド実行
-    remove_resp = mcr.command(cmd.replace(f'%command%', 'remove').replace(f'%tag%', '') if old_tags[index] is None else cmd.replace(f'%command%', 'remove').replace(f'%tag%', f'{old_tags[index]}'))
-    addtag_resp = mcr.command(cmd.replace(f'%command%', 'add').replace(f'%tag%', '') if new_tag is None else cmd.replace(f'%command%', 'add').replace(f'%tag%', f'{new_tag}'))
+    remove_resp = ext.extention_command(cmd.replace(f'%command%', 'remove').replace(f'%tag%', '') if old_tags[index] is None else cmd.replace(f'%command%', 'remove').replace(f'%tag%', f'{old_tags[index]}'))
+    addtag_resp = ext.extention_command(cmd.replace(f'%command%', 'add').replace(f'%tag%', '') if new_tag is None else cmd.replace(f'%command%', 'add').replace(f'%tag%', f'{new_tag}'))
 
     return [remove_resp, addtag_resp]
 
@@ -428,7 +428,7 @@ def checkpoint_prepare():
     '''
     is_file = os.path.isfile('./json_list/checkpoint.json')
     if not is_file:
-        prepare(mcr)
+        prepare(ext)
     is_file = os.path.isfile('./json_list/ticket_list.json')
     if not is_file:
         ticket_item_choice()
@@ -459,7 +459,7 @@ def set_uuid(world,tusk,kqeen,rain,boy,feat):
         world.uuid = world.get_uuid()
     if tusk.name != "1dummy":
         tusk.uuid = tusk.get_uuid()
-        #mcr.command('give ' + tusk.name + 'saddle')     # tusk最初に能力が付与されたタイミングだけサドルを与える。
+        #ext.extention_command('give ' + tusk.name + 'saddle')     # tusk最初に能力が付与されたタイミングだけサドルを与える。
     if kqeen.name != "1dummy":
         kqeen.uuid = kqeen.get_uuid()
     if rain.name != "1dummy":
@@ -538,67 +538,67 @@ def stand_lost_check(world,tusk,kqeen,rain,boy,feat):
     item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート")
 
     if not world.bool_have_a_stand('clock', tag='DIO') and world.name != '1dummy':
-        mcr.command('kill @e[tag=DIOinter]')
-        mcr.command('summon interaction 0 -64 0 {Tags:["DIOinter"],height:2,width:1}')
-        mcr.command('give ' + world.name + ' clock[minecraft:custom_name="' +item_name_list[0]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:DIO}")
+        ext.extention_command('kill @e[tag=DIOinter]')
+        ext.extention_command('summon interaction 0 -64 0 {Tags:["DIOinter"],height:2,width:1}')
+        ext.extention_command('give ' + world.name + ' clock[minecraft:custom_name="' +item_name_list[0]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:DIO}")
         world.create_ticket_compass()
         world.create_target_compass()
     if not tusk.bool_have_a_stand('bone', tag='Saint') and tusk.name != '1dummy':
-        mcr.command('kill @e[tag=tuskinter]')
-        mcr.command('summon interaction 0 -64 0 {Tags:["tuskinter"],height:2,width:1}')
-        mcr.command('give ' + tusk.name + ' saddle')
-        mcr.command('give ' + tusk.name + ' lead')
-        mcr.command('give ' + tusk.name + ' bone[minecraft:custom_name="' +item_name_list[1]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Saint}")
+        ext.extention_command('kill @e[tag=tuskinter]')
+        ext.extention_command('summon interaction 0 -64 0 {Tags:["tuskinter"],height:2,width:1}')
+        ext.extention_command('give ' + tusk.name + ' saddle')
+        ext.extention_command('give ' + tusk.name + ' lead')
+        ext.extention_command('give ' + tusk.name + ' bone[minecraft:custom_name="' +item_name_list[1]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Saint}")
         tusk.create_ticket_compass()
         tusk.create_target_compass()
     if not kqeen.bool_have_a_stand('gunpowder','flint','fire_charge', tag='Killer') and kqeen.name != '1dummy':   # 全て失わないと再取得できないので注意
-        mcr.command('kill @e[tag=kqeeninter]')
-        mcr.command('summon interaction 0 -64 0 {Tags:["kqeeninter"],height:2,width:1}')
-        mcr.command('give ' + kqeen.name + ' gunpowder[minecraft:custom_name="' +item_name_list[2][0]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Killer}")
-        mcr.command('give ' + kqeen.name + ' flint[minecraft:custom_name="' +item_name_list[2][1]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Killer}")
-        mcr.command('give ' + kqeen.name + ' fire_charge[minecraft:custom_name="' +item_name_list[2][2]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Killer}")
+        ext.extention_command('kill @e[tag=kqeeninter]')
+        ext.extention_command('summon interaction 0 -64 0 {Tags:["kqeeninter"],height:2,width:1}')
+        ext.extention_command('give ' + kqeen.name + ' gunpowder[minecraft:custom_name="' +item_name_list[2][0]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Killer}")
+        ext.extention_command('give ' + kqeen.name + ' flint[minecraft:custom_name="' +item_name_list[2][1]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Killer}")
+        ext.extention_command('give ' + kqeen.name + ' fire_charge[minecraft:custom_name="' +item_name_list[2][2]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Killer}")
         kqeen.create_ticket_compass()
         kqeen.create_target_compass()
     if not rain.bool_have_a_stand('skeleton_skull', tag='Rain') and rain.name != '1dummy':
-        mcr.command('give ' + rain.name + ' skeleton_skull[minecraft:custom_name="' +item_name_list[3]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Rain}")
+        ext.extention_command('give ' + rain.name + ' skeleton_skull[minecraft:custom_name="' +item_name_list[3]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Rain}")
         rain.create_ticket_compass()
         rain.create_target_compass()
     if not boy.bool_have_a_stand('snowball', tag='Boy') and boy.name != '1dummy':
-        mcr.command('kill @e[tag=boyinter]')
-        mcr.command('summon interaction 0 -64 0 {Tags:["boyinter"],height:2,width:1}')
-        mcr.command('give ' + boy.name + ' snowball[minecraft:custom_name="' +item_name_list[4]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Boy}")
+        ext.extention_command('kill @e[tag=boyinter]')
+        ext.extention_command('summon interaction 0 -64 0 {Tags:["boyinter"],height:2,width:1}')
+        ext.extention_command('give ' + boy.name + ' snowball[minecraft:custom_name="' +item_name_list[4]+ '",minecraft:enchantments={levels:{'+"'minecraft:vanishing_curse':1},show_in_tooltip:false}]{Tags:Boy}")
         boy.create_ticket_compass()
         boy.create_target_compass()
     if not feat.bool_have_a_stand('Feat') and feat.name != '1dummy':
-        mcr.command('kill @e[tag=featinter]')
-        mcr.command('summon interaction 0 -64 0 {Tags:["featinter"],height:2,width:1}')
-        mcr.command('give ' + feat.name + " music_disc_13{Tags:Feat,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[5] + '"}]'+"'}}")
+        ext.extention_command('kill @e[tag=featinter]')
+        ext.extention_command('summon interaction 0 -64 0 {Tags:["featinter"],height:2,width:1}')
+        ext.extention_command('give ' + feat.name + " music_disc_13{Tags:Feat,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[5] + '"}]'+"'}}")
         feat.create_ticket_compass()
         feat.create_target_compass()
 
 def set_commandblock(world,tusk,kqeen,rain,boy,feat):
-    mcr.command(f'forceload add 0 0 16 16')
+    ext.extention_command(f'forceload add 0 0 16 16')
     command = f'execute as {world.name} at @s run tp @e[tag=DIOinter,limit=1] ^ ^ ^1'
 
-    mcr.command(f'setblock 0 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+    ext.extention_command(f'setblock 0 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
     command = f'execute as {tusk.name} at @s run tp @e[tag=tuskinter,limit=1] ^ ^ ^1'
-    mcr.command(f'setblock 1 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+    ext.extention_command(f'setblock 1 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
     command = f'execute as @e[tag=TuskAct4,limit=1] at @s run tp @e[tag=TuskAct4,limit=1] ^ ^ ^0.8'
-    mcr.command(f'setblock 1 -64 1 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+    ext.extention_command(f'setblock 1 -64 1 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
 
     command = f'execute as {kqeen.name} at @s run tp @e[tag=kqeeninter,limit=1] ^ ^ ^1'
-    mcr.command(f'setblock 2 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+    ext.extention_command(f'setblock 2 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
     command = f'execute as @e[tag=air_bomb] at @s run tp ^ ^ ^0.5'
-    mcr.command(f'setblock 2 -64 1 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+    ext.extention_command(f'setblock 2 -64 1 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
 
     command = f'execute as {rain.name} at @s run tp @e[tag=raininter,limit=1] ^ ^ ^1'
-    mcr.command(f'setblock 3 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+    ext.extention_command(f'setblock 3 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
 
     command = f'execute as {boy.name} at @s run tp @e[tag=boyinter,limit=1] ^ ^ ^1'
-    mcr.command(f'setblock 4 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+    ext.extention_command(f'setblock 4 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
 
     command = f'execute as {feat.name} at @s run tp @e[tag=featinter,limit=1] ^ ^ ^1'
-    mcr.command(f'setblock 5 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+    ext.extention_command(f'setblock 5 -64 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
 
 def find_target(controller,world,tusk,kqeen,rain,boy,feat):
     player = []
@@ -640,12 +640,12 @@ def update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat):
     boy.create_ticket_compass()
     feat.create_ticket_compass()
 
-def stand_list_json_rewrite_for_new_joinner(mcr):
+def stand_list_json_rewrite_for_new_joinner(ext):
     '''
     スタンドを持っていない新規参入者のためにstand_list.jsonを読み取り、空きがあれば書き込む処理
 
     Parameter
-        mcr : MCRcon
+        ext : MCRcon
             Rconのサーバ情報
 
     Return
@@ -693,40 +693,11 @@ def stand_list_json_rewrite_for_new_joinner(mcr):
             del vacantStand[rand]
                 
             #「NEW」が付与されているアマスタから新規参入者の名前を削除
-            mcr.command(f'tag @e[limit=1,type=minecraft:armor_stand,name=NEW] remove {newList[i]}')
+            ext.extention_command(f'tag @e[limit=1,type=minecraft:armor_stand,name=NEW] remove {newList[i]}')
     return True
 
 
-def key_detected(e):
-    print(f'キー{e.name}が押されました')
-
-def right_mouse_detected(arg, stand):
-    #print(f'右クリックを検知')
-    cursor_info = win32gui.GetCursorInfo()
-    #print(f'マウスカーソル：{cursor_info[0]}')   #マウスカーソル 0:非表示　1:表示
-    #print('Minecraft' in get_active_window_title())マウスカーソルが選択しているアプリケーションがMinecraftなら
-    if cursor_info[0] == 0 and ('Minecraft' in get_active_window_title()):
-        stand.right_click = True
-        # クリックしましたという記録を行う。
-
-def left_mouse_detected(arg, stand):
-    #print(f'左クリックを検知')
-    cursor_info = win32gui.GetCursorInfo()
-    #print(f'マウスカーソル：{cursor_info[0]}')   #マウスカーソル 0:非表示　1:表示
-    #print('Minecraft' in get_active_window_title())マウスカーソルが選択しているアプリケーションがMinecraftなら
-    if cursor_info[0] == 0 and ('Minecraft' in get_active_window_title()):
-        stand.left_click = True
-        # クリックしましたという記録を行う。
-
-def get_active_window_title():
-    # 現在マウスカーソルが選択しているアプリケーションの名前を取得します。
-    # sample -> ['Minecraft 24w07a - Multiplayer (3rd-party Server)' | 'Minecraft Launcher' | any...]　
-    window = win32gui.GetForegroundWindow()
-    title = win32gui.GetWindowText(window)
-    return title
-
-
-def new_joinner_func(mcr, myname):
+def new_joinner_func(ext, myname):
     '''
     新規参入者処理
 
@@ -734,28 +705,28 @@ def new_joinner_func(mcr, myname):
         myname : str
         自身の名前
         
-        mcr : MCRcon
+        ext : MCRcon
             Rconのサーバ情報
 
     Return
         なし
     '''
-    mcr.command(f'execute unless entity @e[name=List,type=minecraft:armor_stand,tag={myname}] run tag @e[name=NEW,type=minecraft:armor_stand,limit=1] add {myname}')
-    mcr.command(f'execute unless entity @e[name=List,type=minecraft:armor_stand,tag={myname}] run tag @e[name=List,type=minecraft:armor_stand,limit=1] add {myname}')
+    ext.extention_command(f'execute unless entity @e[name=List,type=minecraft:armor_stand,tag={myname}] run tag @e[name=NEW,type=minecraft:armor_stand,limit=1] add {myname}')
+    ext.extention_command(f'execute unless entity @e[name=List,type=minecraft:armor_stand,tag={myname}] run tag @e[name=List,type=minecraft:armor_stand,limit=1] add {myname}')
     
 
-def main(mcr, is_server):
+def main(ext, is_server):
     
     myname = get_self_playername()
     
     if is_server:
         ext.summon_joinner_armor(is_server)
         #スタンド能力と使用者を紐づけるアマスタを生成
-        summon_stand_user_info(mcr) 
+        summon_stand_user_info(ext) 
 
-    new_joinner_func(mcr, myname)
+    new_joinner_func(ext, myname)
     
-    mcr.command("gamerule sendCommandFeedback false")
+    ext.extention_command("gamerule sendCommandFeedback false")
 
     #checkpoint_prepare()
 
@@ -766,35 +737,35 @@ def main(mcr, is_server):
     #ファイルの最終更新日時を取得
     lastModificationTime = os.path.getmtime('./json_list/stand_list.json')
     
-    controller = GameController(mcr)
+    controller = GameController(ext)
     # ゲーム全体の進捗を読み込む。
     controller.get_progress()
 
-    world = The_World(name=stand_list["The_World"], mcr=mcr, controller=controller, pos="[0,0,0]", timer=5)    # 初回5秒
-    #world = The_World(name="KASKA0511", mcr=mcr, pos="[0,0,0]", timer=5)    # 初回5秒
-    mcr.command('kill @e[tag=DIOinter]')
-    mcr.command('summon interaction 0 -64 0 {Tags:["DIOinter"],height:2,width:1}')
+    world = The_World(name=stand_list["The_World"], ext=ext, controller=controller, pos="[0,0,0]", timer=5)    # 初回5秒
+    #world = The_World(name="KASKA0511", ext=ext, pos="[0,0,0]", timer=5)    # 初回5秒
+    ext.extention_command('kill @e[tag=DIOinter]')
+    ext.extention_command('summon interaction 0 -64 0 {Tags:["DIOinter"],height:2,width:1}')
 
-    tusk = TuskAct4(name=stand_list["TuskAct4"], mcr=mcr, controller=controller)
-    mcr.command('kill @e[tag=tuskinter]')
-    mcr.command('summon interaction 0 -64 0 {Tags:["tuskinter"],height:2,width:1}')
+    tusk = TuskAct4(name=stand_list["TuskAct4"], ext=ext, controller=controller)
+    ext.extention_command('kill @e[tag=tuskinter]')
+    ext.extention_command('summon interaction 0 -64 0 {Tags:["tuskinter"],height:2,width:1}')
 
-    kqeen = Killer_Qeen(name=stand_list["Killer_Qeen"], mcr=mcr, controller=controller)
-    mcr.command('kill @e[tag=kqeeninter]')
-    mcr.command('summon interaction 0 -64 0 {Tags:["kqeeninter"],height:2,width:1}')
+    kqeen = Killer_Qeen(name=stand_list["Killer_Qeen"], ext=ext, controller=controller)
+    ext.extention_command('kill @e[tag=kqeeninter]')
+    ext.extention_command('summon interaction 0 -64 0 {Tags:["kqeeninter"],height:2,width:1}')
 
-    rain = Catch_The_Rainbow(name=stand_list["Catch_The_Rainbow"], mcr=mcr, controller=controller)
+    rain = Catch_The_Rainbow(name=stand_list["Catch_The_Rainbow"], ext=ext, controller=controller)
     rain.set_scoreboard()
     rain.summon_amedas()
     rain.mask_air()
 
-    boy = Twentieth_Century_Boy(name=stand_list["Twentieth_Century_Boy"], mcr=mcr, controller=controller)
-    mcr.command('kill @e[tag=boyinter]')
-    mcr.command('summon interaction 0 -64 0 {Tags:["boyinter"],height:2,width:1}')
+    boy = Twentieth_Century_Boy(name=stand_list["Twentieth_Century_Boy"], ext=ext, controller=controller)
+    ext.extention_command('kill @e[tag=boyinter]')
+    ext.extention_command('summon interaction 0 -64 0 {Tags:["boyinter"],height:2,width:1}')
 
-    feat = Little_Feat(name=stand_list["Little_Feat"], mcr=mcr, controller=controller)
-    mcr.command('kill @e[tag=featinter]')
-    mcr.command('summon interaction 0 -64 0 {Tags:["featinter"],height:2,width:1}')
+    feat = Little_Feat(name=stand_list["Little_Feat"], ext=ext, controller=controller)
+    ext.extention_command('kill @e[tag=featinter]')
+    ext.extention_command('summon interaction 0 -64 0 {Tags:["featinter"],height:2,width:1}')
 
     controller.start()
     controller.ticket_start()
@@ -817,7 +788,7 @@ def main(mcr, is_server):
             if lastModificationTime != os.path.getmtime('./json_list/stand_list.json'):
                 
                 #スタンド能力と使用者を紐づけるアマスタを更新
-                summon_stand_user_info(mcr) 
+                summon_stand_user_info(ext)
                 
                  #ファイルの更新日時を更新
                 lastModificationTime = os.path.getmtime('./json_list/stand_list.json')
@@ -858,10 +829,10 @@ def main(mcr, is_server):
             boy.loop()
             feat.loop()
         else:   # ザ・ワールドが起動していたら
-            mcr.command(f'data modify block 2 -64 0 auto set value 0')
-            mcr.command(f'data modify block 3 -64 0 auto set value 0')
-            mcr.command(f'data modify block 4 -64 0 auto set value 0')
-            mcr.command(f'data modify block 5 -64 0 auto set value 0')
+            ext.extention_command(f'data modify block 2 -64 0 auto set value 0')
+            ext.extention_command(f'data modify block 3 -64 0 auto set value 0')
+            ext.extention_command(f'data modify block 4 -64 0 auto set value 0')
+            ext.extention_command(f'data modify block 5 -64 0 auto set value 0')
 
 
         # ザ・ワールドが発動中は基準値の更新を止める。＝時間計測が一時的に止める。
@@ -883,74 +854,6 @@ def main(mcr, is_server):
         if controller.ticket_update_flag:
             controller.ticket_update_flag = False
             update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat)
-
-
-def test_main(ext, is_server):
-
-    ext.name = 'KASKA0511'
-    ext.stand = 'Killer_Qeen'
-
-    controller = GameController(ext)
-
-    my_stand = ext.stand #　テスト用（自分の名前の防具立てに付与されているスタンド名を取得する関数に置き換えられる。）
-    stand = None    #while内でインスタンスが入る。
-    while True:
-        if stand is None:   #インスタンスが入ると再度インスタンス化されることは無くなる。#!!スタンドを変えたい場合はそれ用の関数を作るべき。
-            if my_stand == 'The_World':
-                stand = The_World(name=ext.name, ext=ext, controller=controller)
-                ext.extention_command('kill @e[tag=DIOinter]')
-                ext.extention_command('summon interaction 0 -64 0 {Tags:["DIOinter"],height:2,width:1}')
-
-            elif my_stand == 'TuskAct4':
-                stand = TuskAct4(name=ext.name, ext=ext, controller=controller)
-                ext.extention_command('kill @e[tag=tuskinter]')
-                ext.extention_command('summon interaction 0 -64 0 {Tags:["tuskinter"],height:2,width:1}')
-
-            elif my_stand == 'Killer_Qeen':
-                stand = Killer_Qeen(name=ext.name, ext=ext, controller=controller)
-
-            elif my_stand == 'Catch_The_Rainbow':
-                stand = Catch_The_Rainbow(name=ext.name, ext=ext, controller=controller)
-                stand.set_scoreboard()
-                stand.summon_amedas()
-                stand.mask_air()
-
-            elif my_stand == 'Twentieth_Century_Boy':
-                stand = Twentieth_Century_Boy(name=ext.name, ext=ext, controller=controller)
-                ext.extention_command('kill @e[tag=boyinter]')
-                ext.extention_command('summon interaction 0 -64 0 {Tags:["boyinter"],height:2,width:1}')
-
-            elif my_stand == 'Little_Feat':
-                stand = Little_Feat(name=ext.name, ext=ext, controller=controller)
-                ext.extention_command('kill @e[tag=featinter]')
-                ext.extention_command('summon interaction 0 -64 0 {Tags:["featinter"],height:2,width:1}')
-
-        # キーボードは何のキーを押したのか検知できる。いずれ使うことになると思うので記録として残す。
-        #keyboard.on_press(callback=key_detected)
-
-        # マウスは引数の指定の仕方で検知可能なクリックが変わる。
-        # 左右別々にするならbuttonsを分ける必要がある。
-        # typesはdownとdoubleが無難。→連打が検知可能な状態。
-        mouse.on_button(callback=left_mouse_detected,args=('sample', stand),buttons=('left'),types=('down','double'))    # 引数を渡しながら実行する。
-        mouse.on_button(callback=right_mouse_detected,args=('sample', stand),buttons=('right'),types=('down','double'))    # 引数を渡しながら実行する。
-
-        if is_server:
-            # スタンド能力を付与。
-            gift_stand()
-
-        # スタンド使いの名前を登録する。
-        #name_registration(stand)
-
-        # プレイヤーが入ってきたときuuidを設定しなくてはならない。
-        test_set_uuid(stand)
-
-        # 能力者が死んでいたり、ログアウトしていたりしたら能力を解除
-        test_death_or_logout_check(stand)
-
-        # スタンドアイテムを付与。死亡時やスタンドアイテムをなくした場合自動で与えられる。
-        test_stand_lost_check(stand, my_stand)
-
-        stand.loop()
 
 #初期セットアップ
 if __name__ == '__main__':
@@ -977,6 +880,6 @@ if __name__ == '__main__':
     with MCRcon(rip, rpassword, rport) as mcr:
 
         ext = Extension(mcr)
-        #main(mcr, is_server)
-        test_main(ext, is_server)
+        main(ext, is_server)
+        #test_main(ext, is_server)
 
