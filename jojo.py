@@ -319,7 +319,7 @@ def set_entity_data(mcr, types, X, Y, Z, invulnerable, nogravity, tags, name):
     cmd = cmd.replace(f'%nogravity%', '') if nogravity is None else cmd.replace(f'%nogravity%', f'NoGravity:1,') if nogravity else cmd.replace(f'%nogravity%', f'NoGravity:0,')
 
     #「%tag%」箇所の置換
-    cmd = cmd.replace(f'%tag%', '') if tags is None else cmd.replace(f'%tag%', f'Tags:[{(", ").join(tags)}],')
+    cmd = cmd.replace(f'%tag%', '') if tags is None else cmd.replace(f'%tag%', f'Tags:[{(",").join(tags)}],')
 
     #「%name%」箇所の置換
     cmd = cmd.replace(f'%name%', '') if name is None else cmd.replace(f'%name%', f'CustomName:\'{name}\'')
@@ -660,28 +660,41 @@ def stand_list_json_rewrite_for_new_joinner(mcr):
     
     #該当アマスタが存在する場合
     if not newList is None: 
-            
+        
         #スタンドリストを取得
         contents = open_json(f'{str_dir}/{str_stand_file}')
-                
+        
         #空きスタンドの取得
         vacantStand = find_keys(contents, "1dummy")
-                
+        
         #空きスタンドがない場合は失敗で返す
         if vacantStand is None:
             return False
+        
+        #空きスタンド数の取得
+        vacantStandNum = len(vacantStand)
+        
+        for i in range(len(newList)):
             
-        for player_name in newList: 
-                
+            #空きスタンド数 - for文のループ回数が0以下になったらreturn
+            if vacantStandNum - i <= 0:
+                return False
+            
             #空きスタンドの個数-1(index準拠)でランダム値を生成
             rand = random.randint(0,len(vacantStand) - 1)
+            
+            #空きスタンド能力(key)に対応するプレイヤー(value)を紐づける
+            contents = update_dict_value(contents, vacantStand[rand], newList[i])
                 
-            #空きスタンド能力(key)に対応するプレイヤー(value)を紐づけ、ファイルを保存する
-            save_json(update_dict_value(contents, vacantStand[rand], player_name), f'{str_dir}/{str_stand_file}')
+            #ファイルを保存する
+            save_json(contents, f'{str_dir}/{str_stand_file}')
+            
+            #割り当てたスタンドを削除
+            del vacantStand[rand]
                 
             #「NEW」が付与されているアマスタから新規参入者の名前を削除
-            mcr.command(f'tag @e[limit=1, type=minecraft:armor_stand, name=NEW] remove {player_name}')
-    return True   
+            mcr.command(f'tag @e[limit=1,type=minecraft:armor_stand,name=NEW] remove {newList[i]}')
+    return True
 
 
 def key_detected(e):
