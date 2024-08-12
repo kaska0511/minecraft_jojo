@@ -280,9 +280,9 @@ def set_entity_data(ext, types, X, Y, Z, invulnerable, nogravity, tags, name):
         Z : int
             エンティティのZ座標
         invulnerable : bool
-            エンティティの不死身属性(True：不死身、False：定命)
+            エンティティの不死身属性(True:不死身、False:定命)
         nogravity : bool
-            エンティティの無重力属性(True：無重力、False：重力)
+            エンティティの無重力属性(True:無重力、False:重力)
         tags : list
             タグ情報
         name : str
@@ -312,7 +312,7 @@ def set_entity_data(ext, types, X, Y, Z, invulnerable, nogravity, tags, name):
     cmd = cmd.replace(f'%nogravity%', '') if nogravity is None else cmd.replace(f'%nogravity%', f'NoGravity:1,') if nogravity else cmd.replace(f'%nogravity%', f'NoGravity:0,')
 
     #「%tag%」箇所の置換
-    cmd = cmd.replace(f'%tag%', '') if tags is None else cmd.replace(f'%tag%', f'Tags:[{(",").join(tags)}],')
+    cmd = cmd.replace(f'%tag%', '') if tags is None else cmd.replace(f'%tag%', f'Tags:[{tags}],')
 
     #「%name%」箇所の置換
     cmd = cmd.replace(f'%name%', '') if name is None else cmd.replace(f'%name%', f'CustomName:\'{name}\'')
@@ -351,14 +351,14 @@ def edit_entity_tag_data(ext, types, name, old_tags, new_tag):
     name_list = ext.get_joinner_list()
     
     #参加者リストを元にold_tags内の氏名を検索
-    index = None
+    """index = None
     for i in range(len(old_tags)):
         if old_tags[i] in name_list:
             index = i
-            break
+            break"""
 
     #「%command%」、「%tag%」箇所を置換しコマンド実行
-    remove_resp = ext.extention_command(cmd.replace(f'%command%', 'remove').replace(f'%tag%', '') if old_tags[index] is None else cmd.replace(f'%command%', 'remove').replace(f'%tag%', f'{old_tags[index]}'))
+    remove_resp = ext.extention_command(cmd.replace(f'%command%', 'remove').replace(f'%tag%', '') if old_tags[0] is None else cmd.replace(f'%command%', 'remove').replace(f'%tag%', f'{old_tags[0]}'))
     addtag_resp = ext.extention_command(cmd.replace(f'%command%', 'add').replace(f'%tag%', '') if new_tag is None else cmd.replace(f'%command%', 'add').replace(f'%tag%', f'{new_tag}'))
 
     return [remove_resp, addtag_resp]
