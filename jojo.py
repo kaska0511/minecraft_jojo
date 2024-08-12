@@ -437,7 +437,7 @@ def death_or_logout_check(stand):
     if stand.get_player_Death() != False:
         stand.cancel_stand()
 
-def test_stand_lost_check(stand, my_stand):
+def stand_lost_check(stand, my_standname):
     item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート")
 
     if my_standname == 'The_World':
@@ -446,7 +446,7 @@ def test_stand_lost_check(stand, my_stand):
             #stand.create_ticket_compass()
             #stand.create_target_compass()
 
-    elif my_stand == 'TuskAct4':
+    elif my_standname == 'TuskAct4':
         if not stand.bool_have_a_stand('Saint') and stand.name != '1dummy':
             ext.extention_command('give ' + stand.name + ' saddle')
             ext.extention_command('give ' + stand.name + ' lead')
@@ -454,7 +454,7 @@ def test_stand_lost_check(stand, my_stand):
             #stand.create_ticket_compass()
             #stand.create_target_compass()
 
-    elif my_stand == 'Killer_Qeen':
+    elif my_standname == 'Killer_Qeen':
         if not stand.bool_have_a_stand('Killer') and stand.name != '1dummy':   # 全て失わないと再取得できないので注意
             ext.extention_command('give ' + stand.name + " gunpowder{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][0] + '"}]'+"'}}")
             ext.extention_command('give ' + stand.name + " flint{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][1] + '"}]'+"'}}")
@@ -462,19 +462,19 @@ def test_stand_lost_check(stand, my_stand):
             #stand.create_ticket_compass()
             #stand.create_target_compass()
 
-    elif my_stand == 'Catch_The_Rainbow':
+    elif my_standname == 'Catch_The_Rainbow':
         if not stand.bool_have_a_stand('Rain') and stand.name != '1dummy':
             ext.extention_command('give ' + stand.name + " skeleton_skull{Tags:Rain,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[3] + '"}]'+"'}}")
             #stand.create_ticket_compass()
             #stand.create_target_compass()
 
-    elif my_stand == 'Twentieth_Century_Boy':
+    elif my_standname == 'Twentieth_Century_Boy':
         if not stand.bool_have_a_stand('Boy') and stand.name != '1dummy':
             ext.extention_command('give ' + stand.name + " snowball{Tags:Boy,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[4] + '"}]'+"'}}")
             #stand.create_ticket_compass()
             #stand.create_target_compass()
 
-    elif my_stand == 'Little_Feat':
+    elif my_standname == 'Little_Feat':
         if not stand.bool_have_a_stand('Feat') and stand.name != '1dummy':
             ext.extention_command('give ' + stand.name + " music_disc_13{Tags:Feat,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[5] + '"}]'+"'}}")
 
@@ -593,7 +593,7 @@ def main(ext, is_server):
     if is_server:
         ext.summon_joinner_armor(is_server)
         #スタンド能力と使用者を紐づけるアマスタを生成
-        summon_stand_user_info(ext) 
+        summon_stand_user_info(ext)
 
     new_joinner_func(ext, ext.name)
     
@@ -601,10 +601,6 @@ def main(ext, is_server):
 
     #checkpoint_prepare()
 
-    #gift_stand()
-
-    stand_list = open_json('./json_list/stand_list.json')
-    
     #ファイルの最終更新日時を取得
     lastModificationTime = os.path.getmtime('./json_list/stand_list.json')
     
@@ -622,45 +618,54 @@ def main(ext, is_server):
     controller.set_bonus_bossbar("ticket")
     controller.set_bonus_bossbar_visible("ticket", True)"""
 
-    ext.stand = ext.extention_command(f'data get entity @e[name={ext.name},type=armor_stand,limit=1] Tags')[0]
-    my_stand = ext.stand #　テスト用（自分の名前の防具立てに付与されているスタンド名を取得する関数に置き換えられる。）
-
-    stand = None    #while内でインスタンスが入る。
+    # スタンド能力情報が格納される。while内でインスタンスが入る。
+    stand = None
+    my_standname = None
 
     while True:
         
         if is_server:
-            stand_list_json_rewrite_for_new_joinner()
+            stand_list_json_rewrite_for_new_joinner(ext)
             
-            #ファイルの更新日時を元にファイルが変更されたかをチェック
+            # ファイルの更新日時を元にファイルが変更されたかをチェック
+            # これが変化した場合、手動でスタンド能力割り当てが変更されたことになる。
             if lastModificationTime != os.path.getmtime('./json_list/stand_list.json'):
                 
-                #スタンド能力と使用者を紐づけるアマスタを更新
+                # スタンド能力と使用者を紐づけるアマスタを更新
                 summon_stand_user_info(ext)
                 
-                 #ファイルの更新日時を更新
+                 # ファイルの更新日時を更新
                 lastModificationTime = os.path.getmtime('./json_list/stand_list.json')
+
 
             # スタンド能力を付与。
             gift_stand()
 
-        if stand is None:   #インスタンスが入ると再度インスタンス化されることは無くなる。#!!スタンドを変えたい場合はそれ用の関数を作るべき。
-            if my_stand == 'The_World':
+        new_standname = ext.extention_command(f'data get entity @e[name={ext.name},type=armor_stand,limit=1] Tags')[0]
+        # プレイヤー名と紐づくスタンド名を取得し、変更があればそれに合わせて再初期化。
+        if my_standname != new_standname:
+            my_standname = ext.stand = new_standname
+
+            # スタンド能力情報をNoneで削除する。
+            stand = None
+
+        if stand is None:   #インスタンスが入ると再度インスタンス化されることは無くなる。
+            if my_standname == 'The_World':
                 stand = The_World(name=ext.name, ext=ext, controller=controller)
 
-            elif my_stand == 'TuskAct4':
+            elif my_standname == 'TuskAct4':
                 stand = TuskAct4(name=ext.name, ext=ext, controller=controller)
 
-            elif my_stand == 'Killer_Qeen':
+            elif my_standname == 'Killer_Qeen':
                 stand = Killer_Qeen(name=ext.name, ext=ext, controller=controller)
 
-            elif my_stand == 'Catch_The_Rainbow':
+            elif my_standname == 'Catch_The_Rainbow':
                 stand = Catch_The_Rainbow(name=ext.name, ext=ext, controller=controller)
 
-            elif my_stand == 'Twentieth_Century_Boy':
+            elif my_standname == 'Twentieth_Century_Boy':
                 stand = Twentieth_Century_Boy(name=ext.name, ext=ext, controller=controller)
 
-            elif my_stand == 'Little_Feat':
+            elif my_standname == 'Little_Feat':
                 stand = Little_Feat(name=ext.name, ext=ext, controller=controller)
 
         # プレイヤーが入ってきたときuuidを設定しなくてはならない。
@@ -670,7 +675,7 @@ def main(ext, is_server):
         death_or_logout_check(stand)
 
         # スタンドアイテムを付与。死亡時やスタンドアイテムをなくした場合自動で与えられる。
-        stand_lost_check(stand)
+        stand_lost_check(stand, my_standname)
 
         # 作成したbossbarを見られるようにする。一度ワールドを離れたプレイヤーはこれを実行しないとみることができないのでwhile内で実行する。
         """if not controller.prepare:
