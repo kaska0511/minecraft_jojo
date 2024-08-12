@@ -114,7 +114,7 @@ class Common_func:
         else:
             return True
 
-    def bool_have_a_stand(self, *items, tag):
+    def bool_have_a_stand(self, tag):
         '''
         自分がスタンド能力を表すアイテムを持っているかチェックします。
 
