@@ -440,54 +440,7 @@ def death_or_logout_check(stand):
 def test_stand_lost_check(stand, my_stand):
     item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート")
 
-    if my_stand == 'The_World':
-        if not stand.bool_have_a_stand('DIO') and stand.name != '1dummy':
-            ext.extention_command('kill @e[tag=DIOinter]')
-            ext.extention_command('give ' + stand.name + " clock{Tags:DIO,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[0] + '"}]'+"'}}")
-            #stand.create_ticket_compass()
-            #stand.create_target_compass()
-
-    elif my_stand == 'TuskAct4':
-        if not stand.bool_have_a_stand('Saint') and stand.name != '1dummy':
-            ext.extention_command('kill @e[tag=tuskinter]')
-            ext.extention_command('give ' + stand.name + ' saddle')
-            ext.extention_command('give ' + stand.name + ' lead')
-            ext.extention_command('give ' + stand.name + " bone{Tags:Saint,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[1] + '"}]'+"'}}")
-            #stand.create_ticket_compass()
-            #stand.create_target_compass()
-
-    elif my_stand == 'Killer_Qeen':
-        if not stand.bool_have_a_stand('Killer') and stand.name != '1dummy':   # 全て失わないと再取得できないので注意
-            ext.extention_command('kill @e[tag=kqeeninter]')
-            ext.extention_command('give ' + stand.name + " gunpowder{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][0] + '"}]'+"'}}")
-            ext.extention_command('give ' + stand.name + " flint{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][1] + '"}]'+"'}}")
-            ext.extention_command('give ' + stand.name + " fire_charge{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][2] + '"}]'+"'}}")
-            #stand.create_ticket_compass()
-            #stand.create_target_compass()
-
-    elif my_stand == 'Catch_The_Rainbow':
-        if not stand.bool_have_a_stand('Rain') and stand.name != '1dummy':
-            ext.extention_command('give ' + stand.name + " skeleton_skull{Tags:Rain,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[3] + '"}]'+"'}}")
-            stand.create_ticket_compass()
-            stand.create_target_compass()
-
-    elif my_stand == 'Twentieth_Century_Boy':
-        if not stand.bool_have_a_stand('Boy') and stand.name != '1dummy':
-            ext.extention_command('kill @e[tag=boyinter]')
-            ext.extention_command('give ' + stand.name + " snowball{Tags:Boy,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[4] + '"}]'+"'}}")
-            #stand.create_ticket_compass()
-            #stand.create_target_compass()
-
-    elif my_stand == 'Little_Feat':
-        if not stand.bool_have_a_stand('Feat') and stand.name != '1dummy':
-            ext.extention_command('kill @e[tag=featinter]')
-            ext.extention_command('give ' + stand.name + " music_disc_13{Tags:Feat,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[5] + '"}]'+"'}}")
-
-
-def stand_lost_check(stand, my_stand):
-    item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート")
-
-    if my_stand == 'The_World':
+    if my_standname == 'The_World':
         if not stand.bool_have_a_stand('DIO') and stand.name != '1dummy':
             ext.extention_command('give ' + stand.name + " clock{Tags:DIO,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[0] + '"}]'+"'}}")
             #stand.create_ticket_compass()
