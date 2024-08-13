@@ -4,8 +4,8 @@ import re
 from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_EVEN
 
 class GameController:
-    def __init__(self, mcr) -> None:
-        self.mcr = mcr
+    def __init__(self, ext) -> None:
+        self.ext = ext
         self.start_time = 0
         self.ticket_start_time = 0
         self.elapsed_time = 0
@@ -23,7 +23,8 @@ class GameController:
         self.target_dimention = 'the_end'
         self.target_pos = [0, 0, 0]
 
-        self.jpn_item = self.item_translation()
+        # self.jpn_item = self.item_translation()
+        self.userlist = []
 
     def start(self):
         self.start_time = time.time()
@@ -99,7 +100,7 @@ class GameController:
     def target_dim(self, player):
         dimention = ('overworld','the_nether','the_end')
         for dim in dimention:
-            res = self.mcr.command(f'execute as {player} at @s if dimension minecraft:{dim}')
+            res = self.ext.extention_command(f'execute as {player} at @s if dimension minecraft:{dim}')
             if 'Test passed' == res:
                 return dim
         else:   # 何にも引っかからない。恐らくプレイヤーがいない。
@@ -118,7 +119,7 @@ class GameController:
                 ex -> {"KASKA0511":[0, 0, 0]}
         '''
         reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        res = self.mcr.command(f'data get entity {player} Pos')        # 座標
+        res = self.ext.extention_command(f'data get entity {player} Pos')        # 座標
         if 'No' in res and 'found' in res:
             return (0, 0, 0)
         else:
@@ -204,47 +205,47 @@ class GameController:
         if max >= 300:
             max = 300
         id = id.lower()
-        self.mcr.command(f'bossbar add {id} "{display_str}"')
-        self.mcr.command(f'bossbar set minecraft:{id} color {color}')
-        self.mcr.command(f'bossbar set minecraft:{id} max {max}')
+        self.ext.extention_command(f'bossbar add {id} "{display_str}"')
+        self.ext.extention_command(f'bossbar set minecraft:{id} color {color}')
+        self.ext.extention_command(f'bossbar set minecraft:{id} max {max}')
 
     def set_bossbar(self, id):
         id = id.lower()
-        self.mcr.command(f'bossbar set minecraft:{id} players @a')
+        self.ext.extention_command(f'bossbar set minecraft:{id} players @a')
 
     def set_bossbar_value(self, id, value):
         if value >= 300:
             value = 300
         id = id.lower()
-        self.mcr.command(f'bossbar set minecraft:{id} value {value}')
+        self.ext.extention_command(f'bossbar set minecraft:{id} value {value}')
 
     def reset_bossbar(self, id):
         id = id.lower()
-        self.mcr.command(f'bossbar set minecraft:{id} value 0')
+        self.ext.extention_command(f'bossbar set minecraft:{id} value 0')
 
     def checkpoint_particle(self):
-        self.mcr.command(f'execute as @e[type=minecraft:armor_stand,tag=checkpoint] at @s run particle minecraft:shriek 0 ^ ^0 ^ 0 0 0 1 1 force @a')
-        self.mcr.command(f'execute as @e[tag=active] at @s run particle minecraft:happy_villager ^ ^2 ^ 0 0 0 0.1 1 force @a')
+        self.ext.extention_command(f'execute as @e[type=minecraft:armor_stand,tag=checkpoint] at @s run particle minecraft:shriek 0 ^ ^0 ^ 0 0 0 1 1 force @a')
+        self.ext.extention_command(f'execute as @e[tag=active] at @s run particle minecraft:happy_villager ^ ^2 ^ 0 0 0 0.1 1 force @a')
 
     def add_bonus_bossbar(self, id, display_str, color="green", max=60):
         # display_str -> 追加報酬+1
         id = id.lower()
-        self.mcr.command(f'bossbar add {id} "{display_str}"')
-        self.mcr.command(f'bossbar set minecraft:{id} color {color}')
-        self.mcr.command(f'bossbar set minecraft:{id} max {max}')
+        self.ext.extention_command(f'bossbar add {id} "{display_str}"')
+        self.ext.extention_command(f'bossbar set minecraft:{id} color {color}')
+        self.ext.extention_command(f'bossbar set minecraft:{id} max {max}')
 
     def set_bonus_bossbar(self, id):
         # ボーナスのゲージは全員に見えるようにする。
         id = id.lower()
-        self.mcr.command(f'bossbar set minecraft:{id} players @a')
+        self.ext.extention_command(f'bossbar set minecraft:{id} players @a')
 
     def set_bonus_bossbar_value(self, id, value):
         id = id.lower()
-        self.mcr.command(f'bossbar set minecraft:{id} value {value}')
+        self.ext.extention_command(f'bossbar set minecraft:{id} value {value}')
 
     def set_bonus_bossbar_name(self, id, display_str):
         id = id.lower()
-        self.mcr.command(f'bossbar set minecraft:{id} name "{display_str}"')
+        self.ext.extention_command(f'bossbar set minecraft:{id} name "{display_str}"')
 
     def set_bonus_bossbar_visible(self, id, bool=True):
         if bool:
@@ -256,11 +257,11 @@ class GameController:
         else:
             return
         id = id.lower()
-        self.mcr.command(f'bossbar set minecraft:{id} visible {bool}')
+        self.ext.extention_command(f'bossbar set minecraft:{id} visible {bool}')
 
     def reset_bonus_bossbar(self, id):
         id = id.lower()
-        self.mcr.command(f'bossbar set minecraft:{id} value 0')
+        self.ext.extention_command(f'bossbar set minecraft:{id} value 0')
 
     def make_bonus_bar(self):
         # ボーナスバーは事前に作る。
@@ -327,14 +328,14 @@ class GameController:
             self.target_pos = [0, 0, 0]
         self.old_target_player = self.new_target_player
         nbt = self.crate_target_compass_nbt(self.new_target_player, self.target_dimention, self.target_pos)
-        self.mcr.command('clear @a compass{Tags:target} 1')
-        self.mcr.command('give @a compass{'+nbt+'}')
+        self.ext.extention_command('clear @a compass{Tags:target} 1')
+        self.ext.extention_command('give @a compass{'+nbt+'}')
 
     def create_ticket_compass(self, name, pass_point, ticket_item, point_pos):
         dim = self.get_dimention(pass_point+1)
         nbt = self.crate_ticket_compass_nbt(pass_point, ticket_item, dim, point_pos)
-        self.mcr.command('clear ' + name + ' compass{Tags:ticket} 1')
-        self.mcr.command('give ' + name + ' compass{'+nbt+'}')
+        self.ext.extention_command('clear ' + name + ' compass{Tags:ticket} 1')
+        self.ext.extention_command('give ' + name + ' compass{'+nbt+'}')
 
     def get_pass_point(self, stand):
         '''
@@ -365,8 +366,8 @@ class GameController:
             attack_uuid : str
                 通過申請しているプレイヤーのUUID。
         '''
-        attack = self.mcr.command(f'data get entity @e[tag={checkpoint_tag},tag=attackinter,limit=1] attack.player') # Interaction has the following entity data: [I; 123, -1234, -1234, 1234]
-        # self.mcr.command(f'data remove entity @e[tag={checkpoint_tag},tag=checkpoint,limit=1] attack')
+        attack = self.ext.extention_command(f'data get entity @e[tag={checkpoint_tag},tag=attackinter,limit=1] attack.player') # Interaction has the following entity data: [I; 123, -1234, -1234, 1234]
+        # self.ext.extention_command(f'data remove entity @e[tag={checkpoint_tag},tag=checkpoint,limit=1] attack')
         attack_uuid = re.sub(r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: ', '', attack)
         return attack_uuid
 
@@ -383,7 +384,7 @@ class GameController:
         Return
             None
         '''
-        #self.mcr.command(f'data remove entity @e[tag=No{number},tag=checkpoint,limit=1] attack')
+        #self.ext.extention_command(f'data remove entity @e[tag=No{number},tag=checkpoint,limit=1] attack')
         with open('./json_list/pass_checkpoint_list.json') as f:
             df = json.load(f)
             df[stand] = number + 1
@@ -392,31 +393,31 @@ class GameController:
             json.dump(df, f, indent=4)
 
     def check_active(self, number):
-        res = self.mcr.command(f'tag @e[tag={number},tag=attackinter,limit=1] list')
+        res = self.ext.extention_command(f'tag @e[tag={number},tag=attackinter,limit=1] list')
         return True if 'active' in res else False   # 文字列にactiveが含むならTrue
 
     def gift_reward(self, name, number, many=0):
-        self.mcr.command(f'tag @e[tag={number},tag=attackinter,limit=1] list')  # タグの確認。
+        self.ext.extention_command(f'tag @e[tag={number},tag=attackinter,limit=1] list')  # タグの確認。
         #! ボーナスタイムで稼いだ場合それに合わせてダイヤモンドの数を増やす。
-        self.mcr.command(f'give {name} diamond {3+many}')  # タグの確認。
+        self.ext.extention_command(f'give {name} diamond {3+many}')  # タグの確認。
 
     def summon_finalgift(self):
         if self.check_dragonegg() and self.check_chest() == False:
-            self.mcr.command('execute in minecraft:the_end positioned 0 ~ 0 positioned over motion_blocking_no_leaves positioned ^ ^-2 ^ run setblock 0 ~ 0 chest destroy')
-            self.mcr.command('execute in minecraft:the_end positioned 0 ~ 0 positioned over motion_blocking_no_leaves positioned ^ ^-2 ^ run item replace block 0 ~ 0 container.0 with minecraft:diamond 64')
-            self.mcr.command('execute in minecraft:the_end positioned 0 ~ 0 positioned over motion_blocking_no_leaves positioned ^ ^-2 ^ run item replace block 0 ~ 0 container.1 with minecraft:netherite_ingot 32')
+            self.ext.extention_command('execute in minecraft:the_end positioned 0 ~ 0 positioned over motion_blocking_no_leaves positioned ^ ^-2 ^ run setblock 0 ~ 0 chest destroy')
+            self.ext.extention_command('execute in minecraft:the_end positioned 0 ~ 0 positioned over motion_blocking_no_leaves positioned ^ ^-2 ^ run item replace block 0 ~ 0 container.0 with minecraft:diamond 64')
+            self.ext.extention_command('execute in minecraft:the_end positioned 0 ~ 0 positioned over motion_blocking_no_leaves positioned ^ ^-2 ^ run item replace block 0 ~ 0 container.1 with minecraft:netherite_ingot 32')
             for i in range(16):
-                self.mcr.command('execute in minecraft:the_end positioned 0 ~ 0 positioned over motion_blocking_no_leaves positioned ^ ^-2 ^ run item replace block 0 ~ 0 container.'+str(i+2)+' with minecraft:enchanted_book{StoredEnchantments:[{id:mending,lvl:1}]} 1')
+                self.ext.extention_command('execute in minecraft:the_end positioned 0 ~ 0 positioned over motion_blocking_no_leaves positioned ^ ^-2 ^ run item replace block 0 ~ 0 container.'+str(i+2)+' with minecraft:enchanted_book{StoredEnchantments:[{id:mending,lvl:1}]} 1')
 
     def check_dragonegg(self):
-        res = self.mcr.command('execute in minecraft:the_end positioned 0 ~ 0 positioned over motion_blocking_no_leaves positioned ^ ^-1 ^ if block 0 ~ 0 minecraft:dragon_egg')
+        res = self.ext.extention_command('execute in minecraft:the_end positioned 0 ~ 0 positioned over motion_blocking_no_leaves positioned ^ ^-1 ^ if block 0 ~ 0 minecraft:dragon_egg')
         if 'passed' in res:
             return True
         else:
             return False
 
     def check_chest(self):
-        res = self.mcr.command('execute in minecraft:the_end positioned 0 ~ 0 positioned over motion_blocking_no_leaves positioned ^ ^-2 ^ if block 0 ~ 0 minecraft:chest')
+        res = self.ext.extention_command('execute in minecraft:the_end positioned 0 ~ 0 positioned over motion_blocking_no_leaves positioned ^ ^-2 ^ if block 0 ~ 0 minecraft:chest')
         if 'passed' in res:
             return True
         else:
@@ -440,7 +441,7 @@ class GameController:
         '''
         # アイテムを持っている場合：res = Found 128 matching item(s) on player KASKA0511
         # アイテムを持っていない場合:res = No items were found on player KASAKA0511
-        res = self.mcr.command(f'clear {player} minecraft:{item} 0')
+        res = self.ext.extention_command(f'clear {player} minecraft:{item} 0')
         if 'No' in res and 'found' in res:
             return False
         else:
@@ -500,9 +501,9 @@ class GameController:
 
     def first_place_pass_process(self, name, pass_point, bonus_cnt):
         # 一位通過者
-        self.mcr.command(f'playsound minecraft:ui.toast.challenge_complete master @a[name=!{name}] ~ ~ ~ 1 1 1')
-        self.mcr.command(f'tag @e[tag=No{pass_point+1},tag=attackinter,limit=1] add active')# チェックポイントアクティブ化処理追加
-        self.mcr.command(f'bossbar set minecraft:ticket visible true')   # 画面から不可視にしていたticketゲージを再可視化
+        self.ext.extention_command(f'playsound minecraft:ui.toast.challenge_complete master @a[name=!{name}] ~ ~ ~ 1 1 1')
+        self.ext.extention_command(f'tag @e[tag=No{pass_point+1},tag=attackinter,limit=1] add active')# チェックポイントアクティブ化処理追加
+        self.ext.extention_command(f'bossbar set minecraft:ticket visible true')   # 画面から不可視にしていたticketゲージを再可視化
         self.gift_reward(name, f'No{pass_point+1}', bonus_cnt)
         self.reset_all_bonus_bossbar()       # 全員分のボーナスゲージをリセット
         self.reset_bossbar("ticket")     # ticketのbossbarをリセット。
@@ -515,12 +516,12 @@ class GameController:
     def second_place_pass_process(self, name, stand_name, pass_point, point_pos):
         # 既にアクティブ化されているなら自分のチェックポイントを加算。
         # 通過者共通処理。
-        self.mcr.command(f'execute as {name} run playsound minecraft:ui.toast.challenge_complete master @s ~ ~ ~ 1 1 1')
+        self.ext.extention_command(f'execute as {name} run playsound minecraft:ui.toast.challenge_complete master @s ~ ~ ~ 1 1 1')
         self.new_target_player = ['ターゲット不明']
         self.false_ticketitem_get_frag() # 一旦下げる。誰かが次のチケットアイテムを手に入れているならすぐにフラグが立つはず。
         self.add_checkpoint(stand_name, pass_point) # jsonファイルにチェックポイント情報更新
         if pass_point+1 < 4:
-            self.mcr.command(f'execute as {name} at @s positioned over motion_blocking_no_leaves run spawnpoint {name} {point_pos[0]} ~ {point_pos[1]}')
+            self.ext.extention_command(f'execute as {name} at @s positioned over motion_blocking_no_leaves run spawnpoint {name} {point_pos[0]} ~ {point_pos[1]}')
         self.compass_prepare = False
 
     def assign_throwitem_tag(self):
@@ -531,7 +532,7 @@ class GameController:
         常に呼び出すことを推奨します。
         '''
         """使われない処理なので隠すが今後使うかもしれないので残す。
-        self.mcr.command('execute as @e[type=item] at @s unless data entity @s Item.tag.Tags run data modify entity @s Item.tag.Tags set from entity @s Thrower')
+        self.ext.extention_command('execute as @e[type=item] at @s unless data entity @s Item.tag.Tags run data modify entity @s Item.tag.Tags set from entity @s Thrower')
         """
 
     def assign_deathitem_tag(self):
@@ -546,10 +547,10 @@ class GameController:
 
         if alive:
             pos, dim = self.get_DeathLocation_info()
-            self.mcr.command(f'execute in {dim} run summon armor_stand {pos[0]} {pos[1]} {pos[2]} {{Invisible:1b,Invulnerable:1b,Tags:["{self.name}","death"]}}')  # 死亡地点にアマスタを召喚
-            self.mcr.command(f'execute as @e[type=item] at @s run tp @e[tag={self.name},tag=death,distance=..7,limit=1]')   # 召喚したアマスタを中心に半径7ブロック以内のアイテムをアマスタに集める
-            self.mcr.command(f'execute as @e[type=item] at @s if entity @e[tag={self.name},tag=death,distance=..1] unless data entity @s Item.tag.Tags run data modify entity @s Item.tag.Tags set from entity {self.name} UUID')    #実行者をitemに移し、アイテム自身がアマスタの半径1ブロック以内にいるならタグを付与
-            self.mcr.command(f'kill @e[tag={self.name},tag=death]')
+            self.ext.extention_command(f'execute in {dim} run summon armor_stand {pos[0]} {pos[1]} {pos[2]} {{Invisible:1b,Invulnerable:1b,Tags:["{self.name}","death"]}}')  # 死亡地点にアマスタを召喚
+            self.ext.extention_command(f'execute as @e[type=item] at @s run tp @e[tag={self.name},tag=death,distance=..7,limit=1]')   # 召喚したアマスタを中心に半径7ブロック以内のアイテムをアマスタに集める
+            self.ext.extention_command(f'execute as @e[type=item] at @s if entity @e[tag={self.name},tag=death,distance=..1] unless data entity @s Item.tag.Tags run data modify entity @s Item.tag.Tags set from entity {self.name} UUID')    #実行者をitemに移し、アイテム自身がアマスタの半径1ブロック以内にいるならタグを付与
+            self.ext.extention_command(f'kill @e[tag={self.name},tag=death]')
         else:   # プレイヤーが見つからない or プレイヤーが死んでいないなら
             return
         """

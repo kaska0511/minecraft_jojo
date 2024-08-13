@@ -205,22 +205,22 @@ def summon_stand_user_info(ext):
     Z = 0
     invulnerable = True
     nogravity = True
-    contents = open_json(f'{str_dir}/{str_stand_file}')
+    contents = open_json(f'./{str_dir}/{str_stand_file}')
 
     for stand_name in contents.keys():
         
         #ワールドのエンティティの情報を取得
-        resp = get_entity_data(ext, entity_name, None, stand_name, 'Tags')
+        resp = get_entity_data(ext, entity_name, None, contents.get(stand_name), 'Tags')
         
         #ワールドのエンティティが存在しない場合
         if resp is None:
             #エンティティを新規で生成する
-            _ = set_entity_data(ext, entity_name, X, Y, Z, invulnerable, nogravity, contents.get(stand_name) , stand_name)
+            set_entity_data(ext, entity_name, X, Y, Z, invulnerable, nogravity, stand_name, contents.get(stand_name))
 
         #外部ファイルとワールドのエンティティが一致しない場合  
         elif resp != contents.get(stand_name):
             #外部ファイルを踏襲
-            _ = edit_entity_tag_data(ext, entity_name, stand_name, resp, contents.get(stand_name))
+            edit_entity_tag_data(ext, entity_name, contents.get(stand_name), resp, stand_name)
 
         #外部ファイルとエンティティが一致する場合
         else:
@@ -637,9 +637,6 @@ def main(ext, is_server):
                  # ファイルの更新日時を更新
                 lastModificationTime = os.path.getmtime('./json_list/stand_list.json')
 
-
-            # スタンド能力を付与。
-            gift_stand()
 
         new_standname = ext.extention_command(f'data get entity @e[name={ext.name},type=armor_stand,limit=1] Tags')[0]
         # プレイヤー名と紐づくスタンド名を取得し、変更があればそれに合わせて再初期化。
