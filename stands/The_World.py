@@ -183,10 +183,16 @@ class The_World(Common_func):
         self.stop_player_effect_list()
         # whileで視線と場所を固定する。
 
+        # 参加者リストを取得。
+        for _ in range(10): # joinner_listがNoneで返ってくる場合があるので繰り返し取得する。自分自身が居るのでNoneはあり得ない。
+            joinner_list = self.ext.get_joinner_list()
+            if joinner_list is not None:
+                break
+
         #! 時が止まっているときに新規参加者は視線を固定することができない。
         if not self.fix_flag:
             rots = []
-            for player in self.ext.get_joinner_list():
+            for player in joinner_list:
                 get_rot = self.get_rot(player)
                 if get_rot is None:
                     get_rot = "None"    # プレイヤーが居ない場合はNoneが返るはず。なので文字列にして納める。
@@ -198,7 +204,7 @@ class The_World(Common_func):
             self.fix_flag = True
 
         # アマスタを重なるように配置し行動を制限。
-        for player, rot in zip(self.ext.get_joinner_list(), self.rots):
+        for player, rot in zip(joinner_list, self.rots):
             if player == self.name: # 自分の時は固定しない。
                 #pass
                 continue
