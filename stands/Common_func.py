@@ -443,7 +443,7 @@ class Common_func:
         # tagに関して
         #   単一    KASKA0511 has the following entity data: "Killer"
         #   複数    KASKA0511 has the following entity data: ["DIO", "a"]
-        tag = self.ext.extention_command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].tag.Tags')
+        tag = self.ext.extention_command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].components."minecraft:custom_data".tag')
 
         return id, tag
 

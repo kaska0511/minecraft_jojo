@@ -238,7 +238,7 @@ class Catch_The_Rainbow(Common_func):
         # 上から順にチェックしていく。
         # 1.スタンドアイテムを付けているか？
         id, tag = self.get_select_Inventory(self.name, "103")
-        if tag == "Rain" :
+        if tag == "Catch_The_Rainbow" :
             pass
         else:
             #print('!!stand')
