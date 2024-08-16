@@ -19,7 +19,7 @@ class Killer_Qeen(Common_func):
             return
 
         item, tag = self.get_SelectedItem()
-        if tag == "Killer":
+        if tag == "Killer_Qeen":
 
             if item == "minecraft:gunpowder" and self.right_click:
                 #print("ブロック爆弾化発動")

@@ -28,7 +28,7 @@ class TuskAct4(Common_func):
                 # 馬に騎乗していて動いていれば。できれば走っているのを判定したいが・・・→ ride_motion_bがその役割だったが上手く行かない。。。
                 ride_motion = True
 
-        if tag == "Saint" and ride_motion:
+        if tag == "TuskAct4" and ride_motion:
             if self.right_click and self.run_stand == False:
                 # 右クリックした人が本人なら能力発動
                 self.target = self.search_entity()

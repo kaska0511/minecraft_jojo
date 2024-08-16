@@ -441,42 +441,42 @@ def stand_lost_check(stand, my_standname):
     item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート")
 
     if my_standname == 'The_World':
-        if not stand.bool_have_a_stand('DIO') and stand.name != '1dummy':
-            ext.extention_command('give ' + stand.name + " clock{Tags:DIO,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[0] + '"}]'+"'}}")
+        if not stand.bool_have_a_stand(tag='The_World') and stand.name != '1dummy':
+            ext.extention_command('give ' + stand.name + ' clock[minecraft:custom_name="' + item_name_list[0] + '",minecraft:custom_data={tag:"The_World"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
             #stand.create_ticket_compass()
             #stand.create_target_compass()
 
     elif my_standname == 'TuskAct4':
-        if not stand.bool_have_a_stand('Saint') and stand.name != '1dummy':
+        if not stand.bool_have_a_stand(tag='TuskAct4') and stand.name != '1dummy':
             ext.extention_command('give ' + stand.name + ' saddle')
             ext.extention_command('give ' + stand.name + ' lead')
-            ext.extention_command('give ' + stand.name + " bone{Tags:Saint,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[1] + '"}]'+"'}}")
+            ext.extention_command('give ' + stand.name + ' bone[minecraft:custom_name="' + item_name_list[1] + '",minecraft:custom_data={tag:"TuskAct4"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
             #stand.create_ticket_compass()
             #stand.create_target_compass()
 
     elif my_standname == 'Killer_Qeen':
-        if not stand.bool_have_a_stand('Killer') and stand.name != '1dummy':   # 全て失わないと再取得できないので注意
-            ext.extention_command('give ' + stand.name + " gunpowder{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][0] + '"}]'+"'}}")
-            ext.extention_command('give ' + stand.name + " flint{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][1] + '"}]'+"'}}")
-            ext.extention_command('give ' + stand.name + " fire_charge{Tags:Killer,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[2][2] + '"}]'+"'}}")
+        if not stand.bool_have_a_stand(tag='Killer_Qeen') and stand.name != '1dummy':   # 全て失わないと再取得できないので注意
+            ext.extention_command('give ' + stand.name + ' gunpowder[minecraft:custom_name="' + item_name_list[2][0] + '",minecraft:custom_data={tag:"Killer_Qeen"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+            ext.extention_command('give ' + stand.name + ' flint[minecraft:custom_name="' + item_name_list[2][1] + '",minecraft:custom_data={tag:"Killer_Qeen"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+            ext.extention_command('give ' + stand.name + ' fire_charge[minecraft:custom_name="' + item_name_list[2][2] + '",minecraft:custom_data={tag:"Killer_Qeen"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
             #stand.create_ticket_compass()
             #stand.create_target_compass()
 
     elif my_standname == 'Catch_The_Rainbow':
-        if not stand.bool_have_a_stand('Rain') and stand.name != '1dummy':
-            ext.extention_command('give ' + stand.name + " skeleton_skull{Tags:Rain,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[3] + '"}]'+"'}}")
+        if not stand.bool_have_a_stand(tag='Catch_The_Rainbow') and stand.name != '1dummy':
+            ext.extention_command('give ' + stand.name + ' skeleton_skull[minecraft:custom_name="' + item_name_list[3] + '",minecraft:custom_data={tag:"Catch_The_Rainbow"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
             #stand.create_ticket_compass()
             #stand.create_target_compass()
 
     elif my_standname == 'Twentieth_Century_Boy':
-        if not stand.bool_have_a_stand('Boy') and stand.name != '1dummy':
-            ext.extention_command('give ' + stand.name + " snowball{Tags:Boy,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[4] + '"}]'+"'}}")
+        if not stand.bool_have_a_stand(tag='Twentieth_Century_Boy') and stand.name != '1dummy':
+            ext.extention_command('give ' + stand.name + ' snowball[minecraft:custom_name="' + item_name_list[4] + '",minecraft:custom_data={tag:"Twentieth_Century_Boy"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
             #stand.create_ticket_compass()
             #stand.create_target_compass()
 
     elif my_standname == 'Little_Feat':
-        if not stand.bool_have_a_stand('Feat') and stand.name != '1dummy':
-            ext.extention_command('give ' + stand.name + " music_disc_13{Tags:Feat,Enchantments:[{}],display:{Name:'" + '[{"text":"' + item_name_list[5] + '"}]'+"'}}")
+        if not stand.bool_have_a_stand(tag='Little_Feat') and stand.name != '1dummy':
+            ext.extention_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[5] + '",minecraft:custom_data={tag:"Little_Feat"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
 
 def find_target(controller,world,tusk,kqeen,rain,boy,feat):
