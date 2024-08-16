@@ -145,6 +145,11 @@ class Catch_The_Rainbow(Common_func):
 
                 else:   # 上昇も下降もしようとしてない→その場で留まる。
                     self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0')
+                    if self.get_Onground(self.name):
+                        self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0.08')
+
+        if not self.double_spacekey:    # 飛行状態解除。落下ダメージは受けない。
+            self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0.08')
 
         if self.run_stand:
             self.ext.extention_command(f'attribute {self.name} minecraft:generic.movement_speed base set 0.3')
@@ -152,11 +157,6 @@ class Catch_The_Rainbow(Common_func):
         else:   # 仮面を外したらetc...
             self.cancel_stand()
 
-            if self.kill_check:  # 能力解除時、体力が4以下なら死ぬ。
-                self.kill_check = False
-                health = self.get_Health()
-                if health is not None and health <= 4.0:
-                    self.ext.extention_command(f'kill {self.name}')
         """
         # チケットアイテム獲得によるターゲット該当者処理
         # チケットアイテムを持っていないならFalse。死んだりチェストにしまうとFalseになる。
@@ -232,6 +232,12 @@ class Catch_The_Rainbow(Common_func):
         self.ext.extention_command(f'attribute {self.name} minecraft:generic.movement_speed base set 0.1')  # 移動速度上昇を元に戻す。
         self.ext.extention_command(f'kill @e[tag=rain_knife]')
         self.ext.extention_command(f'effect clear {self.name} minecraft:resistance')
+        
+        if self.kill_check:  # 能力解除時、体力が2以下なら死ぬ。
+            self.kill_check = False
+            health = self.get_Health()
+            if health is not None and health <= 2.0:
+                self.ext.extention_command(f'kill {self.name}')
 
     def can_I_run_stand(self):
         #import pdb;pdb.set_trace()
