@@ -155,6 +155,7 @@ class TuskAct4(Common_func):
         self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run particle minecraft:sculk_charge_pop ^ ^1 ^ 0.5 0.5 0.5 0 20 force @a') # 当たったら回転演出
         self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run particle minecraft:explosion_emitter ~ ~ ~') # 当たったら爆発演出
         self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run playsound minecraft:entity.generic.explode master @a ~ ~ ~ 4')
+        self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run damage @e[distance=..1,type=!item,tag=!checkpoint] 999999999999999999999 minecraft:explosion by {self.name}')
         self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run kill @e[distance=..1,type=!item,tag=!checkpoint]')   # ターゲットキル。接触しているものもキル。スタンド自身もキル。
 
         # もしターゲットがいないなら処理。デスポーンやログアウト用
