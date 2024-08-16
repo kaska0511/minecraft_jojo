@@ -18,6 +18,8 @@ from stands.Catch_The_Rainbow import Catch_The_Rainbow
 from stands.Twentieth_Century_Boy import Twentieth_Century_Boy
 from stands.Little_Feat import Little_Feat
 
+STR_DIR = 'json_list'
+STR_STAND_FILE = 'stand_list.json'
 def get_rcon_info(is_server):
     '''
     rconのipアドレスとポート番号とパスワードを取得します。
@@ -197,15 +199,13 @@ def summon_stand_user_info(ext):
         ext : MCRcon
             Rconのサーバ情報
     '''
-    str_dir = 'json_list'
-    str_stand_file = 'stand_list.json'
     entity_name = 'minecraft:armor_stand'
     X = 0
     Y = -74
     Z = 0
     invulnerable = True
     nogravity = True
-    contents = open_json(f'./{str_dir}/{str_stand_file}')
+    contents = open_json(f'./{STR_DIR}/{STR_STAND_FILE}')
 
     for stand_name in contents.keys():
         
@@ -522,9 +522,6 @@ def stand_list_json_rewrite_for_new_joinner(ext):
     Return
         bool
     '''
-    #スタンドリストの格納場所
-    str_dir = 'json_list'
-    str_stand_file = 'stand_list.json'
     
     #「NEW」が付与されているアマスタのTag(プレイヤー名)を取得
     newList = ext.get_newjoinner_list()
@@ -533,7 +530,7 @@ def stand_list_json_rewrite_for_new_joinner(ext):
     if not newList is None: 
         
         #スタンドリストを取得
-        contents = open_json(f'{str_dir}/{str_stand_file}')
+        contents = open_json(f'./{STR_DIR}/{STR_STAND_FILE}')
         
         #空きスタンドの取得
         vacantStand = find_keys(contents, "1dummy")
@@ -558,7 +555,7 @@ def stand_list_json_rewrite_for_new_joinner(ext):
             contents = update_dict_value(contents, vacantStand[rand], newList[i])
                 
             #ファイルを保存する
-            save_json(contents, f'{str_dir}/{str_stand_file}')
+            save_json(contents, f'./{STR_DIR}/{STR_STAND_FILE}')
             
             #割り当てたスタンドを削除
             del vacantStand[rand]
@@ -712,18 +709,16 @@ def main(ext, is_server):
 
 #初期セットアップ
 if __name__ == '__main__':
-     
-    str_dir = 'json_list'
-    str_stand_file = 'stand_list.json'
+
     str_server_file = 'server.properties'
     is_server = False
 
     #ディレクトリの存在チェック
-    if not os.path.isdir(str_dir):
-        make_dir(str_dir)
+    if not os.path.isdir(STR_DIR):
+        make_dir(STR_DIR)
     
     #ファイルの存在チェック
-    if not os.path.isfile(f'{str_dir}/{str_stand_file}'):
+    if not os.path.isfile(f'./{STR_DIR}/{STR_STAND_FILE}'):
         make_stand_list()
     
     #サーバ側の判定
