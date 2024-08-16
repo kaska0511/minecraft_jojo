@@ -640,6 +640,9 @@ def main(ext, is_server):
         if my_standname != new_standname:
             my_standname = ext.stand = new_standname
 
+            if stand is not None:
+                # 能力を初期化
+                stand.cancel_stand()
             # スタンド能力情報をNoneで削除する。
             stand = None
 
