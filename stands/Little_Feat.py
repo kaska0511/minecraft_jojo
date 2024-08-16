@@ -13,7 +13,7 @@ class Little_Feat(Common_func):
 
         item, tag = self.get_SelectedItem()
 
-        if tag == "Feat":
+        if tag == "Little_Feat":
             if self.run_stand:
                 self.ext.extention_command(f'data modify block 5 -64 0 auto set value 1')
             else:

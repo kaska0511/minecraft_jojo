@@ -145,6 +145,11 @@ class Catch_The_Rainbow(Common_func):
 
                 else:   # 上昇も下降もしようとしてない→その場で留まる。
                     self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0')
+                    if self.get_Onground(self.name):
+                        self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0.08')
+
+        if not self.double_spacekey:    # 飛行状態解除。落下ダメージは受けない。
+            self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0.08')
 
         if self.run_stand:
             self.ext.extention_command(f'attribute {self.name} minecraft:generic.movement_speed base set 0.3')
@@ -152,11 +157,6 @@ class Catch_The_Rainbow(Common_func):
         else:   # 仮面を外したらetc...
             self.cancel_stand()
 
-            if self.kill_check:  # 能力解除時、体力が4以下なら死ぬ。
-                self.kill_check = False
-                health = self.get_Health()
-                if health is not None and health <= 4.0:
-                    self.ext.extention_command(f'kill {self.name}')
         """
         # チケットアイテム獲得によるターゲット該当者処理
         # チケットアイテムを持っていないならFalse。死んだりチェストにしまうとFalseになる。
@@ -232,13 +232,19 @@ class Catch_The_Rainbow(Common_func):
         self.ext.extention_command(f'attribute {self.name} minecraft:generic.movement_speed base set 0.1')  # 移動速度上昇を元に戻す。
         self.ext.extention_command(f'kill @e[tag=rain_knife]')
         self.ext.extention_command(f'effect clear {self.name} minecraft:resistance')
+        
+        if self.kill_check:  # 能力解除時、体力が2以下なら死ぬ。
+            self.kill_check = False
+            health = self.get_Health()
+            if health is not None and health <= 2.0:
+                self.ext.extention_command(f'kill {self.name}')
 
     def can_I_run_stand(self):
         #import pdb;pdb.set_trace()
         # 上から順にチェックしていく。
         # 1.スタンドアイテムを付けているか？
         id, tag = self.get_select_Inventory(self.name, "103")
-        if tag == "Rain" :
+        if tag == "Catch_The_Rainbow" :
             pass
         else:
             #print('!!stand')
@@ -347,13 +353,13 @@ class Catch_The_Rainbow(Common_func):
 
         if now_y >= 63: # 海抜（＝高度63ブロック以上）より高い場所にいるなら
             #import pdb; pdb.set_trace()
-            res0 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ ~ ~ ~ 319 ~ {self.mask[0]} ~ {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')
+            res0 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ {now_y+1} ~ ~ 319 ~ {self.mask[0]} ~ {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')
             if res0 == '0s':
                 shield_flag = False
 
         else:           # 海抜以下にいるなら
-            now_y = now_y + 257
-            res0 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ ~ ~ ~ 62 ~ {self.mask[0]} {now_y} {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')    # 海抜以下を検索
+            now_y_add = now_y + 257
+            res0 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ {now_y+1} ~ ~ 62 ~ {self.mask[0]} {now_y_add} {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')    # 海抜以下を検索
             res1 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ 63 ~ ~ 319 ~ {self.mask[0]} 63 {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')       # 海抜超過の場所を検索
 
             if res0 == '0s' and res1 == '0s':

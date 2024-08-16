@@ -15,9 +15,9 @@ class Common_func:
         self.left_click = False
 
         self.controller = controller
-        self.pass_point = int(self.controller.get_pass_point(self.ext.stand))   #現在のチェックポイント（初回は0）オーバーライドが必要かも。
-        self.point_pos = self.controller.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
-        self.ticket_item = self.controller.get_ticket_info(self.pass_point)
+        #self.pass_point = int(self.controller.get_pass_point(self.ext.stand))   #現在のチェックポイント（初回は0）オーバーライドが必要かも。
+        #self.point_pos = self.controller.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
+        #self.ticket_item = self.controller.get_ticket_info(self.pass_point)
         self.ticket_target = False
         self.bonus_start_time = time.time()
         self.bonus_time = None
@@ -114,11 +114,14 @@ class Common_func:
         else:
             return True
 
-    def bool_have_a_stand(self, tag):
+    def bool_have_a_stand(self, item="*", tag=None):
         '''
         自分がスタンド能力を表すアイテムを持っているかチェックします。
 
         Parameter
+            item : str
+                スタンドアイテムを表すitem名\n
+                アイテム名は省略可。
             tag : str
                 スタンドアイテムが持つtag名
 
@@ -127,29 +130,25 @@ class Common_func:
                 スタンドアイテムを持つならTrue、持っていないならFalse
         '''
 
-        have_a_stand = True
+        have_a_stand = False
 
         # runの後は何でもよかった。メインは「nbt=」の部分で特定のタグ名を持つアイテムを所持しているならrunの後が実行される。
         # 持っていないなら空文字が返される。
-        if self.get_player_Death() == False or self.get_logout() == False:
-        #if self.get_player_Death() != True:
-            # execute if entity @a[name=KASKA0511,nbt={Inventory:[{tag:{Tags:["DIO"]}}]}] run data get entity KASKA0511 DeathTime # DIOタグのアイテムを持っていたらrun以降が実行される。持っていなかったら空文字が返る。
 
-            # 一つのアイテムに "単一" のTagsを持つ場合はこちらが実行される。
-            substituent = 'execute if entity @a[name=_NAME_,nbt={Inventory:[{tag:{Tags:"_TAG_"}}]}] run data get entity _NAME_ DeathTime'
+        substituent = 'execute if items entity _NAME_ _SEARCH_ _ITEM_[minecraft:custom_data={tag: "_TAG_"}] run data get entity _NAME_ DeathTime'
+        SEARCH = ('container.*', 'player.cursor', 'weapon.*', 'armor.*')
+
+        if self.get_player_Death() == False:
             substituent = substituent.replace(f'_NAME_', self.name)
             substituent = substituent.replace(f'_TAG_', tag)
-            result = self.ext.extention_command(f'{substituent}')
+            substituent = substituent.replace(f'_ITEM_', item)  # itemが省略されていればitemの種類に依存せず検索する。
 
-            if result is None:  # タグ一つで検索してNoneなら複数形で検索をかける。
-                # 一つのアイテムに "複数" のTagsを持つ場合はこちらが実行される。
-                substituent = 'execute if entity @a[name=_NAME_,nbt={Inventory:[{tag:{Tags:["_TAG_"]}}]}] run data get entity _NAME_ DeathTime'
-                substituent = substituent.replace(f'_NAME_', self.name)
-                substituent = substituent.replace(f'_TAG_', tag)
-                result = self.ext.extention_command(f'{substituent}')
-
-            # resultで結果が得られたら(is not None)スタンドアイテムを持っている。 = True
-            have_a_stand = True if result is not None else False
+            for search in SEARCH:
+                final_substituent = substituent.replace(f'_SEARCH_', search)
+                have_a_stand = self.ext.extention_command(f'{final_substituent}')
+                if have_a_stand == '0s':
+                    have_a_stand = True
+                    break
 
         return have_a_stand
 
@@ -301,9 +300,9 @@ class Common_func:
                 アイテム名とそれ付与されているタグが返されます。
                 ex -> ("minecraft.clock", "DIO") or ("minecraft.clock", ["DIO","b"])
         '''
+
         id = self.ext.extention_command(f'data get entity {self.name} SelectedItem.id')
-        tag = self.ext.extention_command(f'data get entity {self.name} SelectedItem.tag.Tags')     # tag取得はこれがいいかも
-        
+        tag = self.ext.extention_command(f'data get entity {self.name} SelectedItem.components."minecraft:custom_data".tag')
         id = None if id is None else id     # スロットが空など、もし見つからなかったらNoneで返す。
         tag = None if tag is None else tag # アイテムにTagが無いならNoneで返す。
 
@@ -439,11 +438,12 @@ class Common_func:
             tag : str | list[str]
                 そのアイテムが持つtag
         '''
+
         id = self.ext.extention_command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].id')     # KASKA0511 has the following entity data: "minecraft:flint"
         # tagに関して
         #   単一    KASKA0511 has the following entity data: "Killer"
         #   複数    KASKA0511 has the following entity data: ["DIO", "a"]
-        tag = self.ext.extention_command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].tag.Tags')
+        tag = self.ext.extention_command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].components."minecraft:custom_data".tag')
 
         return id, tag
 

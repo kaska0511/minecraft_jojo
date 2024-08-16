@@ -28,7 +28,7 @@ class TuskAct4(Common_func):
                 # 馬に騎乗していて動いていれば。できれば走っているのを判定したいが・・・→ ride_motion_bがその役割だったが上手く行かない。。。
                 ride_motion = True
 
-        if tag == "Saint" and ride_motion:
+        if tag == "TuskAct4" and ride_motion:
             if self.right_click and self.run_stand == False:
                 # 右クリックした人が本人なら能力発動
                 self.target = self.search_entity()
@@ -134,7 +134,7 @@ class TuskAct4(Common_func):
         if self.summon_flag == False and self.target:
             self.ext.extention_command(f'execute as {self.name} at @s run playsound minecraft:block.beacon.activate master @a ~ ~ ~ 4 2')
             # アマスタを召喚。見えない、無敵、ちょっと小さい。
-            self.ext.extention_command(f'execute as {self.name} at @s anchored eyes run summon minecraft:armor_stand ^ ^ ^1 {{Attributes:[{{Name:"generic.scale",Base:0.4}}],CustomName:TuskAct4,Invisible:1,Invulnerable:1,Small:1,NoGravity:1}}')
+            self.ext.extention_command(f'execute as {self.name} at @s anchored eyes run summon minecraft:armor_stand ^ ^ ^1 {{attributes:[{{id:"minecraft:generic.scale",base:0.4}}],CustomName:TuskAct4,Invisible:1,Invulnerable:1,Small:1,NoGravity:1}}')
             # execute as KASKA0511 at @s anchored feet run summon minecraft:armor_stand ^ ^ ^1 {Attributes:[{Name:"generic.scale",Base:0.4}],CustomName:TuskAct4,Invisible:1,Invulnerable:1,Small:1,NoGravity:1,Tags:["TuskAct4"]}
             self.summon_flag = True
 
@@ -155,6 +155,7 @@ class TuskAct4(Common_func):
         self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run particle minecraft:sculk_charge_pop ^ ^1 ^ 0.5 0.5 0.5 0 20 force @a') # 当たったら回転演出
         self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run particle minecraft:explosion_emitter ~ ~ ~') # 当たったら爆発演出
         self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run playsound minecraft:entity.generic.explode master @a ~ ~ ~ 4')
+        self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run damage @e[distance=..1,type=!item,tag=!checkpoint] 999999999999999999999 minecraft:explosion by {self.name}')
         self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run kill @e[distance=..1,type=!item,tag=!checkpoint]')   # ターゲットキル。接触しているものもキル。スタンド自身もキル。
 
         # もしターゲットがいないなら処理。デスポーンやログアウト用

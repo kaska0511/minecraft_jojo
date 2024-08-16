@@ -18,8 +18,7 @@ class The_World(Common_func):
 
         self.watch_time()
         item, tag = self.get_SelectedItem()
-        #import pdb;pdb.set_trace()
-        if tag == "DIO" and self.run_stand == False:
+        if tag == "The_World" and self.run_stand == False:
             if self.right_click and self.run_stand == False and self.timer != 0:
                 # 右クリックした人が本人なら能力発動
                 self.run_stand = True
@@ -148,7 +147,7 @@ class The_World(Common_func):
         self.ext.extention_command(f'effect clear @a[name=!{self.name}] minecraft:slow_falling')
 
         ## 各プレイヤーに重なるアマスタを切る。
-        self.ext.extention_command(f'kill @e[tag=The_World]')
+        self.ext.extention_command(f'kill @e[tag=The_World_fix]')
 
         self.run_stand = False
         self.controller.run_The_World = False
@@ -184,10 +183,16 @@ class The_World(Common_func):
         self.stop_player_effect_list()
         # whileで視線と場所を固定する。
 
+        # 参加者リストを取得。
+        for _ in range(10): # joinner_listがNoneで返ってくる場合があるので繰り返し取得する。自分自身が居るのでNoneはあり得ない。
+            joinner_list = self.ext.get_joinner_list()
+            if joinner_list is not None:
+                break
+
         #! 時が止まっているときに新規参加者は視線を固定することができない。
         if not self.fix_flag:
             rots = []
-            for player in self.ext.get_joinner_list():
+            for player in joinner_list:
                 get_rot = self.get_rot(player)
                 if get_rot is None:
                     get_rot = "None"    # プレイヤーが居ない場合はNoneが返るはず。なので文字列にして納める。
@@ -199,13 +204,13 @@ class The_World(Common_func):
             self.fix_flag = True
 
         # アマスタを重なるように配置し行動を制限。
-        for player, rot in zip(self.ext.get_joinner_list(), self.rots):
+        for player, rot in zip(joinner_list, self.rots):
             if player == self.name: # 自分の時は固定しない。
                 #pass
                 continue
 
             if rot != "None":
-                self.ext.extention_command(f'execute as @e[tag={player},limit=1] at @s run tp {player} ~ ~ ~ {rot[0]} {rot[1]}')
+                self.ext.extention_command(f'execute as @e[tag={player},tag=The_World_fix,limit=1] at @s run tp {player} ~ ~ ~ {rot[0]} {rot[1]}')
 
     def prepare_arrow_effect(self):
         self.ext.extention_command('execute as @e[type=minecraft:arrow] at @s unless data entity @s Passengers if entity @a[name='+self.name+',distance=..2] run summon armor_stand ~ ~ ~ {Invisible:0b,Invulnerable:1b,NoGravity:1b,Tags:["DIOarrow"],Attributes:[{Name:"generic.scale", Base:0.0625}]}')

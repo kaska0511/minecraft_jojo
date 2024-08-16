@@ -14,7 +14,7 @@ class Twentieth_Century_Boy(Common_func):
 
         item, tag = self.get_SelectedItem()
 
-        if tag == "Boy":
+        if tag == "Twentieth_Century_Boy":
             if self.right_click and self.run_stand == False:
                 # 右クリックした人が本人なら能力発動
                 # 能力発動の準備と無敵化付与
@@ -122,7 +122,7 @@ class Twentieth_Century_Boy(Common_func):
         return rrot
 
     def prepare_stand(self):
-        self.ext.extention_command(f'execute as {self.name} at @s run summon minecraft:armor_stand ~ ~ ~ {{Attributes:[{{Name:"generic.scale",Base:0.0625}}],Tags:[boystand],Silent:1,Invulnerable:1,Invisible:1}}')
+        self.ext.extention_command(f'execute as {self.name} at @s run summon minecraft:armor_stand ~ ~ ~ {{attributes:[{{id:"minecraft:generic.scale",base:0.0625}}],Tags:[boystand],Silent:1,Invulnerable:1,Invisible:1}}')
 
     def ride_stand(self):
         self.ext.extention_command(f'ride {self.name} mount @e[tag=boystand,limit=1]')
