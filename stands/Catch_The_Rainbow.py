@@ -347,13 +347,13 @@ class Catch_The_Rainbow(Common_func):
 
         if now_y >= 63: # 海抜（＝高度63ブロック以上）より高い場所にいるなら
             #import pdb; pdb.set_trace()
-            res0 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ ~ ~ ~ 319 ~ {self.mask[0]} ~ {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')
+            res0 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ {now_y+1} ~ ~ 319 ~ {self.mask[0]} ~ {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')
             if res0 == '0s':
                 shield_flag = False
 
         else:           # 海抜以下にいるなら
-            now_y = now_y + 257
-            res0 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ ~ ~ ~ 62 ~ {self.mask[0]} {now_y} {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')    # 海抜以下を検索
+            now_y_add = now_y + 257
+            res0 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ {now_y+1} ~ ~ 62 ~ {self.mask[0]} {now_y_add} {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')    # 海抜以下を検索
             res1 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ 63 ~ ~ 319 ~ {self.mask[0]} 63 {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')       # 海抜超過の場所を検索
 
             if res0 == '0s' and res1 == '0s':
