@@ -6,7 +6,7 @@ import json
 import os
 from extension import Extension
 from mcrcon import MCRcon
-
+import flet as ft
 
 from Steel_Ball_Run_Race.GameController import *
 from Steel_Ball_Run_Race.SBR import *
@@ -18,8 +18,11 @@ from stands.Catch_The_Rainbow import Catch_The_Rainbow
 from stands.Twentieth_Century_Boy import Twentieth_Century_Boy
 from stands.Little_Feat import Little_Feat
 
+from User_Interface import GUI
+
 STR_DIR = 'json_list'
 STR_STAND_FILE = 'stand_list.json'
+
 def get_rcon_info(is_server):
     '''
     rconのipアドレスとポート番号とパスワードを取得します。
@@ -44,7 +47,7 @@ def get_rcon_info(is_server):
     #サーバ側の場合
     if is_server:
         str_file = 'server.properties'
-        with open(str_file) as file:
+        with open(f'./{str_file}') as file:
             content = [contsnts.strip() for contsnts in file.readlines()]
             for i in content:
                 if None != re.search(r'^rcon.password=', i):
@@ -729,6 +732,8 @@ if __name__ == '__main__':
         is_server = True
     
     rip, rport, rpassword = get_rcon_info(is_server)
+
+    ft.app(target=GUI.tabmain)
 
     with MCRcon(rip, rpassword, rport) as mcr:
 
