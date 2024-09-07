@@ -57,6 +57,9 @@ class Rcon_Server(Container):
             value = self.get_rcon_info(0),
             error_text = "",
             width = 200,
+            on_change = self.connection_test,
+            on_blur = self.connection_test,
+            on_focus = self.connection_test
         )
 
         self.Right_Port = TextField(
@@ -67,6 +70,9 @@ class Rcon_Server(Container):
             error_text = "",
             width = 180,
             input_filter = InputFilter(allow=True, regex_string=r"[0-9]", replacement_string=""),
+            on_change = self.connection_test,
+            on_blur = self.connection_test,
+            on_focus = self.connection_test
         )
 
         self.Right_Pass = TextField(
@@ -112,6 +118,19 @@ class Rcon_Server(Container):
         content = {"sever_ip": f"{self.Right_IPaddress.value}", "rcon_port": f"{self.Right_Port.value}", "password": f"{self.Right_Pass.value}"}
         with open(f'./rconserver.json', 'w', encoding='utf-8') as f:
             json.dump(content, f, ensure_ascii=False)
+
+    def connection_test(self, e):
+        import socket
+        try:
+            s = socket.socket()
+            read_ip = self.get_rcon_info(0)
+            read_port = self.get_rcon_info(1)
+            s.connect((read_ip, int(read_port)))
+            s.close()
+            self.Right_Connect_Ring.value = 1.0
+            self.Right_Connect_Ring.tooltip = "Successful Connection!"
+        except:
+            self.Right_Connect_Ring.value = None
 
     def get_rcon_info(self, mode):
         '''
