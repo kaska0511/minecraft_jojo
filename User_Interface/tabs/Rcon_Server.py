@@ -69,6 +69,7 @@ class Rcon_Server(Container):
             value = self.get_rcon_info(1),
             error_text = "",
             width = 180,
+            max_length=5,
             input_filter = InputFilter(allow=True, regex_string=r"[0-9]", replacement_string=""),
             on_change = self.connection_test,
             on_blur = self.connection_test,
