@@ -81,7 +81,8 @@ class Rcon_Server(Container):
         )
 
         self.Right_Button = ElevatedButton(
-            text = "保存"
+            text = "保存",
+            on_click = self.on_submit
         )
 
         self.Right_Row = Row(
@@ -101,7 +102,7 @@ class Rcon_Server(Container):
             controls = [self.Left_Column, self.Right_Column]    #controls = [self.Left_Column, self.Right_Column]
         )
 
-    """def on_submit(self):
+    def on_submit(self, e):
         self.Right_IPaddress.error_text = "空欄を埋めてください" if not self.Right_IPaddress.value else ""
         self.Right_IPaddress.update()
         self.Right_Port.error_text = "空欄を埋めてください" if not self.Right_Port.value else ""
@@ -110,7 +111,7 @@ class Rcon_Server(Container):
         self.Right_Pass.update()
         content = {"sever_ip": f"{self.Right_IPaddress.value}", "rcon_port": f"{self.Right_Port.value}", "password": f"{self.Right_Pass.value}"}
         with open(f'./rconserver.json', 'w', encoding='utf-8') as f:
-            json.dump(content, f, ensure_ascii=False)"""
+            json.dump(content, f, ensure_ascii=False)
 
     def get_rcon_info(self, mode):
         '''
