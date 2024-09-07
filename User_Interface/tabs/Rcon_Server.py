@@ -122,15 +122,17 @@ class Rcon_Server(Container):
     def connection_test(self, e):
         import socket
         try:
-            s = socket.socket()
             read_ip = self.get_rcon_info(0)
             read_port = self.get_rcon_info(1)
+            s = socket.socket()
             s.connect((read_ip, int(read_port)))
             s.close()
             self.Right_Connect_Ring.value = 1.0
             self.Right_Connect_Ring.tooltip = "Successful Connection!"
+            self.Right_Connect_Ring.update()
         except:
             self.Right_Connect_Ring.value = None
+            self.Right_Connect_Ring.update()
 
     def get_rcon_info(self, mode):
         '''
@@ -160,16 +162,16 @@ class Rcon_Server(Container):
 
         # サーバー側か検知
         is_server = True if os.path.isfile(f"./{str_server_file}") else False
-        print(is_server)
+
         #サーバ側の場合
         if is_server:
             with open(f"./{str_server_file}") as file:
                 content = [contsnts.strip() for contsnts in file.readlines()]
                 for i in content:
-                    if None != re.search(r'^rcon.password=', i):
-                        rpassword = re.sub(r'^rcon.password=', '', i)
                     if None != re.search(r'^rcon.port=', i):
-                        rport = int(re.sub(r'rcon.port=', '', i))
+                        r_info[1] = int(re.sub(r'rcon.port=', '', i))
+                    if None != re.search(r'^rcon.password=', i):
+                        r_info[2] = re.sub(r'^rcon.password=', '', i)
 
         #クライアント側の場合
         else:
@@ -180,9 +182,9 @@ class Rcon_Server(Container):
                     json.dump(content, f, ensure_ascii=False)
 
             contns = self.open_json(str_file)
-            rip = contns['sever_ip']
-            rport = contns['rcon_port']
-            rpassword = contns['password']
+            r_info[0] = contns['sever_ip']
+            r_info[1] = contns['rcon_port']
+            r_info[2] = contns['password']
 
         return r_info[mode]
 
