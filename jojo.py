@@ -4,6 +4,8 @@ import random
 import time
 import json
 import os
+import signal
+
 from extension import Extension
 from mcrcon import MCRcon
 
@@ -699,12 +701,19 @@ def gui_main(page: Page):
         make_stand_list()
         is_server = True
 
-    # page setting
+    def handle_window_event(e):
+        if e.data == "close":
+            page.window.destroy()
+            #print("The window was closed.")
+            os.kill(os.getpid(), signal.SIGTERM)    # signal.SIGTERMによってデストラクタを用いて終了させられるはず。ctl + Cを押したことになるはず
+
+    # pageの初期設定
     page.title = "マイクラでジョジョを再現してみた"
     #page.window_icon = "icon.png"
     page.window.width = 1280
     page.window.height = 810
-
+    page.window.prevent_close = True
+    page.window.on_event = handle_window_event
     page.add(MyLayout(page))
 
     connection = False
