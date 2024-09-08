@@ -6,7 +6,10 @@ import json
 import os
 from extension import Extension
 from mcrcon import MCRcon
+
 import flet as ft
+from flet import (app,Page)
+from User_Interface.layout import MyLayout
 
 from Steel_Ball_Run_Race.GameController import *
 from Steel_Ball_Run_Race.SBR import *
@@ -17,8 +20,6 @@ from stands.Killer_Qeen import Killer_Qeen
 from stands.Catch_The_Rainbow import Catch_The_Rainbow
 from stands.Twentieth_Century_Boy import Twentieth_Century_Boy
 from stands.Little_Feat import Little_Feat
-
-from User_Interface import GUI
 
 STR_DIR = 'json_list'
 STR_STAND_FILE = 'stand_list.json'
@@ -40,8 +41,8 @@ def get_rcon_info(is_server):
             rconのパスワードです。
     '''
     #rconサーバ情報のデフォルト値を設定
-    rip = '127.0.0.1'
-    rport = 25575
+    rip = None
+    rport = None
     rpassword = 'password'
     
     #サーバ側の場合
@@ -383,7 +384,7 @@ def get_self_playername():
     return find_value(contents, 'name')
 
 
-def gift_stand():
+def gift_stand(ext):
     # stand_list.jsonを開く。
     res = open_json('./json_list/stand_list.json')
 
@@ -411,7 +412,7 @@ def gift_stand():
                     json.dump(df, f, indent=4)
 
 
-def checkpoint_prepare():
+def checkpoint_prepare(ext):
     '''
     チェックポイントの座標リストとチケットアイテムを決定し\n
     checkpoint.json、ticket_list.jsonとしてファイルを作成します。
@@ -440,7 +441,7 @@ def death_or_logout_check(stand):
     if stand.get_player_Death() != False:
         stand.cancel_stand()
 
-def stand_lost_check(stand, my_standname):
+def stand_lost_check(ext, stand, my_standname):
     item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート")
 
     if my_standname == 'The_World':
@@ -481,35 +482,6 @@ def stand_lost_check(stand, my_standname):
         if not stand.bool_have_a_stand(tag='Little_Feat') and stand.name != '1dummy':
             ext.extention_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[5] + '",minecraft:custom_data={tag:"Little_Feat"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
-
-def find_target(controller,world,tusk,kqeen,rain,boy,feat):
-    player = []
-
-    if world.ticket_target:
-        #print("world",world.ticket_item)
-        player.append(world.name)
-    if tusk.ticket_target:
-        #print("tusk",tusk.ticket_item)
-        player.append(tusk.name)
-    if kqeen.ticket_target:
-        #print("kqeen",kqeen.ticket_item)
-        player.append(kqeen.name)
-    if rain.ticket_target:
-        #print("rain",rain.ticket_item)
-        player.append(rain.name)
-    if boy.ticket_target:
-        #print("boy",boy.ticket_item)
-        player.append(boy.name)
-    if feat.ticket_target:
-        player.append(feat.name)
-
-    if player != []:
-        controller.new_target_player = player
-    else:
-        controller.new_target_player = ['ターゲット不明']
-    controller.give_target_compass()
-
-    return player
 
 def update_all_ticketcompass(stand):
     stand.create_ticket_compass()
@@ -587,7 +559,7 @@ def new_joinner_func(ext, myname):
     
 
 def main(ext, is_server):
-    
+
     ext.name = get_self_playername()
     
     if is_server:
@@ -675,7 +647,7 @@ def main(ext, is_server):
         death_or_logout_check(stand)
 
         # スタンドアイテムを付与。死亡時やスタンドアイテムをなくした場合自動で与えられる。
-        stand_lost_check(stand, my_standname)
+        stand_lost_check(ext, stand, my_standname)
 
         # 作成したbossbarを見られるようにする。一度ワールドを離れたプレイヤーはこれを実行しないとみることができないのでwhile内で実行する。
         """if not controller.prepare:
@@ -713,10 +685,9 @@ def main(ext, is_server):
             controller.ticket_update_flag = False
             update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat)"""
 
-#初期セットアップ
-if __name__ == '__main__':
 
-    str_server_file = 'server.properties'
+def gui_main(page: Page):
+    
     is_server = False
 
     #ディレクトリの存在チェック
@@ -726,18 +697,35 @@ if __name__ == '__main__':
     #ファイルの存在チェック
     if not os.path.isfile(f'./{STR_DIR}/{STR_STAND_FILE}'):
         make_stand_list()
-    
-    #サーバ側の判定
-    if os.path.isfile(str_server_file):
         is_server = True
-    
-    rip, rport, rpassword = get_rcon_info(is_server)
 
-    ft.app(target=GUI.tabmain)
+    # page setting
+    page.title = "マイクラでジョジョを再現してみた"
+    #page.window_icon = "icon.png"
+    page.window.width = 1280
+    page.window.height = 810
+
+    page.add(MyLayout(page))
+
+    connection = False
+    while not connection:
+        rip, rport, rpassword = get_rcon_info(is_server)
+        import socket
+        try:
+            s = socket.socket()
+            s.connect((rip, int(rport)))
+            s.close()
+            connection = True
+        except:
+            connection = False
 
     with MCRcon(rip, rpassword, rport) as mcr:
-
         ext = Extension(mcr)
         main(ext, is_server)
-        #test_main(ext, is_server)
+
+
+#初期セットアップ
+if __name__ == '__main__':
+    # GUIを実行
+    ft.app(target=gui_main)
 

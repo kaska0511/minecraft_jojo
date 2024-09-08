@@ -1,6 +1,4 @@
-#from components.body import ContentBody
-#from components.header import AppHeader
-from tabs.Rcon_Server import Rcon_Server
+from User_Interface.tabs.Rcon_Server import Rcon_Server
 from flet import (
     icons,
     Tab,
