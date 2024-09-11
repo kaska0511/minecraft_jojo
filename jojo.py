@@ -704,6 +704,7 @@ def gui_main(page: Page):
     def handle_window_event(e):
         if e.data == "close":
             page.window.destroy()
+            time.sleep(0.1)     # destroy()から少し待ってあげないとos.killに失敗してしまう。
             #print("The window was closed.")
             os.kill(os.getpid(), signal.SIGTERM)    # signal.SIGTERMによってデストラクタを用いて終了させられるはず。ctl + Cを押したことになるはず
 
