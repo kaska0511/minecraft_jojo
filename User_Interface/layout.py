@@ -17,23 +17,25 @@ class MyLayout(Tabs):
         self.selected_index = 0   # GUI起動時最初に選択されているタブの番号
         self.animation_duration = 150
         self.expand = 1
-        self.tabs=[Rcon_Server_Tab(), Your_Stand_Info_Tab(), Stand_Assign_Tab()]
+        self.tabs=[Rcon_Server_Tab(self.page), Your_Stand_Info_Tab(self.page), Stand_Assign_Tab()]
 
 
 class Rcon_Server_Tab(Tab):
-    def __init__(self):
+    def __init__(self, page: Page):
         super().__init__()
+        self.page = page
         self.text = "Rcon Server"
         self.icon = icons.SETTINGS_INPUT_ANTENNA
-        self.content = Rcon_Server()
+        self.content = Rcon_Server(self.page)
 
 
 class Your_Stand_Info_Tab(Tab):
-    def __init__(self):
+    def __init__(self, page: Page):
         super().__init__()
+        self.page = page
         self.text = "Your Stand Info"
         self.icon = icons.SETTINGS_ACCESSIBILITY
-        self.content = Your_Stand_Info()
+        self.content = Your_Stand_Info(self.page)
 
 
 class Stand_Assign_Tab(Tab):     

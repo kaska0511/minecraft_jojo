@@ -1,6 +1,7 @@
 import json
 import os
 from flet import (
+    Page,
     alignment,
     MainAxisAlignment,
     CrossAxisAlignment,
@@ -21,13 +22,15 @@ class Your_Stand_Info(Container):
     STR_STAND_FILE = 'stand_list.json'
     YOUR_STAND = None
 
-    def __init__(self):
+    def __init__(self, page: Page):
+        self.page = page
         self.get_my_stand()
         super().__init__()
         self.alignment = alignment.bottom_center
         self.padding = 40
         self.width = 1280
         self.height = 810
+        self.on_click = self.restart
 
         ################################ 画面左側
         self.Left_Image = Image(
@@ -94,6 +97,19 @@ class Your_Stand_Info(Container):
             controls = [self.Left_Column, self.Right_Column]    #controls = [self.Left_Column, self.Right_Column]
         )   # 左右結合
         
+
+
+    def restart(self, e):
+        print(self.YOUR_STAND)
+        self.get_my_stand()
+        self.Left_Image.src_base64 = IMAGES_BASE64[self.YOUR_STAND].value
+        self.individual_stand_name.value = STAND_NAME[self.YOUR_STAND].value
+        self.individual_stand_overview.value = STAND_OVERVIEW[self.YOUR_STAND].value
+        self.individual_stand_detail.value = STAND_DETAIL[self.YOUR_STAND].value
+        self.Left_Image.update()
+        self.individual_stand_name.update()
+        self.individual_stand_overview.update()
+        self.individual_stand_detail.update()
 
     def get_my_stand(self):
         '''

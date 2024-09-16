@@ -3,6 +3,7 @@ import os
 import re
 import random
 from flet import (
+    Page,
     alignment,
     MainAxisAlignment,
     CrossAxisAlignment,
@@ -20,8 +21,9 @@ from User_Interface.StandInfoEnum import *
 #from StandInfoEnum import * # test
 
 class Rcon_Server(Container):
-    def __init__(self):
+    def __init__(self, page: Page):
         super().__init__()
+        self.page = page
         self.alignment = alignment.bottom_center
         self.padding = 40
         self.width = 1280
