@@ -16,7 +16,8 @@ from flet import (
     Column,
     ElevatedButton
 )
-from User_Interface.Images import *
+from User_Interface.StandInfoEnum import *
+#from StandInfoEnum import * # test
 
 class Rcon_Server(Container):
     def __init__(self):
@@ -141,7 +142,7 @@ class Rcon_Server(Container):
 
         Parameter
             mode : int
-                欲しい情報のナンバーです。(0:ip, 1:port, 2:pass)
+                欲しい情報のナンバーです。(0:ip, 1:port, 2:pass, 3:standname)
 
         Returns
             rip : str
@@ -177,7 +178,7 @@ class Rcon_Server(Container):
         else:
             str_file = 'rconserver.json'
             if not os.path.isfile(f'./{str_file}'): # クライアント用のrcon情報ファイルが無いなら作成する。
-                content = {"sever_ip": "", "rcon_port": "", "password": ""}
+                content = {"sever_ip": "", "rcon_port": "", "password": "", "stand_name": ""}
                 with open(f'./{str_file}', 'w', encoding='utf-8') as f:
                     json.dump(content, f, ensure_ascii=False)
 
@@ -185,6 +186,7 @@ class Rcon_Server(Container):
             r_info[0] = contns['sever_ip']
             r_info[1] = contns['rcon_port']
             r_info[2] = contns['password']
+            r_info[3] = contns['stand_name']
 
         return r_info[mode]
 

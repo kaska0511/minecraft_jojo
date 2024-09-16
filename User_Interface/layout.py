@@ -1,4 +1,8 @@
 from User_Interface.tabs.Rcon_Server import Rcon_Server
+from User_Interface.tabs.Your_Stand_Info import Your_Stand_Info
+#from tabs.Rcon_Server import Rcon_Server            # test
+#from tabs.Your_Stand_Info import Your_Stand_Info    # test
+
 from flet import (
     icons,
     Tab,
@@ -29,6 +33,7 @@ class Your_Stand_Info_Tab(Tab):
         super().__init__()
         self.text = "Your Stand Info"
         self.icon = icons.SETTINGS_ACCESSIBILITY
+        self.content = Your_Stand_Info()
 
 
 class Stand_Assign_Tab(Tab):     
