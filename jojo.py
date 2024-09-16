@@ -714,6 +714,7 @@ def gui_main(page: Page):
     page.window.width = 1280
     page.window.height = 810
     page.window.prevent_close = True
+    page.window_maximizable = False
     page.window.on_event = handle_window_event
     page.add(MyLayout(page))
 
