@@ -616,6 +616,11 @@ def main(ext, is_server):
         # プレイヤー名と紐づくスタンド名を取得し、変更があればそれに合わせて再初期化。
         if my_standname != new_standname:
             my_standname = ext.stand = new_standname
+            if not is_server:
+                # jsonにスタンド名を記録する処理を追加。
+                contns = open_json('rconserver.json')
+                contns['stand_name'] = my_standname if my_standname is not None else "None"
+                save_json(contns, 'rconserver.json')
 
             if stand is not None:
                 # 能力を初期化
