@@ -159,7 +159,8 @@ class Rcon_Server(Container):
         rip = '127.0.0.1'
         rport = 25575
         rpassword = 'password'
-        r_info = [rip, rport, rpassword]
+        stand_name = ''
+        r_info = [rip, rport, rpassword, stand_name]
 
         # サーバー側か検知
         is_server = True if os.path.isfile(f"./{str_server_file}") else False
