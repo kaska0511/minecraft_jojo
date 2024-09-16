@@ -28,9 +28,9 @@ class Rcon_Server(Container):
         self.image_src_base64 = BACK_GROUND
 
         self.Left_Image = Image(
-            src_base64 = random.choice(list(IMAGES_BASE64)),
-            #height = 570,
-            width = 570
+            src_base64 = IMAGES_BASE64[random.choice(list(HOME_IMAGE)).name],
+            height = 800,
+            #width = 570
         )
 
         self.Left_Text = Text(
