@@ -6,10 +6,12 @@ from flet import (
     CrossAxisAlignment,
     Image,
     Text,
+    FontWeight,
+    colors,
     Container,
     Row,
     Column,
-    ScrollMode
+    ScrollMode,
 )
 from User_Interface.StandInfoEnum import *
 #from StandInfoEnum import * # test
@@ -48,33 +50,47 @@ class Your_Stand_Info(Container):
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# 画面右側
 
         self.stand_name = Text(
-            value = "スタンド名"
+            value = "スタンド名",
+            size = 40,
+            weight = FontWeight.BOLD,
+            bgcolor = colors.BLUE_600,
         )
         self.individual_stand_name = Text(
-            value = STAND_NAME[self.YOUR_STAND].value
+            value = STAND_NAME[self.YOUR_STAND].value,
+            size = 20,
         )
         self.stand_overview = Text(
-            value = "スタンド概要"
+            value = "スタンド概要",
+            size = 40,
+            weight = FontWeight.BOLD,
+            bgcolor = colors.ORANGE_800,
         )
         self.individual_stand_overview = Text(
-            value = STAND_OVERVIEW[self.YOUR_STAND].value
+            value = STAND_OVERVIEW[self.YOUR_STAND].value,
+            size = 20,
         )
         self.stand_detail = Text(
-            value = "スタンド詳細"
+            value = "スタンド詳細",
+            size = 40,
+            weight=FontWeight.BOLD,
+            bgcolor = colors.GREEN_700,
         )
         self.individual_stand_detail = Text(
-            value = STAND_DETAIL[self.YOUR_STAND].value
+            value = STAND_DETAIL[self.YOUR_STAND].value,
+            size = 20,
         )
         self.Right_Column = Column(
-            alignment = MainAxisAlignment.START,              # 垂直方向ボトムに移動。
-            horizontal_alignment = CrossAxisAlignment.START,  # 水平方向右端に移動。
-            scroll=ScrollMode.ALWAYS,
+            alignment = MainAxisAlignment.END,              # 垂直方向ボトムに移動。
+            horizontal_alignment = CrossAxisAlignment.START,  # 水平方向左端に移動。
+            scroll = ScrollMode.ALWAYS,
+            spacing = 40,
+            width = 750,
             controls = [self.stand_name, self.individual_stand_name, self.stand_overview, self.individual_stand_overview, self.stand_detail, self.individual_stand_detail]
         )
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# 画面右側
 
         self.content = Row(
-            alignment=MainAxisAlignment.SPACE_BETWEEN,
+            alignment=MainAxisAlignment.START,
             controls = [self.Left_Column, self.Right_Column]    #controls = [self.Left_Column, self.Right_Column]
         )   # 左右結合
         
