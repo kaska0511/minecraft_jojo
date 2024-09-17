@@ -30,7 +30,7 @@ class Your_Stand_Info(Container):
         self.padding = 40
         self.width = 1280
         self.height = 810
-        self.on_click = self.restart
+        self.on_hover = self.restart
 
         ################################ 画面左側
         self.Left_Image = Image(
@@ -100,7 +100,6 @@ class Your_Stand_Info(Container):
 
 
     def restart(self, e):
-        print(self.YOUR_STAND)
         self.get_my_stand()
         self.Left_Image.src_base64 = IMAGES_BASE64[self.YOUR_STAND].value
         self.individual_stand_name.value = STAND_NAME[self.YOUR_STAND].value
