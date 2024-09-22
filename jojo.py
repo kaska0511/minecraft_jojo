@@ -22,6 +22,7 @@ from stands.Killer_Qeen import Killer_Qeen
 from stands.Catch_The_Rainbow import Catch_The_Rainbow
 from stands.Twentieth_Century_Boy import Twentieth_Century_Boy
 from stands.Little_Feat import Little_Feat
+from stands.Cream import Cream
 
 STR_DIR = 'json_list'
 STR_STAND_FILE = 'stand_list.json'
@@ -43,7 +44,7 @@ def get_rcon_info(is_server):
             rconのパスワードです。
     '''
     #rconサーバ情報のデフォルト値を設定
-    rip = None
+    rip = '127.0.0.1'
     rport = None
     rpassword = 'password'
     
@@ -94,7 +95,7 @@ def make_stand_list():
     Return
         なし
     '''
-    first = {"The_World": "1dummy", "TuskAct4": "1dummy", "Killer_Qeen": "1dummy", "Catch_The_Rainbow": "1dummy", "Twentieth_Century_Boy": "1dummy", "Little_Feat": "1dummy"}
+    first = {"The_World": "1dummy", "TuskAct4": "1dummy", "Killer_Qeen": "1dummy", "Catch_The_Rainbow": "1dummy", "Twentieth_Century_Boy": "1dummy", "Little_Feat": "1dummy", "Cream": "1dummy"}
     with open('./json_list/stand_list.json', 'w', encoding='utf-8') as f:
         json.dump(first, f, ensure_ascii=False)
 
@@ -444,7 +445,7 @@ def death_or_logout_check(stand):
         stand.cancel_stand()
 
 def stand_lost_check(ext, stand, my_standname):
-    item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート")
+    item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート", "クリーム")
 
     if my_standname == 'The_World':
         if not stand.bool_have_a_stand(tag='The_World') and stand.name != '1dummy':
@@ -483,6 +484,10 @@ def stand_lost_check(ext, stand, my_standname):
     elif my_standname == 'Little_Feat':
         if not stand.bool_have_a_stand(tag='Little_Feat') and stand.name != '1dummy':
             ext.extention_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[5] + '",minecraft:custom_data={tag:"Little_Feat"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+
+    elif my_standname == 'Cream':
+        if not stand.bool_have_a_stand(tag='Cream') and stand.name != '1dummy':
+            ext.extention_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[6] + '",minecraft:custom_data={tag:"Cream"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
 
 def update_all_ticketcompass(stand):
@@ -647,6 +652,9 @@ def main(ext, is_server):
             elif my_standname == 'Little_Feat':
                 stand = Little_Feat(name=ext.name, ext=ext, controller=controller)
 
+            elif my_standname == 'Cream':
+                stand = Cream(name=ext.name, ext=ext, controller=controller)
+
         # プレイヤーが入ってきたときuuidを設定しなくてはならない。
         set_uuid(stand)
 
@@ -697,14 +705,16 @@ def gui_main(page: Page):
     
     is_server = False
 
-    #ディレクトリの存在チェック
-    if not os.path.isdir(STR_DIR):
-        make_dir(STR_DIR)
-    
-    #ファイルの存在チェック
-    if not os.path.isfile(f'./{STR_DIR}/{STR_STAND_FILE}'):
-        make_stand_list()
+    if os.path.isfile(f'./server.properties'):
         is_server = True
+
+        #ディレクトリの存在チェック
+        if not os.path.isdir(STR_DIR):
+            make_dir(STR_DIR)
+        
+        #ファイルの存在チェック
+        if not os.path.isfile(f'./{STR_DIR}/{STR_STAND_FILE}'):
+            make_stand_list()
 
     def handle_window_event(e):
         if e.data == "close":

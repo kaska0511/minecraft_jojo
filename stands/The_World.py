@@ -1,5 +1,4 @@
 import time
-import re
 from stands.Common_func import Common_func
 
 class The_World(Common_func):
