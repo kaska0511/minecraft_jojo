@@ -16,6 +16,10 @@ class The_World(Common_func):
         if self.name == "1dummy" or self.get_logout():
             return
 
+        # 攻撃力と射程距離を増加させる。
+        self.ext.extention_command(f'effect give {self.name} minecraft:strength infinite 12 true') # ピグリンブルートを二発で倒せるレベルのパワーを付与。
+        self.ext.extention_command(f'attribute {self.name} minecraft:player.entity_interaction_range base set 10') # 攻撃射程距離10ブロックへ。
+
         self.watch_time()
         item, tag = self.get_SelectedItem()
         if tag == "The_World" and self.run_stand == False:
@@ -104,13 +108,14 @@ class The_World(Common_func):
         # スタンド解除は実質下の関数。
         self.start_time()
         self.timer = 5
+        self.ext.extention_command(f'attribute {self.name} minecraft:player.entity_interaction_range base set 3') # 攻撃射程距離デフォルト（3ブロック）へ戻す。
+        self.ext.extention_command(f'effect clear {self.name} minecraft:strength')
 
     def stop_time(self):
         self.ext.extention_command(f'execute as {self.name} at @s run tick freeze')
         self.ext.extention_command(f'playsound minecraft:block.bell.resonate master @a ~ ~ ~ 1 1 1')
         self.ext.extention_command(f'playsound minecraft:entity.bee.death master @a ~ ~ ~ 4 0 1')
         self.ext.extention_command(f'effect give @a minecraft:blindness 1 1 true')  # 能力演出
-        self.ext.extention_command(f'effect give {self.name} minecraft:strength infinite 12 true') # ピグリンブルートを二発で倒せるレベルのパワーを付与。
 
         self.stop_player_effect_list()
 
@@ -135,7 +140,6 @@ class The_World(Common_func):
     def start_time(self):
         self.ext.extention_command(f'playsound minecraft:block.bell.resonate master @a ~ ~ ~ 1 1 1')
         self.ext.extention_command(f'effect give @a minecraft:blindness 1 1 true')
-        self.ext.extention_command(f'effect clear {self.name} minecraft:strength')
 
         self.ext.extention_command(f'tick unfreeze')
 
