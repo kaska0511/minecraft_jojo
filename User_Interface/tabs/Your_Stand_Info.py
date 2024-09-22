@@ -87,7 +87,7 @@ class Your_Stand_Info(Container):
             horizontal_alignment = CrossAxisAlignment.START,  # 水平方向左端に移動。
             scroll = ScrollMode.ALWAYS,
             spacing = 40,
-            width = 750,
+            width = 860,
             controls = [self.stand_name, self.individual_stand_name, self.stand_overview, self.individual_stand_overview, self.stand_detail, self.individual_stand_detail]
         )
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# 画面右側
