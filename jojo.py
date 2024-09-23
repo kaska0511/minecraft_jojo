@@ -570,13 +570,15 @@ def main(ext, is_server):
     ext.name = get_self_playername()
     
     if is_server:
+        ext.extention_command("gamerule sendCommandFeedback false")
+        ext.extention_command("forceload add 0 0")
+        while not ext.extention_command(f'forceload query 0 0'): # ロードするまで待つ。
+            pass
         ext.summon_joinner_armor(is_server)
         #スタンド能力と使用者を紐づけるアマスタを生成
         summon_stand_user_info(ext)
 
     new_joinner_func(ext, ext.name)
-    
-    ext.extention_command("gamerule sendCommandFeedback false")
 
     #checkpoint_prepare()
 

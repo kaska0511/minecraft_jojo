@@ -51,8 +51,6 @@ class Extension:
             # stand_list.jsonのstand名を元にStandlistにスタンド名をtag付けする。
             for standname in list(stand_list.keys()):
                 self.mcr.command(f'tag @e[name=Standlist,type=minecraft:armor_stand,limit=1] add {standname}')
-                # 参加者リストにも名前を記録する。
-                self.mcr.command(f'tag @e[name=List,type=minecraft:armor_stand,limit=1] add {standname}')
 
 
     def get_newjoinner_list(self):
