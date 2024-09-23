@@ -15,16 +15,19 @@ class Cream(Common_func):
 
         item, tag = self.get_SelectedItem()
 
-        # 能力発動検知と初期設定        
-        if tag == "Cream":
-            if self.right_click and self.run_stand == False:
-                # 右クリックした人が本人なら能力発動
+        if tag == "Cream" and self.right_click:
+            # 能力発動検知と初期設定  
+            if  self.run_stand == False:
                 # スペクテイターモードに変更
                 self.run_stand = True
                 self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0')
                 self.ext.extention_command(f'execute as {self.name} at @s run gamemode spectator')
                 self.effect_stand()
-            self.right_click = False
+
+            # 自主能力解除
+            elif self.run_stand == True: # 能力発動中に左クリックしたら能力を解除する。
+                self.cancel_stand()
+        self.right_click = False
 
         # 能力発動処理
         if self.run_stand:
@@ -50,12 +53,6 @@ class Cream(Common_func):
                 self.effect_stand()
                 self.ext.extention_command(f'execute as {self.name} at @s run gamemode spectator')
 
-        # 自主能力解除
-        if tag == "Cream":
-            if self.left_click and self.run_stand == True: # 能力発動中に左クリックしたら能力を解除する。
-                self.cancel_stand()
-                self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0.08')
-            self.left_click = False
 
     def cancel_stand(self):
         self.run_stand = False
