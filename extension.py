@@ -25,8 +25,8 @@ class Extension:
 
     def summon_joinner_armor(self, server_side):
         '''
-        サーバー新規参加者の名簿とサーバー参加者の名簿となる防具立てと、\n
-        ゲーム内で使用されるスタンドの名簿となる防具立てを作成します。
+        サーバー新規参加者の名簿（NEW）とサーバー参加者の名簿（List）となる防具立てと、\n
+        ゲーム内で使用されるスタンドの名簿（Standlist）となる防具立てを作成します。
 
         Parameter
             server_side : bool
@@ -51,6 +51,8 @@ class Extension:
             # stand_list.jsonのstand名を元にStandlistにスタンド名をtag付けする。
             for standname in list(stand_list.keys()):
                 self.mcr.command(f'tag @e[name=Standlist,type=minecraft:armor_stand,limit=1] add {standname}')
+                # 参加者リストにも名前を記録する。
+                self.mcr.command(f'tag @e[name=List,type=minecraft:armor_stand,limit=1] add {standname}')
 
 
     def get_newjoinner_list(self):
