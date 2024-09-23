@@ -616,6 +616,10 @@ def main(ext, is_server):
                  # ファイルの更新日時を更新
                 lastModificationTime = os.path.getmtime('./json_list/stand_list.json')
 
+        # ここでext.nameがワールドにいるか検知。Noneの時ワールドに居ない。いなければcontinueする。
+        # 後続の処理はいる前提で動作するので、エラーが発生しないように修正。
+        if ext.extention_command(f'data get entity {ext.name} DeathTime') is None:
+            continue
 
         new_standname = ext.extention_command(f'data get entity @e[name={ext.name},type=armor_stand,limit=1] Tags')[0]
         # プレイヤー名と紐づくスタンド名を取得し、変更があればそれに合わせて再初期化。
