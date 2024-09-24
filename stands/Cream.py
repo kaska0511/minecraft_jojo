@@ -34,24 +34,29 @@ class Cream(Common_func):
             # ダメージ処理
             self.damage_within_range()
 
+            if not self.is_Minecraftwindow():   # 上記のダメージ処理はそのままに、マイクラ以外を操作していたらこれ以下の処理は行わない。
+                self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0')   # サバイバル状態だけど浮いたままにする。
+                self.ext.extention_command(f'execute as {self.name} at @s run gamemode survival')           # 覗き見ている場合はダメージを受ける状態へ
+                return
+
             # 削り取る処理
             if keyboard.is_pressed('shift'):    # 3*3*3に加えて足下3*3も削る
                 self.ext.extention_command(f'execute as {self.name} at @s rotated 90 0 run fill ^-1 ^-1 ^-1 ^1 ^2 ^1 air destroy')
             else:   # 基本は3*3*3で削る
                 self.ext.extention_command(f'execute as {self.name} at @s rotated 90 0 run fill ^-1 ^0 ^-1 ^1 ^2 ^1 air destroy')
 
-            # 覗き見る処理
-            self.new_pos = self.get_pos()
-            if self.old_pos == self.new_pos:   # 座標が同じ＝動いていない＝覗き見る。
-                self.clear_effect()
+            # 覗き見る処理（wasd,space,shiftの行動を検知）
+            #self.new_pos = self.get_pos()
+            if keyboard.is_pressed('w') or keyboard.is_pressed('a') or keyboard.is_pressed('s') or keyboard.is_pressed('d') or keyboard.is_pressed('space') or keyboard.is_pressed('shift'):
+                #self.old_pos = self.new_pos
+                self.effect_stand()
+                self.ext.extention_command(f'execute as {self.name} at @s run gamemode spectator')
+
+            else:   # 動いていないと判定する。
+                #self.clear_effect()
                 self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0')   # サバイバル状態だけど浮いたままにする。
                 self.ext.extention_command(f'execute as {self.name} at @s run gamemode survival')           # 覗き見ている場合はダメージを受ける状態へ
                 #self.ext.extention_command(f'effect clear {self.name} minecraft:invisibility')              # 透明化解除
-
-            else:   # 比較元を更新
-                self.old_pos = self.new_pos
-                self.effect_stand()
-                self.ext.extention_command(f'execute as {self.name} at @s run gamemode spectator')
 
 
     def cancel_stand(self):
