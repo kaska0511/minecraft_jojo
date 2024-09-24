@@ -54,6 +54,8 @@ class Extension:
             
             # stand_list.jsonのuser名を元にListにユーザー名をtag付けする。
             for username in list(stand_list.values()):
+                if username == "1dummy":
+                    continue
                 self.mcr.command(f'tag @e[name=List,type=minecraft:armor_stand,limit=1] add {username}')
 
 
