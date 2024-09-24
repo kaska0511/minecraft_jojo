@@ -36,15 +36,15 @@ class Your_Stand_Info(Container):
         self.Left_Image = Image(
             #src_base64 = random.choice(list(IMAGES_BASE64)),
             src_base64 = IMAGES_BASE64[self.YOUR_STAND].value,
-            height = 640,
-            #width = 400
+            #height = 640,
+            width = 350 # ※1 = 1100 - ※2
         )
 
         self.Left_Text = Text(
             value = f"引用元:https://jojoasbr.bn-ent.net/character/"
         )
         self.Left_Column = Column(
-            alignment = MainAxisAlignment.SPACE_BETWEEN,
+            alignment = MainAxisAlignment.CENTER,
             controls = [self.Left_Image, self.Left_Text]
             #controls = [self.Left_Image]
         )
@@ -83,18 +83,18 @@ class Your_Stand_Info(Container):
             size = 20,
         )
         self.Right_Column = Column(
-            alignment = MainAxisAlignment.END,              # 垂直方向ボトムに移動。
+            alignment = MainAxisAlignment.START,              # 垂直方向トップに移動。
             horizontal_alignment = CrossAxisAlignment.START,  # 水平方向左端に移動。
             scroll = ScrollMode.ALWAYS,
-            spacing = 40,
-            width = 860,
+            spacing = 20,
+            width = 750,    # ※2 = 1100 - ※1
             controls = [self.stand_name, self.individual_stand_name, self.stand_overview, self.individual_stand_overview, self.stand_detail, self.individual_stand_detail]
         )
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~# 画面右側
 
         self.content = Row(
-            alignment=MainAxisAlignment.START,
-            controls = [self.Left_Column, self.Right_Column]    #controls = [self.Left_Column, self.Right_Column]
+            alignment=MainAxisAlignment.SPACE_BETWEEN,
+            controls = [self.Left_Column, self.Right_Column]
         )   # 左右結合
         
 
