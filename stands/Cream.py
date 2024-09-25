@@ -53,7 +53,7 @@ class Cream(Common_func):
                 self.ext.extention_command(f'execute as {self.name} at @s run gamemode spectator')
 
             else:   # 動いていないと判定する。
-                #self.clear_effect()
+                self.clear_effect()
                 self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0')   # サバイバル状態だけど浮いたままにする。
                 self.ext.extention_command(f'execute as {self.name} at @s run gamemode survival')           # 覗き見ている場合はダメージを受ける状態へ
                 #self.ext.extention_command(f'effect clear {self.name} minecraft:invisibility')              # 透明化解除
