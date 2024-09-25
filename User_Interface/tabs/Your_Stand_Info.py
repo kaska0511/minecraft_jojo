@@ -45,8 +45,7 @@ class Your_Stand_Info(Container):
         )
         self.Left_Column = Column(
             alignment = MainAxisAlignment.CENTER,
-            controls = [self.Left_Image, self.Left_Text]
-            #controls = [self.Left_Image]
+            controls = [self.Left_Text, self.Left_Image]
         )
         ################################ 画面左側
 
