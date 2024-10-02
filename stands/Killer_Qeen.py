@@ -18,6 +18,12 @@ class Killer_Qeen(Common_func):
         if self.name == "1dummy" or self.get_logout():
             return
 
+        # 時間停止中はこれ以降の処理は行わない。
+        if self.bool_have_tag('stop_time'):
+            self.left_click = False
+            self.right_click = False
+            return
+
         item, tag = self.get_SelectedItem()
         if tag == "Killer_Qeen":
 

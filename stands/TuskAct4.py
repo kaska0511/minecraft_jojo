@@ -14,6 +14,13 @@ class TuskAct4(Common_func):
         if self.name == "1dummy" or self.get_logout():
             return
 
+        # 時間停止中はこれ以降の処理は行わない。能力発動していないなら。
+        if self.bool_have_tag('stop_time'):
+            self.left_click = False
+            self.right_click = False
+            if self.run_stand == False:
+                return
+
         tag = None
         ride_motion = False
         if not self.run_stand:

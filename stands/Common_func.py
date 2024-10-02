@@ -454,3 +454,20 @@ class Common_func:
         health = float(health.rstrip('f'))
 
         return health
+
+    def bool_have_tag(self, tag):
+        '''
+        指定のtagを自分が付与されているか調べます。
+
+        Parameter
+            tag : str
+                付与されているか知りたいtag
+
+        Return
+            have : bool
+                真偽値
+        '''
+        deathtime = self.ext.extention_command(f'execute as {self.name} if entity @a[name={self.name},tag={tag},limit=1] run data get entity @s DeathTime')
+        have = True if deathtime == '0s' else False
+
+        return have

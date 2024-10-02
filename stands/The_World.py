@@ -7,7 +7,6 @@ class The_World(Common_func):
         self.standard_time = time.time()    # 止める時間を設定するための基準時間
         self.timer = 5  # 止められる時間（秒）初回5秒
         self.fix_flag = False
-        self.poss = None    # 他のプレイヤーの座標を記録する
         self.rots = None    # 他のプレイヤーの視線座標を記録する
 
 
@@ -18,6 +17,12 @@ class The_World(Common_func):
         # 攻撃力と射程距離を増加させる。
         self.ext.extention_command(f'effect give {self.name} minecraft:strength infinite 12 true') # ピグリンブルートを二発で倒せるレベルのパワーを付与。
         self.ext.extention_command(f'attribute {self.name} minecraft:player.entity_interaction_range base set 10') # 攻撃射程距離10ブロックへ。
+
+        # 時を止められる時間が0秒で、スタプラによる時間停止が行われていたら、これ以降の処理は停止する。
+        if self.timer == 0 and self.bool_have_tag('stop_time'):
+            self.left_click = False
+            self.right_click = False
+            return
 
         self.watch_time()
         item, tag = self.get_SelectedItem()
@@ -127,6 +132,7 @@ class The_World(Common_func):
 
 
     def stop_player_effect_list(self):
+        self.ext.extention_command(f'tag @a[name=!{self.name}] add stop_time')  # 時間を止めていることを示すタグを自分以外のプレイヤーに付与。
         self.ext.extention_command(f'execute as @a[name=!{self.name},nbt={{OnGround:0b}}] at @s run attribute @s minecraft:generic.gravity base set 0')
         self.ext.extention_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.jump_strength base set 0')
         self.ext.extention_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.movement_speed base set 0')
@@ -137,6 +143,7 @@ class The_World(Common_func):
 
 
     def start_time(self):
+        self.ext.extention_command(f'tag @a[name=!{self.name}] remove stop_time')  # 時間を止めていることを示すタグを取り除く。
         self.ext.extention_command(f'playsound minecraft:block.bell.resonate master @a ~ ~ ~ 1 1 1')
         self.ext.extention_command(f'effect give @a minecraft:blindness 1 1 true')
 
@@ -165,15 +172,19 @@ class The_World(Common_func):
         # 最後に能力を発動させてから1分経過ごとに止められる時間が1秒増える。
         elapsed_time = int(time.time() - self.standard_time)
         if elapsed_time >= 60 and self.timer < 10:
+            self.ext.extention_command(f'tag {self.name} remove {self.timer}')  # 1.現在の停止時間を削除
             self.timer += 1
             self.standard_time = time.time()
+            self.ext.extention_command(f'tag {self.name} add {self.timer}')     # 2.更新された停止時間を記録
 
 
     def count_down(self):
         # 時間停止中のカウントダウン。
         elapsed_time = int(time.time() - self.standard_time)
         if elapsed_time >= 1 and self.timer > 0:    # 一秒経過・・・
+            self.ext.extention_command(f'tag {self.name} remove {self.timer}')  # 1.現在の停止時間を削除
             self.timer -= 1     # 止められる時間をカウントダウン
+            self.ext.extention_command(f'tag {self.name} add {self.timer}')     # 2.更新された停止時間を記録
             self.ext.extention_command(f'playsound minecraft:item.lodestone_compass.lock master @a ~ ~ ~ 1 2 1')
             self.standard_time = time.time()    # 基準時間を更新
 

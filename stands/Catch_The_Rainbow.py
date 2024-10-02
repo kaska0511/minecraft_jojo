@@ -100,6 +100,12 @@ class Catch_The_Rainbow(Common_func):
         if self.name == "1dummy" or self.get_logout():
             return
 
+        # 時間が停止したらこれ以降の処理は行わない。
+        if self.bool_have_tag('stop_time'):
+            self.left_click = False
+            self.right_click = False
+            return
+
         # standを走らせてもよいか？
         self.run_stand = self.can_I_run_stand()
 

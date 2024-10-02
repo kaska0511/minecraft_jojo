@@ -13,6 +13,13 @@ class Cream(Common_func):
         if self.name == "1dummy" or self.get_logout():
             return
 
+        # 時間停止中はこれ以降の処理は行わない。能力発動を検知しない。
+        if self.bool_have_tag('stop_time'):
+            self.left_click = False
+            self.right_click = False
+            if self.run_stand == False:
+                return
+
         item, tag = self.get_SelectedItem()
 
         if tag == "Cream" and self.right_click:
@@ -25,7 +32,7 @@ class Cream(Common_func):
                 self.effect_stand()
 
             # 自主能力解除
-            elif self.run_stand == True: # 能力発動中に左クリックしたら能力を解除する。
+            elif self.run_stand == True: # 能力発動中に右クリックしたら能力を解除する。
                 self.cancel_stand()
         self.right_click = False
 
@@ -34,16 +41,23 @@ class Cream(Common_func):
             # ダメージ処理
             self.damage_within_range()
 
+            # 能力発動中に時が止まったら、ダメージ処理と削り取る処理だけ実行して終わり。
+            if self.bool_have_tag('stop_time'):
+                self.ext.extention_command(f'execute as {self.name} at @s rotated 90 0 run fill ^-1 ^0 ^-1 ^1 ^2 ^1 air destroy')
+                self.left_click = False
+                self.right_click = False
+                return
+
+            # 削り取る処理
+            if keyboard.is_pressed('shift') and self.is_Minecraftwindow():    # 3*3*3に加えて足下3*3も削る
+                self.ext.extention_command(f'execute as {self.name} at @s rotated 90 0 run fill ^-1 ^-1 ^-1 ^1 ^2 ^1 air destroy')
+            else:   # 基本は3*3*3で削る
+                self.ext.extention_command(f'execute as {self.name} at @s rotated 90 0 run fill ^-1 ^0 ^-1 ^1 ^2 ^1 air destroy')
+
             if not self.is_Minecraftwindow():   # 上記のダメージ処理はそのままに、マイクラ以外を操作していたらこれ以下の処理は行わない。
                 self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0')   # サバイバル状態だけど浮いたままにする。
                 self.ext.extention_command(f'execute as {self.name} at @s run gamemode survival')           # 覗き見ている場合はダメージを受ける状態へ
                 return
-
-            # 削り取る処理
-            if keyboard.is_pressed('shift'):    # 3*3*3に加えて足下3*3も削る
-                self.ext.extention_command(f'execute as {self.name} at @s rotated 90 0 run fill ^-1 ^-1 ^-1 ^1 ^2 ^1 air destroy')
-            else:   # 基本は3*3*3で削る
-                self.ext.extention_command(f'execute as {self.name} at @s rotated 90 0 run fill ^-1 ^0 ^-1 ^1 ^2 ^1 air destroy')
 
             # 覗き見る処理（wasd,space,shiftの行動を検知）
             #self.new_pos = self.get_pos()
