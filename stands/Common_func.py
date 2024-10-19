@@ -15,6 +15,10 @@ if sys.platform == 'darwin':
         kCGNullWindowID
     )
 
+# ダブルクリックを検出するためのタイムアウト設定（ミリ秒）
+DOUBLE_CLICK_THRESHOLD_MAX = 300
+DOUBLE_CLICK_THRESHOLD_MIN = 100
+
 class Common_func:
     def __init__(self, name, ext, controller):
         self.name = name
@@ -25,6 +29,9 @@ class Common_func:
         self.right_click = False
         self.left_click = False
         self.press_key = ''
+        self.last_press_time = 0   # 最後のキー押下時刻
+        self.double_spacekey = False
+
         self.controller = controller
         #self.pass_point = int(self.controller.get_pass_point(self.ext.stand))   #現在のチェックポイント（初回は0）オーバーライドが必要かも。
         #self.point_pos = self.controller.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
@@ -72,12 +79,34 @@ class Common_func:
             print(f'スペシャルキー {str(key)} が押されました')
             self.press_key = str(key).replace('Key.', '')   # Key.space -> space
 
+        if self.press_key == 'space':
+            self.on_space_key_event()
+
     def release(self, key):
         print(f'{key} が離されました')
         self.press_key = ''
         """if key == keyboard.Key.esc:     # escが押された場合
             self.mouse_listener.stop()       # mouseのListenerを止める
             self.keyboard_listener.stop()    # keyboardのlistenerを止める"""
+
+    def on_space_key_event(self):
+        current_time = time.time() * 1000  # ミリ秒に変換
+
+        # 最後の押下からの経過時間を計算
+        elapsed_time = current_time - self.last_press_time
+
+        if DOUBLE_CLICK_THRESHOLD_MIN <= elapsed_time and elapsed_time <= DOUBLE_CLICK_THRESHOLD_MAX:
+            print("スペースキーダブルクリック検出！")
+            # マイクラウィンドウactive and カーソルが非表示。両方を満たしているか？
+            if self.os_name == 'win32' and self.is_Minecraftwindow()[0] and self.invisible_cursor():
+                self.double_spacekey = not self.double_spacekey # スペースキーの打鍵を反転
+            elif self.os_name == 'darwin' and self.is_Minecraftwindow()[0]:
+                self.double_spacekey = not self.double_spacekey # スペースキーの打鍵を反転
+        else:
+            print("スペースキークリック検出！")
+
+        # 現在の時刻を最後の押下時刻として記録
+        self.last_press_time = current_time
 
     def is_Minecraftwindow(self):
         # ユーザーが選択している画面がMinecraftか調べます。

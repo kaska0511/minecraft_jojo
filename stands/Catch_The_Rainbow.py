@@ -2,10 +2,6 @@ import re
 import time
 from stands.Common_func import Common_func
 
-# ダブルクリックを検出するためのタイムアウト設定（ミリ秒）
-DOUBLE_CLICK_THRESHOLD_MAX = 500
-DOUBLE_CLICK_THRESHOLD_MIN = 100
-
 class Catch_The_Rainbow(Common_func):
     def __init__(self, name, ext, controller) -> None:
         super().__init__(name, ext, controller)
@@ -13,29 +9,8 @@ class Catch_The_Rainbow(Common_func):
         self.ability_limit = 0
         self.mask = None
         self.kill_check = False
-        self.last_press_time = 0   # 最後のキー押下時刻
-        self.double_spacekey = False
         self.mask_air()
         self.summon_amedas()
-
-    def on_space_key_event(self, event):
-        current_time = time.time() * 1000  # ミリ秒に変換
-
-        # 最後の押下からの経過時間を計算
-        elapsed_time = current_time - self.last_press_time
-
-        if elapsed_time >= DOUBLE_CLICK_THRESHOLD_MIN and elapsed_time <= DOUBLE_CLICK_THRESHOLD_MAX:
-            #print("スペースキーダブルクリック検出！")
-            # マイクラウィンドウactive and カーソルが非表示。両方を満たしているか？
-            if self.is_Minecraftwindow()[0] and self.invisible_cursor():
-                self.double_spacekey = not self.double_spacekey # スペースキーの打鍵を反転
-
-        else:
-            pass
-            #print("スペースキーが押されました")
-
-        # 現在の時刻を最後の押下時刻として記録
-        self.last_press_time = current_time
 
     def mask_air(self):
         biome = ('deep_cold_ocean','cold_ocean','deep_ocean')
@@ -118,7 +93,10 @@ class Catch_The_Rainbow(Common_func):
 
         if self.run_stand and self.double_spacekey:
             # マイクラウィンドウactive and カーソルが非表示。両方を満たしているか？
-            active_minecraft = True if self.is_Minecraftwindow()[0] and self.invisible_cursor() else False
+            if self.os_name == 'win32':
+                active_minecraft = True if self.is_Minecraftwindow()[0] and self.invisible_cursor() else False
+            elif self.os_name == 'darwin':
+                active_minecraft = True if self.is_Minecraftwindow()[0] else False
 
             # 能力解除時に死ぬかどうかのフラグ。
             self.kill_check = True
