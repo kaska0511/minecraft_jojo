@@ -1,19 +1,30 @@
+import sys
 import re
 import json
 import time
-import keyboard
-import mouse
-import win32gui
+#import keyboard
+#import mouse
+from pynput import mouse, keyboard
+if sys.platform == 'win32':
+    import win32gui
+if sys.platform == 'darwin':
+    from AppKit import NSWorkspace
+    from Quartz import (
+        CGWindowListCopyWindowInfo,
+        kCGWindowListOptionOnScreenOnly,
+        kCGNullWindowID
+    )
 
 class Common_func:
     def __init__(self, name, ext, controller):
         self.name = name
         self.ext = ext
         self.uuid = self.get_uuid()
+        self.os_name = sys.platform
         self.run_stand = False
         self.right_click = False
         self.left_click = False
-
+        self.press_key = ''
         self.controller = controller
         #self.pass_point = int(self.controller.get_pass_point(self.ext.stand))   #現在のチェックポイント（初回は0）オーバーライドが必要かも。
         #self.point_pos = self.controller.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
@@ -23,49 +34,117 @@ class Common_func:
         self.bonus_time = None
         self.bonus_cnt = 0
 
-        # キーボードは何のキーを押したのか検知できる。いずれ使うことになると思うので記録として残す。
-        #keyboard.on_press(callback=key_detected)
+        # mouseのリスナー
+        mouse_listener = mouse.Listener(on_move=self.move,on_click=self.click,on_scroll=self.scroll)
+        mouse_listener.start()
 
-        # マウスは引数の指定の仕方で検知可能なクリックが変わる。
-        # 左右別々にするならbuttonsを分ける必要がある。
-        # typesはdownとdoubleが無難。→連打が検知可能な状態。
-        mouse.on_button(callback=self.left_mouse_detected,args=(),buttons=('left'),types=('down','double'))    # 引数を渡しながら実行する。
-        mouse.on_button(callback=self.right_mouse_detected,args=(),buttons=('right'),types=('down','double'))    # 引数を渡しながら実行する。
+        # keyboardのリスナー
+        keyboard_listener = keyboard.Listener(on_press=self.press,on_release=self.release)
+        keyboard_listener.start()
 
+    def move(self, x, y):
+        pass
+        #print(f'マウスポインターは {(x, y)} へ移動しました')
 
-    def key_detected(self, e):
-        print(f'キー{e.name}が押されました')
+    def click(self, x, y, button, pressed):
+        print(f'{button} が {'Pressed' if pressed else 'Released'} された座標： {(x, y)}')
+        if str(button) == 'Button.left' and self.is_Minecraftwindow()[0] == True:
+            if self.os_name == 'darwin' and self.check_mouse_coordinate(x, y):
+                self.left_click = True
+            elif self.os_name == 'win32' and self.invisible_cursor():
+                self.left_click = True
+        if str(button) == 'Button.right' and self.is_Minecraftwindow()[0] == True:
+            if self.os_name == 'darwin' and self.check_mouse_coordinate(x, y):
+                self.right_click = True
+            elif self.os_name == 'win32' and self.invisible_cursor():
+                self.right_click = True
 
-    def right_mouse_detected(self):
-        #print(f'右クリックを検知')
-        #print('Minecraft' in get_active_window_title())マウスカーソルが選択しているアプリケーションがMinecraftなら
-        if self.invisible_cursor() and self.is_Minecraftwindow()[0] == True:
-            self.right_click = True
-            # クリックしましたという記録を行う。
+    def scroll(self, x, y, dx, dy):
+        pass
+        #print(f'{'down' if dy < 0 else 'up'} スクロールされた座標： {(x, y)}')
 
-    def left_mouse_detected(self):
-        #print(f'左クリックを検知')
-        #print('Minecraft' in get_active_window_title())    マウスカーソルが選択しているアプリケーションがMinecraftなら
-        if self.invisible_cursor() and self.is_Minecraftwindow()[0] == True:
-            self.left_click = True
-            # クリックしましたという記録を行う。
+    def press(self, key):
+        try:
+            print(f'アルファベット {str(key.char)} が押されました')
+            self.press_key = str(key.char).lower()  # 小文字に変換しつつ
+        except AttributeError:
+            print(f'スペシャルキー {str(key)} が押されました')
+            self.press_key = str(key).replace('Key.', '')   # Key.space -> space
+
+    def release(self, key):
+        print(f'{key} が離されました')
+        self.press_key = ''
+        """if key == keyboard.Key.esc:     # escが押された場合
+            self.mouse_listener.stop()       # mouseのListenerを止める
+            self.keyboard_listener.stop()    # keyboardのlistenerを止める"""
 
     def is_Minecraftwindow(self):
         # ユーザーが選択している画面がMinecraftか調べます。
         # 第二返り値として画面名を返します。
-        # sample -> ['Minecraft 24w07a - Multiplayer (3rd-party Server)' | 'Minecraft Launcher' | any...]　
-        window = win32gui.GetForegroundWindow()
-        title = win32gui.GetWindowText(window)
+        # sample -> ['Minecraft 24w07a - Multiplayer (3rd-party Server)' | 'Minecraft Launcher' | any...]
+        title = ''
+        is_Minecraft = False
 
-        is_Minecraft = True if 'Minecraft' in title else False
+        if self.os_name == 'darwin':
+            curr_pid = NSWorkspace.sharedWorkspace().activeApplication()['NSApplicationProcessIdentifier']
+            options = kCGWindowListOptionOnScreenOnly
+            windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
+            
+            for window in windowList:
+                pid = window['kCGWindowOwnerPID']
+                if curr_pid == pid:
+                    title = window['kCGWindowOwnerName']
+                    break
+
+            is_Minecraft = True if 'java' in title else False   # macOS は java で判定する。
+
+        elif self.os_name == 'win32':
+            window = win32gui.GetForegroundWindow()
+            title = win32gui.GetWindowText(window)
+
+            is_Minecraft = True if 'Minecraft' in title else False
 
         return is_Minecraft, title
 
     def invisible_cursor(self):
+        is_cursor = False
+
         # 表示されていないならTrue
         #print(f'マウスカーソル：{cursor_info[0]}')   #マウスカーソル 0:非表示　1:表示
         cursor_info = win32gui.GetCursorInfo()  #マウスカーソル 0:非表示　1:表示
-        return True if cursor_info[0] == 0 else False
+        is_cursor = True if cursor_info[0] == 0 else False
+
+        return is_cursor
+
+    def check_mouse_coordinate(self, x, y):
+        # for macOS function
+        # いずれ画像処理でマウスカーソルが表示されているか検知する方法に変える。
+        # STEP1.フルスクリーン対応
+        is_valid = False
+        if x == 864.0 and y == 577.0:
+            is_valid = True
+            return is_valid
+
+        # STEP2.非フルスクリーン対応。基準座標を取得する処理
+        curr_pid = NSWorkspace.sharedWorkspace().activeApplication()['NSApplicationProcessIdentifier']
+        options = kCGWindowListOptionOnScreenOnly
+        windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
+
+        for window in windowList:
+            pid = window['kCGWindowOwnerPID']
+            if curr_pid == pid:
+                (geometry_width := window['kCGWindowBounds']['Width'])
+                (geometry_height := window['kCGWindowBounds']['Height'])
+                
+                (geometry_X := window['kCGWindowBounds']['X'])
+                (geometry_Y := window['kCGWindowBounds']['Y'])
+                break
+
+        # STEP3.基準座標と比較し、その座標と同じなら適切な場所でクリックされたと判断する。
+        if x == int(geometry_X+(geometry_width/2)) and y == int(geometry_Y+14+(geometry_height/2)):
+            is_valid = True
+        
+        return is_valid
 
     def get_uuid(self):
         result = self.ext.extention_command(f'data get entity {self.name} UUID')
