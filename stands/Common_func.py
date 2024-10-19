@@ -48,16 +48,17 @@ class Common_func:
 
     def click(self, x, y, button, pressed):
         print(f'{button} が {'Pressed' if pressed else 'Released'} された座標： {(x, y)}')
-        if str(button) == 'Button.left' and self.is_Minecraftwindow()[0] == True:
-            if self.os_name == 'darwin' and self.check_mouse_coordinate(x, y):
-                self.left_click = True
-            elif self.os_name == 'win32' and self.invisible_cursor():
-                self.left_click = True
-        if str(button) == 'Button.right' and self.is_Minecraftwindow()[0] == True:
-            if self.os_name == 'darwin' and self.check_mouse_coordinate(x, y):
-                self.right_click = True
-            elif self.os_name == 'win32' and self.invisible_cursor():
-                self.right_click = True
+        if not pressed:     # Releasedの時にクリックされたと判定する。
+            if str(button) == 'Button.left' and self.is_Minecraftwindow()[0] == True:
+                if self.os_name == 'darwin' and self.check_mouse_coordinate(x, y):
+                    self.left_click = True
+                elif self.os_name == 'win32' and self.invisible_cursor():
+                    self.left_click = True
+            if str(button) == 'Button.right' and self.is_Minecraftwindow()[0] == True:
+                if self.os_name == 'darwin' and self.check_mouse_coordinate(x, y):
+                    self.right_click = True
+                elif self.os_name == 'win32' and self.invisible_cursor():
+                    self.right_click = True
 
     def scroll(self, x, y, dx, dy):
         pass
