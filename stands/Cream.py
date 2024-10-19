@@ -1,6 +1,4 @@
-import re
 import time
-import keyboard
 from stands.Common_func import Common_func
 
 class Cream(Common_func):
@@ -49,7 +47,7 @@ class Cream(Common_func):
                 return
 
             # 削り取る処理
-            if keyboard.is_pressed('shift') and self.is_Minecraftwindow():    # 3*3*3に加えて足下3*3も削る
+            if self.press_key == 'shift' and self.is_Minecraftwindow():    # 3*3*3に加えて足下3*3も削る
                 self.ext.extention_command(f'execute as {self.name} at @s rotated 90 0 run fill ^-1 ^-1 ^-1 ^1 ^2 ^1 air destroy')
             else:   # 基本は3*3*3で削る
                 self.ext.extention_command(f'execute as {self.name} at @s rotated 90 0 run fill ^-1 ^0 ^-1 ^1 ^2 ^1 air destroy')
@@ -61,7 +59,7 @@ class Cream(Common_func):
 
             # 覗き見る処理（wasd,space,shiftの行動を検知）
             #self.new_pos = self.get_pos()
-            if keyboard.is_pressed('w') or keyboard.is_pressed('a') or keyboard.is_pressed('s') or keyboard.is_pressed('d') or keyboard.is_pressed('space') or keyboard.is_pressed('shift'):
+            if self.press_key == 'w' or self.press_key == 'a' or self.press_key == 's' or self.press_key == 'd' or self.press_key == 'space' or self.press_key == 'shift':
                 #self.old_pos = self.new_pos
                 self.effect_stand()
                 self.ext.extention_command(f'execute as {self.name} at @s run gamemode spectator')
