@@ -1,10 +1,9 @@
 import re
 import time
-import keyboard
 from stands.Common_func import Common_func
 
 # ダブルクリックを検出するためのタイムアウト設定（ミリ秒）
-DOUBLE_CLICK_THRESHOLD_MAX = 300
+DOUBLE_CLICK_THRESHOLD_MAX = 500
 DOUBLE_CLICK_THRESHOLD_MIN = 100
 
 class Catch_The_Rainbow(Common_func):
@@ -18,7 +17,6 @@ class Catch_The_Rainbow(Common_func):
         self.double_spacekey = False
         self.mask_air()
         self.summon_amedas()
-        keyboard.on_press_key('space', self.on_space_key_event)
 
     def on_space_key_event(self, event):
         current_time = time.time() * 1000  # ミリ秒に変換
@@ -130,11 +128,11 @@ class Catch_The_Rainbow(Common_func):
             self.ext.extention_command(f'attribute {self.name} minecraft:generic.fall_damage_multiplier base set 0')
 
             # 上昇と下降両方押している場合→その場で停止
-            if keyboard.is_pressed('space') and keyboard.is_pressed('shift'):
+            if self.press_key == 'space' and self.press_key == 'shift':
                 if active_minecraft:
                     self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0')
             else:   # 少なくとも両方を押していない。
-                if keyboard.is_pressed('space') and active_minecraft:   # 空中でspaceを押した and マイクラウィンドウactive and カーソルが非表示
+                if self.press_key == 'space' and active_minecraft:   # 空中でspaceを押した and マイクラウィンドウactive and カーソルが非表示
                     #print(f'space押した!{keyboard.is_pressed('space')}')
                     if self.ability_limit == 0: # どの高度でも雨が降る
                         self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set -0.01')
@@ -145,7 +143,7 @@ class Catch_The_Rainbow(Common_func):
                         if round(float(pos[1].rstrip('d'))) <= 128:  # pos[1] = '70.40762608459386d' →　70
                             self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set -0.01')
 
-                elif keyboard.is_pressed('shift') and active_minecraft:   # shiftを押した and マイクラウィンドウactive and カーソルが非表示
+                elif self.press_key == 'shift' and active_minecraft:   # shiftを押した and マイクラウィンドウactive and カーソルが非表示
                     #print(f'shift押した!{keyboard.is_pressed('shift')}')
                     self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0.01')
 
