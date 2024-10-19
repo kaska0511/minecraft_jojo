@@ -1,3 +1,5 @@
 .VSCodeCounter/
 images/
+test/
+rconserver.json
 *.pyc

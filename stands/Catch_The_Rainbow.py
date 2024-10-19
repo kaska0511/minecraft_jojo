@@ -1,11 +1,6 @@
 import re
 import time
-import keyboard
 from stands.Common_func import Common_func
-
-# ダブルクリックを検出するためのタイムアウト設定（ミリ秒）
-DOUBLE_CLICK_THRESHOLD_MAX = 300
-DOUBLE_CLICK_THRESHOLD_MIN = 100
 
 class Catch_The_Rainbow(Common_func):
     def __init__(self, name, ext, controller) -> None:
@@ -14,30 +9,8 @@ class Catch_The_Rainbow(Common_func):
         self.ability_limit = 0
         self.mask = None
         self.kill_check = False
-        self.last_press_time = 0   # 最後のキー押下時刻
-        self.double_spacekey = False
         self.mask_air()
         self.summon_amedas()
-        keyboard.on_press_key('space', self.on_space_key_event)
-
-    def on_space_key_event(self, event):
-        current_time = time.time() * 1000  # ミリ秒に変換
-
-        # 最後の押下からの経過時間を計算
-        elapsed_time = current_time - self.last_press_time
-
-        if elapsed_time >= DOUBLE_CLICK_THRESHOLD_MIN and elapsed_time <= DOUBLE_CLICK_THRESHOLD_MAX:
-            #print("スペースキーダブルクリック検出！")
-            # マイクラウィンドウactive and カーソルが非表示。両方を満たしているか？
-            if self.is_Minecraftwindow()[0] and self.invisible_cursor():
-                self.double_spacekey = not self.double_spacekey # スペースキーの打鍵を反転
-
-        else:
-            pass
-            #print("スペースキーが押されました")
-
-        # 現在の時刻を最後の押下時刻として記録
-        self.last_press_time = current_time
 
     def mask_air(self):
         biome = ('deep_cold_ocean','cold_ocean','deep_ocean')
@@ -120,7 +93,10 @@ class Catch_The_Rainbow(Common_func):
 
         if self.run_stand and self.double_spacekey:
             # マイクラウィンドウactive and カーソルが非表示。両方を満たしているか？
-            active_minecraft = True if self.is_Minecraftwindow()[0] and self.invisible_cursor() else False
+            if self.os_name == 'win32':
+                active_minecraft = True if self.is_Minecraftwindow()[0] and self.invisible_cursor() else False
+            elif self.os_name == 'darwin':
+                active_minecraft = True if self.is_Minecraftwindow()[0] else False
 
             # 能力解除時に死ぬかどうかのフラグ。
             self.kill_check = True
@@ -130,11 +106,11 @@ class Catch_The_Rainbow(Common_func):
             self.ext.extention_command(f'attribute {self.name} minecraft:generic.fall_damage_multiplier base set 0')
 
             # 上昇と下降両方押している場合→その場で停止
-            if keyboard.is_pressed('space') and keyboard.is_pressed('shift'):
+            if self.press_key == 'space' and self.press_key == 'shift':
                 if active_minecraft:
                     self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0')
             else:   # 少なくとも両方を押していない。
-                if keyboard.is_pressed('space') and active_minecraft:   # 空中でspaceを押した and マイクラウィンドウactive and カーソルが非表示
+                if self.press_key == 'space' and active_minecraft:   # 空中でspaceを押した and マイクラウィンドウactive and カーソルが非表示
                     #print(f'space押した!{keyboard.is_pressed('space')}')
                     if self.ability_limit == 0: # どの高度でも雨が降る
                         self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set -0.01')
@@ -145,7 +121,7 @@ class Catch_The_Rainbow(Common_func):
                         if round(float(pos[1].rstrip('d'))) <= 128:  # pos[1] = '70.40762608459386d' →　70
                             self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set -0.01')
 
-                elif keyboard.is_pressed('shift') and active_minecraft:   # shiftを押した and マイクラウィンドウactive and カーソルが非表示
+                elif self.press_key == 'shift' and active_minecraft:   # shiftを押した and マイクラウィンドウactive and カーソルが非表示
                     #print(f'shift押した!{keyboard.is_pressed('shift')}')
                     self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0.01')
 
