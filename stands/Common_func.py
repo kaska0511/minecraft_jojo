@@ -1,17 +1,75 @@
 import re
+import json
+import time
+import keyboard
+import mouse
+import win32gui
 
 class Common_func:
-    def __init__(self, name, mcr, uuid = None):
+    def __init__(self, name, ext, controller):
         self.name = name
-        self.mcr = mcr
-        self.uuid = uuid
+        self.ext = ext
+        self.uuid = self.get_uuid()
+        self.run_stand = False
+        self.right_click = False
+        self.left_click = False
 
+        self.controller = controller
+        #self.pass_point = int(self.controller.get_pass_point(self.ext.stand))   #現在のチェックポイント（初回は0）オーバーライドが必要かも。
+        #self.point_pos = self.controller.get_point_pos(f'checkpoint{self.pass_point+1}')   # 次の目的地。（初回はcheckpoint1）
+        #self.ticket_item = self.controller.get_ticket_info(self.pass_point)
+        self.ticket_target = False
+        self.bonus_start_time = time.time()
+        self.bonus_time = None
+        self.bonus_cnt = 0
+
+        # キーボードは何のキーを押したのか検知できる。いずれ使うことになると思うので記録として残す。
+        #keyboard.on_press(callback=key_detected)
+
+        # マウスは引数の指定の仕方で検知可能なクリックが変わる。
+        # 左右別々にするならbuttonsを分ける必要がある。
+        # typesはdownとdoubleが無難。→連打が検知可能な状態。
+        mouse.on_button(callback=self.left_mouse_detected,args=(),buttons=('left'),types=('down','double'))    # 引数を渡しながら実行する。
+        mouse.on_button(callback=self.right_mouse_detected,args=(),buttons=('right'),types=('down','double'))    # 引数を渡しながら実行する。
+
+
+    def key_detected(self, e):
+        print(f'キー{e.name}が押されました')
+
+    def right_mouse_detected(self):
+        #print(f'右クリックを検知')
+        #print('Minecraft' in get_active_window_title())マウスカーソルが選択しているアプリケーションがMinecraftなら
+        if self.invisible_cursor() and self.is_Minecraftwindow()[0] == True:
+            self.right_click = True
+            # クリックしましたという記録を行う。
+
+    def left_mouse_detected(self):
+        #print(f'左クリックを検知')
+        #print('Minecraft' in get_active_window_title())    マウスカーソルが選択しているアプリケーションがMinecraftなら
+        if self.invisible_cursor() and self.is_Minecraftwindow()[0] == True:
+            self.left_click = True
+            # クリックしましたという記録を行う。
+
+    def is_Minecraftwindow(self):
+        # ユーザーが選択している画面がMinecraftか調べます。
+        # 第二返り値として画面名を返します。
+        # sample -> ['Minecraft 24w07a - Multiplayer (3rd-party Server)' | 'Minecraft Launcher' | any...]　
+        window = win32gui.GetForegroundWindow()
+        title = win32gui.GetWindowText(window)
+
+        is_Minecraft = True if 'Minecraft' in title else False
+
+        return is_Minecraft, title
+
+    def invisible_cursor(self):
+        # 表示されていないならTrue
+        #print(f'マウスカーソル：{cursor_info[0]}')   #マウスカーソル 0:非表示　1:表示
+        cursor_info = win32gui.GetCursorInfo()  #マウスカーソル 0:非表示　1:表示
+        return True if cursor_info[0] == 0 else False
 
     def get_uuid(self):
-        result = self.mcr.command(f'data get entity {self.name} UUID')
-        uuid = re.sub('[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: ', '', result)
-        print(uuid)
-        return uuid
+        result = self.ext.extention_command(f'data get entity {self.name} UUID')
+        return result
 
     def get_login_user(self):
         '''
@@ -21,15 +79,12 @@ class Common_func:
             None
 
         Return
-            pos_dict : list
-                各プレイヤーの座標を辞書型で返します。
+            result : list[str]
+                各プレイヤーの名前のリスト。
                 ex -> ['KASKA0511', 'hoge', 'fuga']
         '''
-        rec = self.mcr.command('list')   
-        cut_rec = re.sub(r'There are [0-9]* of a max of [0-9]* players online: ', '', rec)
-        split_list = re.split(r', ', cut_rec)
-        
-        return split_list
+        result = self.ext.extention_command('data get entity @e[type=minecraft:armor_stand,limit=1,name=List] Tags')
+        return result
 
     def get_logout(self):
         '''
@@ -39,61 +94,88 @@ class Common_func:
             None
 
         Return
-            dimention : str
+            bool
                 自分がワールドに居ないならTrue、居るならFalseを返します。
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        result = self.mcr.command(f'data get entity @e[nbt={{UUID:{self.uuid}}},limit=1] UUID')
+        if self.uuid is not None:   # プログラム起動後にワールドに入っているならself.uuidは存在するはず。
+            # データが取得できなかった場合はNoneが返る。
+            substituent = 'data get entity @e[nbt={UUID:[I; uuid0, uuid1, uuid2, uuid3]},limit=1] UUID'
 
-        logout = True if result == 'No entity was found' else False
+            for i in range(len(self.uuid)):
+                substituent = substituent.replace(f'uuid{i}', self.uuid[i])
 
-        return logout
+            result = self.ext.extention_command(f'{substituent}')
+            return True if result is None else False
+            """
+            if result is None:  # データが取得できない = ワールドから居なくなった。
+                return True
+            else:               # データが取得できる。 = プレイヤーがワールドにいる。
+                return False"""
+        else:
+            return True
 
-    def bool_have_a_stand(self, tag):
+    def bool_have_a_stand(self, item="*", tag=None):
         '''
         自分がスタンド能力を表すアイテムを持っているかチェックします。
 
         Parameter
+            item : str
+                スタンドアイテムを表すitem名\n
+                アイテム名は省略可。
             tag : str
                 スタンドアイテムが持つtag名
 
         Return
-            None : bool
-                スタンドアイテムを持つならTrue、\n
-                持っていないならFalse
+            have_a_stand : bool
+                スタンドアイテムを持つならTrue、持っていないならFalse
         '''
+
+        have_a_stand = False
+
         # runの後は何でもよかった。メインは「nbt=」の部分で特定のタグ名を持つアイテムを所持しているならrunの後が実行される。
         # 持っていないなら空文字が返される。
-        standres = self.mcr.command('execute as @a[name=' + self.name + ',nbt={Inventory:[{tag:{Tags:"' + tag + '"}}]}] run data get entity ' + self.name + ' Pos')
-        return True if standres != '' else False
-        """
-        if standres != '':
-            return True
-        else:
-            return False
-        """
+
+        substituent = 'execute if items entity _NAME_ _SEARCH_ _ITEM_[minecraft:custom_data={tag: "_TAG_"}] run data get entity _NAME_ DeathTime'
+        SEARCH = ('container.*', 'player.cursor', 'weapon.*', 'armor.*')
+
+        if self.get_player_Death() == False:
+            substituent = substituent.replace(f'_NAME_', self.name)
+            substituent = substituent.replace(f'_TAG_', tag)
+            substituent = substituent.replace(f'_ITEM_', item)  # itemが省略されていればitemの種類に依存せず検索する。
+
+            for search in SEARCH:
+                final_substituent = substituent.replace(f'_SEARCH_', search)
+                have_a_stand = self.ext.extention_command(f'{final_substituent}')
+                if have_a_stand == '0s':
+                    have_a_stand = True
+                    break
+
+        return have_a_stand
+
 
     def get_player_Death(self):
         '''
         自分が死んでいるかを調べます。
+        現状の処理だとワールドにプレイヤーがいない(ログアウト)ことも判定として内包されています。
 
         Parameter
             None
 
         Return
-            deathbool : str
+            bool | None
                 自分が死亡しているならTrue、死亡していないならFalseを返します。\n
                 ワールドに自分が見つからないならNoneを返します。
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        result = self.mcr.command(f'data get entity {self.name} DeathTime')
+        result = self.ext.extention_command(f'data get entity {self.name} DeathTime')
 
-        split_data = re.split(r' ', result)
-        deathbool = None if split_data[0] == 'Found' or split_data[0] == 'No' else re.sub(reg, '', result).strip('"')    # uuidのエンティティがいないならNone
-        deathbool = False if deathbool == '0s' else True    # 死んでいるなら（=0s超える）True
+        if result is None:      # 情報が取得できなかった。 = ワールドに存在しない。
+            return None
+        elif result == '0s':    # ワールドに存在して　かつ　生存。
+            return False
+        elif result != '0s':    # ワールドに存在して　かつ　死亡。
+            return True
 
-        return deathbool
-
+    #! taskしか使わないし、特定mobのUUIDを取得してそれをどうこうするのが難しくなったため廃止予定
     def get_DeathTime(self,uuid):
         '''
         UUIDを持つエンティティが死亡しているかを調べます。
@@ -107,8 +189,8 @@ class Common_func:
                 エンティティが死亡しているならTrue、死亡していないならFalseを返します。\n
                 エンティティが見つからないならNoneを返します。
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        result = self.mcr.command(f'data get entity nbt={{UUID:{uuid}}}] DeathTime')
+        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
+        result = self.ext.extention_command(f'data get entity nbt={{UUID:{uuid}}}] DeathTime')
 
         split_data = re.split(r' ', result)
         deathbool = None if split_data[0] == 'Found' or split_data[0] == 'No' else re.sub(reg, '', result).strip('"')    # uuidのエンティティがいないならNone
@@ -116,70 +198,69 @@ class Common_func:
 
         return deathbool
 
+
+    def get_DeathLocation_info(self):
+        '''
+        自分に対して、最後に死亡した座標とディメンションを調べます。
+
+        Parameter
+            None
+
+        Return
+            pos : str
+                最後に死亡した座標を返します。\n
+                ワールドに自分が見つからないならNoneを返します。
+            dim : str
+                最後に死亡したディメンションを返します。\n
+                ワールドに自分が見つからないならNoneを返します。
+        '''
+        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
+        result_pos = self.ext.extention_command(f'data get entity {self.name} LastDeathLocation.pos')
+        result_dim = self.ext.extention_command(f'data get entity {self.name} LastDeathLocation.dimension')
+        split_data = re.split(r' ', result_pos) # プレイヤーがいるかどうかの検知なのでresult_dimに対しては不要
+        pos = None if split_data[0] == 'Found' or split_data[0] == 'No' else re.sub(reg, '', result_pos).strip('"')    # uuidのエンティティがいないならNone
+        dim = None if split_data[0] == 'Found' or split_data[0] == 'No' else re.sub(reg, '', result_dim).strip('"')    # uuidのエンティティがいないならNone
+        if pos:
+            pos = pos.strip('[I; ]').split(", ") # リストへ変換
+
+        return pos, dim
+
+
     def get_pos(self):
         '''
-        現在ワールドに参加しているプレイヤーの座標を取得します。
+        プレイヤーの座標を取得します。
 
         Parameter
             None
 
         Return
-            pos_dict : dict
-                各プレイヤーの座標を辞書型で返します。
-                ex -> {"KASKA0511":[0, 0, 0]}
+            res : list
         '''
-        pos_dict = {}
         # 参加者リストを取得
         #new_player = 'komine'
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        for new_player in self.get_login_user():
-            if new_player != '':
-                res = self.mcr.command(f'data get entity {new_player} Pos')        # 座標
+        res = self.ext.extention_command(f'data get entity {self.name} Pos')        # 座標
 
-                res = re.sub(reg, '', res).strip("[d]")
-                pos = re.split('d, ', res)
-                '''
-                now_locate = split_str[6] + split_str[7] + split_str[8]    # 現在地[5435.5d, 74.0d, -6207.5d]
-                edit_locate = now_locate.strip('[]').replace(',', '')
-                pos = re.split('d', edit_locate)    # pos = ['5435.5', '74.0', '-6207.5', '']
-                pos.remove("")                      # pos = ['5435.5', '74.0', '-6207.5']
-                '''
+        return res
 
-                pos_dict[new_player] = pos     #{"KASKA0511":[0, 0, 0]}
-
-        return pos_dict
-
-    def get_rot(self):
+    def get_rot(self, name=None):
         '''
-        現在ワールドに参加しているプレイヤーの視線座標を取得します。
+        自分自身の視線座標を取得します。
 
         Parameter
             None
 
         Return
-            rot_dict : dict
-                各プレイヤーの座標を辞書型で返します。
-                ex -> {"KASKA0511":[0, 0]}
+            rot : list
+                ex -> [0, 0]
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        rot_dict = {}
-        # 参加者リストを取得
-        for new_player in self.get_login_user():
-            if new_player != '':
-                res = self.mcr.command(f'data get entity {new_player} Rotation')   # 視線
-                """
-                split_str = re.split(r' ', rec)
-                now_view = split_str[6] + split_str[7]    # 現在地[5435.5f, -6207.5f]
-                edit_view = now_view.strip('[]').replace(',', '')
-                rot = re.split('f', edit_view)    # pos = ['5435.5', '-6207.5', '']
-                rot.remove("")                      # pos = ['5435.5', '-6207.5']
-                """
-                res = re.sub(reg, '', res).strip("[f]")
-                rot = re.split('f, ', res)
-
-                rot_dict[new_player] = rot     #{"KASKA0511":[0, 0]}
-
-        return rot_dict
+        if name is None:
+            name = self.name
+        res = self.ext.extention_command(f'data get entity {name} Rotation')   # 視線
+        if res is None:
+            return None
+        else:
+            rot = (res[0].rstrip("f"), res[1].rstrip("f"))
+            return rot
 
     def get_SelectedItemSlot(self):
         '''
@@ -191,8 +272,8 @@ class Common_func:
         Return
             slotno : int
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        Slotres = self.mcr.command(f'data get entity {self.name} SelectedItemSlot')
+        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
+        Slotres = self.ext.extention_command(f'data get entity {self.name} SelectedItemSlot')
 
         split = re.split(r' ', Slotres)
         slotno = None if split[0] == 'Found' or split[0] == 'No' else int(re.sub(reg, '', Slotres).strip('"'))
@@ -211,22 +292,11 @@ class Common_func:
                 アイテム名とそれ付与されているタグが返されます。
                 ex -> ("minecraft.clock", "DIO") or ("minecraft.clock", ["DIO","b"])
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        id_rec = self.mcr.command(f'data get entity {self.name} SelectedItem.id')
-        tag_rec = self.mcr.command(f'data get entity {self.name} SelectedItem.tag.Tags')     # tag取得はこれがいいかも
-        
-        split_id = re.split(r' ', id_rec)
-        split_tag = re.split(r' ', tag_rec)
 
-        id = None if split_id[0] == 'Found' or split_id[0] == 'No' else re.sub(reg, '', id_rec).strip('"')    # スロットが空など、もし見つからなかったらNoneで返す。
-        tag = None if split_tag[0] == 'Found' or split_tag[0] == 'No' else re.sub(reg, '', tag_rec).strip('"') # アイテムにTagが無いならNoneで返す。
-
-        '''
-        if split_id[0] == 'Found':
-            id = None
-        else:
-            id = re.sub(reg, '', id_rec)
-        '''
+        id = self.ext.extention_command(f'data get entity {self.name} SelectedItem.id')
+        tag = self.ext.extention_command(f'data get entity {self.name} SelectedItem.components."minecraft:custom_data".tag')
+        id = None if id is None else id     # スロットが空など、もし見つからなかったらNoneで返す。
+        tag = None if tag is None else tag # アイテムにTagが無いならNoneで返す。
 
         return id, tag
 
@@ -242,9 +312,8 @@ class Common_func:
             OnG : boolean
                 地面に接触しているならTrue、接触していないならFalseを返します。
         '''
-        OnG = self.mcr.command(f'data get entity {player} OnGround')
-        split_str = re.split(r' ', OnG)     # プレイヤーが浮いているかどうか
-        OnG = True if split_str[6] == '1b' else False
+        OnG = self.ext.extention_command(f'data get entity {player} OnGround')
+        OnG = True if OnG == '1b' else False
         return OnG
 
     def get_rider(self):
@@ -258,17 +327,12 @@ class Common_func:
         Return
             ride : str
                 エンティティ名とUUIDを返します。\n
-                ex -> "minecraft:horse", "[I; 1963727455, 2072923448, -1958974380, 527210886]"
+                ex -> "minecraft:horse", "[1963727455, 2072923448, -1958974380, 527210886]"
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        res_name = self.mcr.command(f'data get entity {self.name} RootVehicle.Entity.id')
-        
-        split_ride = re.split(r' ', res_name)
-        ride_name = None if split_ride[0] == 'Found' or split_ride[0] == 'No' else re.sub(reg, '', res_name).strip('"')
 
-        res_uuid = self.mcr.command(f'data get entity {self.name} RootVehicle.Entity.UUID')
-        split_ride = re.split(r' ', res_uuid)
-        ride_uuid = None if split_ride[0] == 'Found' or split_ride[0] == 'No' else re.sub(reg, '', res_uuid).strip('"')
+        ride_name = self.ext.extention_command(f'data get entity {self.name} RootVehicle.Entity.id')
+
+        ride_uuid = self.ext.extention_command(f'data get entity {self.name} RootVehicle.Entity.UUID')
 
         return ride_name, ride_uuid
 
@@ -288,13 +352,10 @@ class Common_func:
                 動きのベクトルを返します。\n
                 何にも乗っていない場合はNoneを返します。
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        res = self.mcr.command(f'data get entity {self.name} RootVehicle.Entity.Motion')
-        split_ride = re.split(r' ', res)
-        ride_motion = None if split_ride[0] == 'Found' or split_ride[0] == 'No' else re.sub(reg, '', res).strip('"')
-        if ride_motion is not None:
-            ride_motion_bool = True if ride_motion == "[0.0d, 0.0d, 0.0d]" else False
-            edit_result = ride_motion.strip('[d]')      # [d]のdはこの関数では必要。
+        res = self.ext.extention_command(f'data get entity {self.name} RootVehicle.Entity.Motion')
+        if res is not None:
+            ride_motion_bool = True if res == "[0.0d, 0.0d, 0.0d]" else False
+            edit_result = res.strip('[d]')      # [d]のdはこの関数では必要。
             result = re.split('d, ', edit_result)       # pos = ['0.0', '0.0', '0.0']
 
         else:
@@ -303,26 +364,33 @@ class Common_func:
 
         return ride_motion_bool, result
 
-    def get_dimension(self,uuid):
+    def get_dimension(self, tag):
         '''
         UUIDを持つエンティティのディメンションを調べます。
 
         Parameter
-            uuid : str
-                エンティティのUUID
+            tag : str
+                エンティティのtag
 
         Return
             dimention : str
                 エンティティが見つかったら次の中から値が返されます。"minecraft:overworld", "minecraft:the_nether", "minecraft:the_end"\n
                 エンティティが見つからないならNoneを返します。
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        result = self.mcr.command(f'data get entity @e[nbt={{UUID:{uuid}}},limit=1] Dimension')
-
-        split_data = re.split(r' ', result)
-        dimention = None if split_data[0] == 'Found' or split_data[0] == 'No' else re.sub(reg, '', result).strip('"')
-
-        return dimention
+        substituent = 'execute if entity @e[tag=_TAG_,limit=1,nbt={Dimension:"_DIMENTION_"}] run data get entity @e[name=_NAME_,limit=1] DeathTime'
+        substituent = substituent.replace(f'_TAG_', tag)    # Tusk_Target
+        substituent = substituent.replace(f'_NAME_', self.name)
+        dimentions = ("minecraft:overworld", "minecraft:the_nether", "minecraft:the_end")
+        #!! Dimensionはプレイヤーしか持たない。
+        #!! このため適当なmobを指定した場合、Foundにヒットするため停止はしないものの、あまり意味がない。
+        #!! また現在はタスクAct4しか使わない関数のため再検討の余地あり。
+        for dimention in dimentions:
+            substituent = substituent.replace(f'_DIMENTION_', dimention)
+            dimention = self.ext.extention_command(f'{substituent}')
+            if dimention == '0s':
+                return dimention
+        else:   # 対象が居ない、DimentionNBTを持たないプレイヤーではないなど
+            return None
 
     def get_Inventory(self):
         '''
@@ -335,8 +403,8 @@ class Common_func:
             inventory : str
                 インベントリ情報を文字列で返します。
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        inventory = self.mcr.command(f'data get entity {self.name} Inventory')
+        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
+        inventory = self.ext.extention_command(f'data get entity {self.name} Inventory')
 
         split_inve = re.split(r' ', inventory)
 
@@ -359,18 +427,15 @@ class Common_func:
         Return
             id : str
                 指定インベントリ番号のid
-            tag : str
+            tag : str | list[str]
                 そのアイテムが持つtag
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        id = self.mcr.command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].id')
-        tag = self.mcr.command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].tag.Tags')
 
-        split_id = re.split(r' ', id)
-        split_tag = re.split(r' ', tag)
-
-        id = None if split_id[0] == 'Found' or split_id[0] == 'No' else re.sub(reg, '', id).strip('"')    # スロットが空など、もし見つからなかったらNoneで返す。
-        tag = None if split_tag[0] == 'Found' or split_tag[0] == 'No' else re.sub(reg, '', tag).strip('"') # アイテムにTagが無いならNoneで返す。
+        id = self.ext.extention_command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].id')     # KASKA0511 has the following entity data: "minecraft:flint"
+        # tagに関して
+        #   単一    KASKA0511 has the following entity data: "Killer"
+        #   複数    KASKA0511 has the following entity data: ["DIO", "a"]
+        tag = self.ext.extention_command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].components."minecraft:custom_data".tag')
 
         return id, tag
 
@@ -385,10 +450,24 @@ class Common_func:
             health : float
                 プレイヤーの体力。
         '''
-        reg = '[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        result = self.mcr.command(f'data get entity {self.name} Health')
-
-        split_data = re.split(r' ', result)
-        health = None if split_data[0] == 'No' or split_data[0] == 'Found' else float(re.sub(reg, '', result).strip('f"'))
+        health = self.ext.extention_command(f'data get entity {self.name} Health')
+        health = float(health.rstrip('f'))
 
         return health
+
+    def bool_have_tag(self, tag):
+        '''
+        指定のtagを自分が付与されているか調べます。
+
+        Parameter
+            tag : str
+                付与されているか知りたいtag
+
+        Return
+            have : bool
+                真偽値
+        '''
+        deathtime = self.ext.extention_command(f'execute as {self.name} if entity @a[name={self.name},tag={tag},limit=1] run data get entity @s DeathTime')
+        have = True if deathtime == '0s' else False
+
+        return have
