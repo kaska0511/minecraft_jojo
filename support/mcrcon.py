@@ -50,8 +50,7 @@ class MCRcon(object):
         self.port = port
         self.tlsmode = tlsmode
         self.timeout = timeout
-        #if platform.system() != "Windows":
-        #    pass
+        #if platform.system() != "Windows": # macOSはこの記述を消さないと動作しない。
         #    signal.signal(signal.SIGALRM, timeout_handler)
 
     def __enter__(self):
