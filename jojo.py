@@ -29,7 +29,11 @@ def main(ext, is_server):
     ext.name = get_self_playername()
     
     if is_server:
+        # 実質ザ・ワールド用無敵時間無視データパック配置
+        add_cooldown_datapack()
+        # ゲームルール設定
         ext.extention_command("gamerule sendCommandFeedback false")
+        # 情報取得用チャンクを強制ロード設定
         ext.extention_command("forceload add 0 0")
         while not ext.extention_command(f'forceload query 0 0'): # ロードするまで待つ。
             pass

@@ -530,3 +530,29 @@ def new_joinner_func(ext, myname):
     ext.extention_command(f'execute unless entity @e[name=List,type=minecraft:armor_stand,tag={myname}] run tag @e[name=NEW,type=minecraft:armor_stand,limit=1] add {myname}')
     ext.extention_command(f'execute unless entity @e[name=List,type=minecraft:armor_stand,tag={myname}] run tag @e[name=List,type=minecraft:armor_stand,limit=1] add {myname}')
     
+def add_cooldown_datapack():
+    world_name = 'world'
+
+    str_file = 'server.properties'
+    with open(f'./{str_file}') as file:
+        content = [contsnts.strip() for contsnts in file.readlines()]
+        for i in content:
+            if None != re.search(r'^level-name=', i):
+                world_name = re.sub(r'^level-name=', '', i)
+
+    datapack_dir = f'./{world_name}/datapacks/'
+    cooldown_dir = 'off_cooldown/data/minecraft/tags/damage_type'
+    full_path = datapack_dir + cooldown_dir
+
+    try:
+        # ディレクトリを再帰的に作成
+        os.makedirs(full_path, exist_ok=True)
+        print(f"'{full_path}' directory structure created successfully.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+    pack_mcmeta = {"pack":{"pack_format":11,"description":"description"}}
+    bypasses_cooldown_json = {"values": ["minecraft:player_attack","minecraft:arrow","minecraft:trident","minecraft:thrown","minecraft:player_explosion","minecraft:indirect_magic","minecraft:mob_attack"]}
+
+    save_json(pack_mcmeta, datapack_dir + 'off_cooldown/pack.mcmeta')
+    save_json(bypasses_cooldown_json, full_path + '/bypasses_cooldown.json')
