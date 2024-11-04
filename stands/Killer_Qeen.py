@@ -173,8 +173,7 @@ class Killer_Qeen(Common_func):
     def set_bomb(self):
         discovery = False
         # 目線の高さに合わせてsummonする。
-        #! インタラクションではなく、できるだけ小さいカスタムネームの効いたアマスタへ変更。名前はKiller_Qeen（フィルターのため。）、tagはそのままsearcherで良さそう。
-        substituent = 'execute as _NAME_ at @s run summon minecraft:armor_stand ~ ~ ~ {CustomName:"Killer_Qeen",Attributes:[{Name:"generic.scale",Base:0.0625}],Tags:["searcher"],Silent:1,Invulnerable:1,Invisible:1,NoGravity:1}'
+        substituent = 'execute as _NAME_ at @s run summon minecraft:armor_stand ~ ~ ~ {CustomName:"Killer_Qeen",attributes:[{id:"minecraft:scale",base:0.0625d}],Tags:["searcher"],Silent:1,Invulnerable:1,Invisible:1,NoGravity:1}'
         substituent = substituent.replace(f'_NAME_', self.name)
         self.ext.extention_command(substituent)
 

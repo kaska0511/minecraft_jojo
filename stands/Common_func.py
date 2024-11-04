@@ -54,18 +54,18 @@ class Common_func:
         #print(f'マウスポインターは {(x, y)} へ移動しました')
 
     def click(self, x, y, button, pressed):
-        print(f'{button} が {'Pressed' if pressed else 'Released'} された座標： {(x, y)}')
-        if not pressed:     # Releasedの時にクリックされたと判定する。
-            if str(button) == 'Button.left' and self.is_Minecraftwindow()[0] == True:
-                if self.os_name == 'darwin' and self.check_mouse_coordinate(x, y):
-                    self.left_click = True
-                elif self.os_name == 'win32' and self.invisible_cursor():
-                    self.left_click = True
-            if str(button) == 'Button.right' and self.is_Minecraftwindow()[0] == True:
-                if self.os_name == 'darwin' and self.check_mouse_coordinate(x, y):
-                    self.right_click = True
-                elif self.os_name == 'win32' and self.invisible_cursor():
-                    self.right_click = True
+        #print(f'{button} が {'Pressed' if pressed else 'Released'} された座標： {(x, y)}') 
+
+        if str(button) == 'Button.left' and self.is_Minecraftwindow()[0] == True:
+            if self.os_name == 'darwin' and self.check_mouse_coordinate(x, y):
+                self.left_click = pressed      # Pressed : True, Released : False
+            elif self.os_name == 'win32' and self.invisible_cursor():
+                self.left_click = pressed      # Pressed : True, Released : False
+        if str(button) == 'Button.right' and self.is_Minecraftwindow()[0] == True:
+            if self.os_name == 'darwin' and self.check_mouse_coordinate(x, y):
+                self.right_click = pressed     # Pressed : True, Released : False
+            elif self.os_name == 'win32' and self.invisible_cursor():
+                self.right_click = pressed     # Pressed : True, Released : False
 
     def scroll(self, x, y, dx, dy):
         pass
@@ -73,17 +73,17 @@ class Common_func:
 
     def press(self, key):
         try:
-            print(f'アルファベット {str(key.char)} が押されました')
+            #print(f'アルファベット {str(key.char)} が押されました')
             self.press_key = str(key.char).lower()  # 小文字に変換しつつ
         except AttributeError:
-            print(f'スペシャルキー {str(key)} が押されました')
+            #print(f'スペシャルキー {str(key)} が押されました')
             self.press_key = str(key).replace('Key.', '')   # Key.space -> space
 
         if self.press_key == 'space':
             self.on_space_key_event()
 
     def release(self, key):
-        print(f'{key} が離されました')
+        #print(f'{key} が離されました')
         self.press_key = ''
         """if key == keyboard.Key.esc:     # escが押された場合
             self.mouse_listener.stop()       # mouseのListenerを止める
@@ -206,22 +206,16 @@ class Common_func:
             bool
                 自分がワールドに居ないならTrue、居るならFalseを返します。
         '''
-        if self.uuid is not None:   # プログラム起動後にワールドに入っているならself.uuidは存在するはず。
-            # データが取得できなかった場合はNoneが返る。
-            substituent = 'data get entity @e[nbt={UUID:[I; uuid0, uuid1, uuid2, uuid3]},limit=1] UUID'
 
-            for i in range(len(self.uuid)):
-                substituent = substituent.replace(f'uuid{i}', self.uuid[i])
-
-            result = self.ext.extention_command(f'{substituent}')
-            return True if result is None else False
-            """
-            if result is None:  # データが取得できない = ワールドから居なくなった。
-                return True
-            else:               # データが取得できる。 = プレイヤーがワールドにいる。
-                return False"""
-        else:
+        # データが取得できなかった場合はNoneが返る。
+        result = self.ext.extention_command(f'data get entity {self.name} DeathTime')
+        return True if result is None else False      # 情報が取得できなかった。 = ワールドに存在しない。
+        """
+        if result is None:  # データが取得できない = ワールドから居なくなった。
             return True
+        else:               # データが取得できる。 = プレイヤーがワールドにいる。
+            return False"""
+
 
     def bool_have_a_stand(self, item="*", tag=None):
         '''

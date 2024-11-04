@@ -117,6 +117,7 @@ class The_World(Common_func):
 
     def stop_time(self):
         self.ext.extention_command(f'execute as {self.name} at @s run tick freeze')
+        self.ext.extention_command(f'execute as {self.name} at @s run particle minecraft:flash ^ ^ ^ 0 0 0 0 0 force @a')  # 能力演出
         self.ext.extention_command(f'playsound minecraft:block.bell.resonate master @a ~ ~ ~ 1 1 1')
         self.ext.extention_command(f'playsound minecraft:entity.bee.death master @a ~ ~ ~ 4 0 1')
         self.ext.extention_command(f'effect give @a minecraft:blindness 1 1 true')  # 能力演出
@@ -225,12 +226,3 @@ class The_World(Common_func):
 
             if rot != "None":
                 self.ext.extention_command(f'execute as @e[tag={player},tag=The_World_fix,limit=1] at @s run tp {player} ~ ~ ~ {rot[0]} {rot[1]}')
-
-    def prepare_arrow_effect(self):
-        self.ext.extention_command('execute as @e[type=minecraft:arrow] at @s unless data entity @s Passengers if entity @a[name='+self.name+',distance=..2] run summon armor_stand ~ ~ ~ {Invisible:0b,Invulnerable:1b,NoGravity:1b,Tags:["DIOarrow"],Attributes:[{Name:"generic.scale", Base:0.0625}]}')
-        self.ext.extention_command(f'execute as @e[type=minecraft:armor_stand,tag=DIOarrow] at @s run ride @s mount @e[type=minecraft:arrow,sort=nearest,limit=1]')
-
-    def while_arrow_effect(self):
-        self.ext.extention_command(f'execute as @e[tag=DIOarrow] at @s run damage @e[distance=..2,type=!item,type=!armor_stand,type=!interaction,limit=1] 6 minecraft:arrow')
-        self.ext.extention_command(f'execute as @e[tag=DIOarrow] at @s if entity @e[distance=..2,type=!item,type=!armor_stand,type=!interaction,limit=1] run kill @s')
-        self.ext.extention_command('execute as @e[tag=DIOarrow] at @s if entity @e[type=minecraft:arrow,nbt={inGround:1b}] run kill @s')
