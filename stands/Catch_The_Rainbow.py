@@ -1,5 +1,3 @@
-import re
-import time
 from stands.Common_func import Common_func
 
 class Catch_The_Rainbow(Common_func):
@@ -9,52 +7,8 @@ class Catch_The_Rainbow(Common_func):
         self.ability_limit = 0
         self.mask = None
         self.kill_check = False
-        self.mask_air()
         self.summon_amedas()
 
-    def mask_air(self):
-        biome = ('deep_cold_ocean','cold_ocean','deep_ocean')
-
-        loop = True
-        while loop:
-            for ocean in biome:
-                #import pdb; pdb.set_trace()
-                res = self.ext.extention_command(f'locate biome minecraft:{ocean}')
-
-                # 調査座標をロードしておく。遠すぎると読み込むことができないため。
-                self.ext.extention_command(f'forceload add {res[0]} {res[2]} {res[0]} {res[2]}')
-                while not self.ext.extention_command(f'forceload query {res[0]} {res[2]}'): # ロードするまで待つ。
-                    pass
-
-                result = self.ext.extention_command(f'execute if block {res[0]} 62 {res[2]} minecraft:water run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')   # 見つかった座標の場所が水か？
-                air_flag = False
-                if result == '0s':    # 起点が水なら。（起点が水だと海の場合が多く、上空までブロックが無いことが多い。）
-                    air_flag = True
-                else:
-                    self.ext.extention_command(f'forceload remove {res[0]} {res[2]} {res[0]} {res[2]}')
-                    continue    # バイオームを変える。
-
-                if air_flag:
-                    if self.check_mask(res):    # マスク座標が決定したらforを終了。
-                        loop = False
-                        self.mask = res
-                        return
-                    else:
-                        loop = True
-
-    def check_mask(self, res):
-        max = 73
-        for i in range(63, max):
-            result = self.ext.extention_command(f'execute if block {res[0]} {i} {res[2]} minecraft:air run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')   # 水源から上方5マスが空気か調べる。本当は最高高度320マスまで調べるべき。
-            if result == '0s':
-                if i == max-1:     # チェックが最後まで出来たらマスク用の場所として登録する。
-                    #! 修正は不要！ 初めmask用の座標はforceloadしないようにしていたが、チャンクを超えると読み込まなくなった。
-                    # このためmask用座標は常に読み込ませる必要がある。
-                    #self.ext.extention_command(f'forceload remove {res[0]} {res[2]}')
-                    return True
-            else:   # 何らかのブロックに引っかかった。
-                self.ext.extention_command(f'forceload remove {res[0]} {res[2]} {res[0]} {res[2]}')
-                return False
 
     def summon_amedas(self):
         """
@@ -67,7 +21,7 @@ class Catch_The_Rainbow(Common_func):
         self.ext.extention_command(f'execute as {self.name} at @s positioned {res[0]} 317 {res[2]} rotated 0 0 run fill ^ ^1 ^ ^ ^2 ^ minecraft:air destroy')
         self.ext.extention_command(f'execute unless entity @e[name=Catch_The_Rainbow,tag=Amedas,limit=1] run summon minecraft:snow_golem {res[0]} 318 {res[2]} {{CustomName:Catch_The_Rainbow,NoAI:1,Silent:1,NoGravity:1,Tags:["Amedas"]}}')
         self.ext.extention_command(f'effect give @e[tag=Amedas,limit=1] minecraft:health_boost infinite 120 false')  # 体力最大値をウォーデン並みにする。
-        self.ext.extention_command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 120 true')     # 最大値を変更したら上限まで回復させる必要がある。（即時回復）
+        self.ext.extention_command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 124 false')     # 最大値を変更したら上限まで回復させる必要がある。（即時回復）
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
@@ -309,7 +263,7 @@ class Catch_The_Rainbow(Common_func):
         res = self.ext.extention_command(f'data get entity @e[tag=Amedas,limit=1] HurtTime')
 
         # 体力を最大値まで回復させる。（即時回復）
-        self.ext.extention_command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 120 true')
+        self.ext.extention_command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 124 false')
 
         # エンティティが見つからない場合はNoneつまり再召喚が必要
         if res is None:
@@ -326,27 +280,23 @@ class Catch_The_Rainbow(Common_func):
         何かあればTrue、何もなければFalse
         """
         shield_flag = True
-        
-        pos = self.ext.extention_command(f'data get entity {self.name} Pos')
-        if pos is None: # スタンド使いが居ない。処理終了。
-            return False
 
-        now_y = round(float(pos[1].rstrip('d')))    # pos[1] = '70.40762608459386d' →　70
+        # 新たな実行位置のy座標：葉以外で衝突判定のあるブロックのみに絞り、アマスタを召喚。
+        self.ext.extention_command('execute as '+ self.name +' positioned over motion_blocking_no_leaves run summon armor_stand ~ ~ ~ {attributes:[{id:"minecraft:scale",base:0.0625d}],Tags:["Shield"],Silent:1,Invulnerable:1,Invisible:0,NoGravity:1}')
+        # 召喚したアマスタの視線をプレイヤー自身に向ける。
+        self.ext.extention_command(f'execute as @e[tag=Shield,limit=1] at @s run tp @s ~ ~ ~ facing entity {self.name}')
 
-        if now_y >= 63: # 海抜（＝高度63ブロック以上）より高い場所にいるなら
-            #import pdb; pdb.set_trace()
-            res0 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ {now_y+1} ~ ~ 319 ~ {self.mask[0]} ~ {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')
-            if res0 == '0s':
-                shield_flag = False
+        # アマスタが重なっているか？
+        result = self.ext.extention_command(f'execute as {self.name} at @s if entity @n[tag=Shield,limit=1,distance=..1] run data get entity {self.name} DeathTime')
+        shield_flag = False if result == '0s' else True
+        if shield_flag == False:
+            return shield_flag
+        # アマスタが上を向いているか？＝プレイヤーの足元より下にいるならアマスタは上を向く。＝遮蔽物無し。
+        # x_rotation : 値の範囲は-90（直上）～0（水平方向）～90（直下）
+        result = self.ext.extention_command(f'execute as {self.name} at @s if entity @n[tag=Shield,limit=1,x_rotation=-90..0] run data get entity {self.name} DeathTime')
+        shield_flag = False if result == '0s' else True
 
-        else:           # 海抜以下にいるなら
-            now_y_add = now_y + 257
-            res0 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ {now_y+1} ~ ~ 62 ~ {self.mask[0]} {now_y_add} {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')    # 海抜以下を検索
-            res1 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ 63 ~ ~ 319 ~ {self.mask[0]} 63 {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')       # 海抜超過の場所を検索
-
-            if res0 == '0s' and res1 == '0s':
-                shield_flag = False
-
+        # この時点までTrueであれば、プレイヤーと重なってもいないし、上にいることが確定。＝遮蔽物あり。
         return shield_flag
 
     def effect_Resistance(self):
