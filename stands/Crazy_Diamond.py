@@ -36,6 +36,9 @@ class Crazy_Diamond(Common_func):
                 self.clear_minus_effect()
                 # 回復を終えたら対象としてのtagを削除
                 self.ext.extention_command('tag @e[] remove CDheal')
+                # 画面表示
+                self.ext.extention_command(f'title {self.name} clear')
+                self.ext.extention_command(f'title {self.name} actionbar "クレイジー・ダイヤモンド！"')
 
                 if self.distance_check():  # 右クリックかつコピー元の座標付近にいるなら
                     # エンティティではなくブロックを見て右クリックしていたら
@@ -56,9 +59,10 @@ class Crazy_Diamond(Common_func):
                     self.ext.extention_command(f'kill @e[tag=CDsearcher]')
 
                     if reverse_blocks:
-                        print('reversed')
-                        self.ext.extention_command('execute as @e[tag=CDcp] at @s rotated 270 0 run clone from minecraft:the_nether 0 128 0 15 143 15 ~ ~ ~ masked move')
-                        self.ext.extention_command('kill @e[tag=CDcp]')
+                        # 繰り返し同じ鉱石やチェストを手に入れることが出来るが、現状仕様とする。強すぎたら対策する。
+                        self.ext.extention_command(f'title {self.name} clear')
+                        self.ext.extention_command(f'title {self.name} actionbar "地形を修復した"')
+                        self.ext.extention_command('execute as @e[tag=CDcp] at @s rotated 270 0 run clone from minecraft:the_nether 0 128 0 15 143 15 ~ ~ ~ masked normal')
 
                 else:   # 右クリックした時コピー元座標付近に居ないなら
                     # 自分を中心に半径８ブロックをネザー天井裏へコピー
@@ -68,6 +72,8 @@ class Crazy_Diamond(Common_func):
                     # コピー起点の防具立てを置いておく。
                     self.ext.extention_command('kill @e[tag=CDcp]')
                     self.ext.extention_command('execute as ' +self.name+ ' at @s rotated 270 0 run summon minecraft:armor_stand ^7 ^-8 ^-8 {attributes:[{id:"minecraft:scale",base:0.0625d}],Tags:["CDcp"],Silent:1,Invulnerable:1,Invisible:1,NoGravity:1}')
+                    self.ext.extention_command(f'title {self.name} clear')
+                    self.ext.extention_command(f'title {self.name} actionbar "地形を覚えた"')
             self.run_stand = False
             self.right_click = False
 
