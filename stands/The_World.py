@@ -116,6 +116,9 @@ class The_World(Common_func):
         self.ext.extention_command(f'effect clear {self.name} minecraft:strength')
 
     def stop_time(self):
+        self.ext.extention_command('title @a times 0 0.8s 0.2s')
+        self.ext.extention_command('title @a subtitle "ザ・ワールド！！"')
+        self.ext.extention_command('title @a title "世界！！"')
         self.ext.extention_command(f'execute as {self.name} at @s run tick freeze')
         self.ext.extention_command(f'execute as {self.name} at @s run particle minecraft:flash ^ ^ ^ 0 0 0 0 0 force @a')  # 能力演出
         self.ext.extention_command(f'playsound minecraft:block.bell.resonate master @a ~ ~ ~ 1 1 1')
@@ -144,6 +147,9 @@ class The_World(Common_func):
 
 
     def start_time(self):
+        self.ext.extention_command(f'title @a clear')
+        self.ext.extention_command(f'title @a title "時は動き出す..."')
+        self.ext.extention_command(f'title @a reset')
         self.ext.extention_command(f'tag @a[name=!{self.name}] remove stop_time')  # 時間を止めていることを示すタグを取り除く。
         self.ext.extention_command(f'playsound minecraft:block.bell.resonate master @a ~ ~ ~ 1 1 1')
         self.ext.extention_command(f'effect give @a minecraft:blindness 1 1 true')
@@ -187,6 +193,9 @@ class The_World(Common_func):
             self.timer -= 1     # 止められる時間をカウントダウン
             self.ext.extention_command(f'tag {self.name} add {self.timer}')     # 2.更新された停止時間を記録
             self.ext.extention_command(f'playsound minecraft:item.lodestone_compass.lock master @a ~ ~ ~ 1 2 1')
+            if self.timer != 0:
+                self.ext.extention_command(f'title @a clear')
+                self.ext.extention_command(f'title @a actionbar "{self.timer}秒前..."')
             self.standard_time = time.time()    # 基準時間を更新
 
             if self.timer == 0: # 止められる時間を消費しきったら「時は動き出す・・・」
