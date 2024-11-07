@@ -11,4 +11,4 @@ class Little_Feat(Common_func):
         if self.name == "1dummy" or self.get_logout():
             return
 
-        item, tag = self.get_SelectedItem()
+        item, tag = self.get_OffHandItem()

@@ -18,7 +18,7 @@ class Cream(Common_func):
             if self.run_stand == False:
                 return
 
-        item, tag = self.get_SelectedItem()
+        item, tag = self.get_OffHandItem()
 
         if tag == "Cream" and self.right_click:
             # 能力発動検知と初期設定  

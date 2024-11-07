@@ -1,9 +1,6 @@
 import sys
 import re
-import json
 import time
-#import keyboard
-#import mouse
 from pynput import mouse, keyboard
 if sys.platform == 'win32':
     import win32gui
@@ -399,7 +396,27 @@ class Common_func:
         id = self.ext.extention_command(f'data get entity {self.name} SelectedItem.id')
         tag = self.ext.extention_command(f'data get entity {self.name} SelectedItem.components."minecraft:custom_data".tag')
         id = None if id is None else id     # スロットが空など、もし見つからなかったらNoneで返す。
-        tag = None if tag is None else tag # アイテムにTagが無いならNoneで返す。
+        tag = None if tag is None else tag  # アイテムにTagが無いならNoneで返す。
+
+        return id, tag
+
+    def get_OffHandItem(self):
+        '''
+        自分がオフハンド（非利き手）に持っているアイテムidとtagを取得します。
+
+                Parameter
+            None
+
+        Return
+            rot_dict : tuple
+                アイテム名とそれ付与されているタグが返されます。
+                ex -> ("minecraft.clock", "DIO") or ("minecraft.clock", ["DIO","b"])
+        '''
+
+        id = self.ext.extention_command('data get entity '+ self.name +' Inventory[{Slot:-106b}].id')
+        tag = self.ext.extention_command('data get entity '+ self.name +' Inventory[{Slot:-106b}]."minecraft:custom_data".tag')
+        id = None if id is None else id     # スロットが空など、もし見つからなかったらNoneで返す。
+        tag = None if tag is None else tag  # アイテムにTagが無いならNoneで返す。
 
         return id, tag
 

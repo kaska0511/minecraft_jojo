@@ -18,7 +18,7 @@ class Twentieth_Century_Boy(Common_func):
             self.right_click = False
             return
 
-        item, tag = self.get_SelectedItem()
+        item, tag = self.get_OffHandItem()
 
         if tag == "Twentieth_Century_Boy":
             if self.right_click and self.run_stand == False:

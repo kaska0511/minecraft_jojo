@@ -24,7 +24,7 @@ class Killer_Qeen(Common_func):
             self.right_click = False
             return
 
-        item, tag = self.get_SelectedItem()
+        item, tag = self.get_OffHandItem()
         if tag == "Killer_Qeen":
 
             if item == "minecraft:gunpowder" and self.right_click:

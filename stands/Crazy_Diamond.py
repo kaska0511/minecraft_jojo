@@ -15,7 +15,7 @@ class Crazy_Diamond(Common_func):
             self.right_click = False
             return
 
-        item, tag = self.get_SelectedItem()
+        item, tag = self.get_OffHandItem()
 
         if tag == "Crazy_Diamond":
             # スタンド発現時は破壊速度を上昇

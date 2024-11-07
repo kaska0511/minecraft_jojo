@@ -24,7 +24,7 @@ class TuskAct4(Common_func):
         tag = None
         ride_motion = False
         if not self.run_stand:
-            item, tag = self.get_SelectedItem()
+            item, tag = self.get_OffHandItem()
             ride_name, ride_uuid = self.get_rider()
             #ride_motion_b, vec = self.get_rider_motion()
             if ride_uuid is not None:
