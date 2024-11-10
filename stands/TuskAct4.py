@@ -116,8 +116,8 @@ class TuskAct4(Common_func):
 
     def search_entity(self):
         found_target = False
-        for i in range(1, 60, 3):
-            y = round(9/60*i + 1)
+        for i in range(1, 20, 3):
+            y = round(9/20*i + 1)
             found_player = self.ext.extention_command(f'execute as {self.name} at @s positioned ^ ^ ^{i} if entity @e[name=!{self.name},type=player,nbt=!{{UUID:{self.ride_uuid}}},distance=..{y},sort=nearest,limit=1] run data get entity @e[name={self.name},type=player,limit=1] DeathTime')
             found_mob = self.ext.extention_command(f'execute as {self.name} at @s positioned ^ ^ ^{i} if entity @e[name=!{self.name},type=!item,type=!armor_stand,nbt=!{{UUID:{self.ride_uuid}}},distance=..{y},sort=nearest,limit=1] run data get entity @e[name={self.name},type=player,limit=1] DeathTime')
 
