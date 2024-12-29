@@ -103,29 +103,33 @@ def main(ext, is_server):
             stand = None
 
         if stand is None:   #インスタンスが入ると再度インスタンス化されることは無くなる。
-            if my_standname == 'The_World':
-                stand = The_World(name=ext.name, ext=ext, controller=controller)
+            match my_standname:
+                case 'The_World':
+                    stand = The_World(name=ext.name, ext=ext, controller=controller)
 
-            elif my_standname == 'TuskAct4':
-                stand = TuskAct4(name=ext.name, ext=ext, controller=controller)
+                case 'TuskAct4':
+                    stand = TuskAct4(name=ext.name, ext=ext, controller=controller)
 
-            elif my_standname == 'Killer_Qeen':
-                stand = Killer_Qeen(name=ext.name, ext=ext, controller=controller)
+                case 'Killer_Qeen':
+                    stand = Killer_Qeen(name=ext.name, ext=ext, controller=controller)
 
-            elif my_standname == 'Catch_The_Rainbow':
-                stand = Catch_The_Rainbow(name=ext.name, ext=ext, controller=controller)
+                case 'Catch_The_Rainbow':
+                    stand = Catch_The_Rainbow(name=ext.name, ext=ext, controller=controller)
 
-            elif my_standname == 'Twentieth_Century_Boy':
-                stand = Twentieth_Century_Boy(name=ext.name, ext=ext, controller=controller)
+                case 'Twentieth_Century_Boy':
+                    stand = Twentieth_Century_Boy(name=ext.name, ext=ext, controller=controller)
 
-            elif my_standname == 'Little_Feat':
-                stand = Little_Feat(name=ext.name, ext=ext, controller=controller)
+                case 'Little_Feat':
+                    stand = Little_Feat(name=ext.name, ext=ext, controller=controller)
 
-            elif my_standname == 'Cream':
-                stand = Cream(name=ext.name, ext=ext, controller=controller)
+                case 'Cream':
+                    stand = Cream(name=ext.name, ext=ext, controller=controller)
 
-            elif my_standname == 'Crazy_Diamond':
-                stand = Crazy_Diamond(name=ext.name, ext=ext, controller=controller)
+                case 'Crazy_Diamond':
+                    stand = Crazy_Diamond(name=ext.name, ext=ext, controller=controller)
+                
+                case _:
+                        print('全てにマッチ')
 
         # プレイヤーが入ってきたときuuidを設定しなくてはならない。
         set_uuid(stand)

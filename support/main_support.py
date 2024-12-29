@@ -424,44 +424,47 @@ def death_or_logout_check(stand):
 def stand_lost_check(ext, stand, my_standname):
     item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート", "クリーム", "クレイジー・ダイヤモンド")
 
-    if my_standname == 'The_World':
-        if not stand.bool_have_a_stand(tag='The_World') and stand.name != '1dummy':
-            ext.extention_command('give ' + stand.name + ' clock[minecraft:custom_name="' + item_name_list[0] + '",minecraft:custom_data={tag:"The_World"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+    match my_standname:
+        case 'The_World':
+            if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
+                ext.extention_command('give ' + stand.name + ' clock[minecraft:custom_name="' + item_name_list[0] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
-    elif my_standname == 'TuskAct4':
-        if not stand.bool_have_a_stand(tag='TuskAct4') and stand.name != '1dummy':
-            ext.extention_command('give ' + stand.name + ' saddle')
-            ext.extention_command('give ' + stand.name + ' lead')
-            ext.extention_command('give ' + stand.name + ' bone[minecraft:custom_name="' + item_name_list[1] + '",minecraft:custom_data={tag:"TuskAct4"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+        case 'TuskAct4':
+            if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
+                ext.extention_command('give ' + stand.name + ' saddle')
+                ext.extention_command('give ' + stand.name + ' lead')
+                ext.extention_command('give ' + stand.name + ' bone[minecraft:custom_name="' + item_name_list[1] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
-    elif my_standname == 'Killer_Qeen':
-        if not stand.bool_have_a_stand(tag='Killer_Qeen') and stand.name != '1dummy':   # 全て失わないと再取得できないので注意
-            ext.extention_command('give ' + stand.name + ' gunpowder[minecraft:custom_name="' + item_name_list[2][0] + '",minecraft:custom_data={tag:"Killer_Qeen"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
-            ext.extention_command('give ' + stand.name + ' flint[minecraft:custom_name="' + item_name_list[2][1] + '",minecraft:custom_data={tag:"Killer_Qeen"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
-            ext.extention_command('give ' + stand.name + ' fire_charge[minecraft:custom_name="' + item_name_list[2][2] + '",minecraft:custom_data={tag:"Killer_Qeen"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+        case 'Killer_Qeen':
+            if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':   # 全て失わないと再取得できないので注意
+                ext.extention_command('give ' + stand.name + ' gunpowder[minecraft:custom_name="' + item_name_list[2][0] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+                ext.extention_command('give ' + stand.name + ' flint[minecraft:custom_name="' + item_name_list[2][1] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+                ext.extention_command('give ' + stand.name + ' fire_charge[minecraft:custom_name="' + item_name_list[2][2] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
-    elif my_standname == 'Catch_The_Rainbow':
-        if not stand.bool_have_a_stand(tag='Catch_The_Rainbow') and stand.name != '1dummy':
-            ext.extention_command('give ' + stand.name + ' skeleton_skull[minecraft:custom_name="' + item_name_list[3] + '",minecraft:custom_data={tag:"Catch_The_Rainbow"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+        case 'Catch_The_Rainbow':
+            if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
+                ext.extention_command('give ' + stand.name + ' skeleton_skull[minecraft:custom_name="' + item_name_list[3] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
-    elif my_standname == 'Twentieth_Century_Boy':
-        if not stand.bool_have_a_stand(tag='Twentieth_Century_Boy') and stand.name != '1dummy':
-            ext.extention_command('give ' + stand.name + ' snowball[minecraft:custom_name="' + item_name_list[4] + '",minecraft:custom_data={tag:"Twentieth_Century_Boy"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
-            #stand.create_ticket_compass()
-            #stand.create_target_compass()
+        case 'Twentieth_Century_Boy':
+            if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
+                ext.extention_command('give ' + stand.name + ' snowball[minecraft:custom_name="' + item_name_list[4] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+                #stand.create_ticket_compass()
+                #stand.create_target_compass()
 
-    elif my_standname == 'Little_Feat':
-        if not stand.bool_have_a_stand(tag='Little_Feat') and stand.name != '1dummy':
-            ext.extention_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[5] + '",minecraft:custom_data={tag:"Little_Feat"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+        case 'Little_Feat':
+            if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
+                ext.extention_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[5] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
-    elif my_standname == 'Cream':
-        if not stand.bool_have_a_stand(tag='Cream') and stand.name != '1dummy':
-            ext.extention_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[6] + '",minecraft:custom_data={tag:"Cream"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+        case 'Cream':
+            if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
+                ext.extention_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[6] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
-    elif my_standname == 'Crazy_Diamond':
-        if not stand.bool_have_a_stand(tag='Crazy_Diamond') and stand.name != '1dummy':
-            ext.extention_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[7] + '",minecraft:custom_data={tag:"Crazy_Diamond"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+        case 'Crazy_Diamond':
+            if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
+                ext.extention_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[7] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
+        case _:
+                pass
 
 def update_all_ticketcompass(stand):
     stand.create_ticket_compass()

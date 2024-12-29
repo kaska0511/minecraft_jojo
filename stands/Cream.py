@@ -59,7 +59,7 @@ class Cream(Common_func):
 
             # 覗き見る処理（wasd,space,shiftの行動を検知）
             #self.new_pos = self.get_pos()
-            if self.press_key == 'w' or self.press_key == 'a' or self.press_key == 's' or self.press_key == 'd' or self.press_key == 'space' or self.press_key == 'shift':
+            if any(self.press_key == 'w', self.press_key == 'a', self.press_key == 's', self.press_key == 'd', self.press_key == 'space', self.press_key == 'shift'):
                 #self.old_pos = self.new_pos
                 self.effect_stand()
                 self.ext.extention_command(f'execute as {self.name} at @s run gamemode spectator')
