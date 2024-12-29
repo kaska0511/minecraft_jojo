@@ -195,12 +195,11 @@ class Killer_Qeen(Common_func):
 
 
     def judge_block(self, tag):
-        # 参考：ttps://minecraft.fandom.com/ja/wiki/%E3%82%BF%E3%82%B0#wither_immune
-        exclude_list = ('#minecraft:air','#minecraft:water','#minecraft:fire','#minecraft:lava','#minecraft:wither_immune') # 当てはまりやすいもの順に並べること。
+        exclude_list = ('air','water','fire','soul_fire','lava','nether_portal','end_portal','barrier') # 当てはまりやすいもの順に並べること。
         collision_flag = False
         for block in exclude_list:
             # run 以降は if block が当てはまった場合に実行される。
-            res = self.ext.extention_command(f'execute as @e[name=Killer_Qeen,tag={tag},limit=1] at @s if block ~ ~ ~ {block} run data get entity @e[name=Killer_Qeen,tag={tag},limit=1] DeathTime')  # アマスタに重なるブロックが除外ブロックか検知
+            res = self.ext.extention_command(f'execute as @e[name=Killer_Qeen,tag={tag},limit=1] at @s if block ~ ~ ~ minecraft:{block} run data get entity @e[name=Killer_Qeen,tag={tag},limit=1] DeathTime')  # アマスタに重なるブロックが除外ブロックか検知
             if res == '0s':  # 除外リストに当てはまったら0sが返ってくるはず。
                 break
             elif block == 'barrier':    # 最後まで調べてresが空なら爆弾に変えてもよいブロックに重なった判定
