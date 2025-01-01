@@ -57,7 +57,7 @@ class Gold_Experience(Common_func):
                 self.ext.extention_command(f'execute in the_nether run fill -{x} 128 {z} -{x+2} 130 {z+2} minecraft:bedrock hollow') # hollow:空洞
         self.ext.extention_command(f'execute in the_nether run fill -{x_min+1} 128 {z_min+1} -{x_max-1} 128 {z_max-1} minecraft:netherrack replace minecraft:bedrock')    # 火を設置するための対応。岩盤をネザーラックで置換。
 
-    def seek_save_shunk(self):
+    def seek_save_chunk(self):
         # 保存領域に空きがあるかチェックする。
         # 空き領域を順番に探す。
         # -2 Y 1（始点）
@@ -96,14 +96,20 @@ class Gold_Experience(Common_func):
             self.ext.extention_command(f'execute as @e[tag={searcher_tag},limit=1] at @s run tp ^ ^ ^0.2')   # 視線をプレイヤーとリンクした状態で0.2マス分前進する。
             # 空気以外の何らかのブロックか？
             if self.is_block(searcher_tag):
+                # 植物系の特別なブロックか？
                 if self.specific_block(searcher_tag):
                     # 成長か生命化が正常終了
-                    #! この処理が未実装
+                    break
+                # 石などのありふれたブロック
+                else:
+                    # ブロックを消費し、生物を生成する。
+                    self.specific_block_summon()
                     break
             # 経験値以外のエンティティか？
             if self.is_entity(searcher_tag):
                 if self.is_mob(searcher_tag):
-                    if '能力で生み出したMOBなら':   # tagで検知かな・・・
+                    # 能力で生み出したMOBなら
+                    if self.is_GECreature(searcher_tag):   # tagで検知
                         pass # 元に戻す処理。
                     else:   # 自然生成生物かプレイヤーなので、生命エネルギーを流す。
                         self.add_tag_GEtarget(searcher_tag)
@@ -140,8 +146,12 @@ class Gold_Experience(Common_func):
         boolv = True if result == '0s' else False
 
         return boolv
-    
+
     def specific_block(self, tag):
+        '''
+        特別なブロックを検知します。\n
+        特別なブロックとは植物系ブロックのことを指します。
+        '''
         #exeption_block_list = (木に関するブロック群, 雑草, 花(マングローブの芽, ツツジ含む))
         exeption_block_list = ('#minecraft:completes_find_tree_tutorial', '#minecraft:replaceable_by_trees', '#flowers')
 
@@ -155,20 +165,19 @@ class Gold_Experience(Common_func):
         # 上記以外の植物か？ -> 成長も生命化も、何もしない。
         elif self.search_block_kinds(tag, exeption_block_list):
             result = True
-        # 上記以外のブロックであれば生命化。
+        # 上記以外のありふれたブロックであれば生命化。
         else:
-            # ここ
-            self.specific_block_summon()
+            result = False
 
         return result
- 
+
     def specific_block_summon(self, tag):
-        result = self.seek_save_shunk()
+        result = self.seek_save_chunk()
         if not result[0]:   # 空きがない。
             #! 未実装
             #! ※1 共通記号は同処理のため関数化
             #! 古い１枠を空ける。
-            #! result = self.seek_save_shunk() もう一回シークする。
+            #! result = self.seek_save_chunk() もう一回シークする。
             pass
 
         # 特定のmobを召喚する。
@@ -199,11 +208,15 @@ class Gold_Experience(Common_func):
         return boolv
 
     def saplings_process(self, tag):
-        #! ペールオークが1.21.4にて追加となるため以下のtupleに追加
+        '''
+        苗木用処理。\n
+        検知した苗木に合わせて大きな樹木に成長させます。
+        '''
+        # 苗木リストとストラクチャリストは順番を意識しているため注意。
         # 苗木リスト
-        saplings = ('oak_sapling', 'birch_sapling', 'acacia_sapling', 'dark_oak_sapling', 'spruce_sapling', 'jungle_sapling', 'cherry_sapling', 'mangrove_propagule', 'azalea', 'flowering_azalea')
+        saplings = ('oak_sapling', 'birch_sapling', 'acacia_sapling', 'dark_oak_sapling', 'spruce_sapling', 'jungle_sapling', 'cherry_sapling', 'mangrove_propagule', 'pale_oak_sapling', 'azalea', 'flowering_azalea')
         # 木を生やすためのストラクチャ名
-        trees = (('oak','fancy_oak'), ('birch','birch_tall'), 'acacia', 'dark_oak', ('spruce','mega_spruce','trees_taiga','pine','mega_pine'), 'mega_jungle_tree', 'cherry', 'tall_mangrove', 'azalea_tree', 'azalea_tree')
+        trees = (('oak','fancy_oak'), ('birch','birch_tall'), 'acacia', 'dark_oak', ('spruce','mega_spruce','trees_taiga','pine','mega_pine'), 'mega_jungle_tree', 'cherry', 'tall_mangrove', 'pale_oak_creaking', 'azalea_tree', 'azalea_tree')
 
         # 苗木を検索。
         n = None
@@ -226,6 +239,11 @@ class Gold_Experience(Common_func):
         return True # 正常終了
 
     def crops_process(self, tag):
+        '''
+        作物用処理。\n
+        検知した作物に合わせて成長させます。\n
+        注意点として最大まで成長させることができない作物があります。
+        '''
         # ttps://minecraft.fandom.com/ja/wiki/%E3%82%BF%E3%82%B0#bee_growables
         crops = ('wheat', 'carrots', 'potatoes', 'pumpkin_stem', 'melon_stem', 'sweet_berry_bush', 'beetroots')
 
@@ -242,15 +260,17 @@ class Gold_Experience(Common_func):
         # 作物を成長させる。
         for age in range(1, 17):
             self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run setblock ~ ~ ~ {crops[n]}[age={age}]')
-        
+
         return True
 
     def choice_mob(self, water_flag=False):
+        # マイクラ内に非敵対mobが追加された際にはここに水彩生物と区別して記載する。ソートされているので注意。
+        # 水中生物と陸上生物特別する。
         water_mob = ('axolotl', 'cod', 'dolphin', 'glow_squid', 'pufferfish', 'salmon', 'squid', 'tadpole', 'tropical_fish')
         normal_mob = ('bat', 'bee', 'camel', 'cat', 'chicken', 'cow', 'donkey', 'frog', 'fox', 'goat', 'horse', 'llama', 'mooshroom', 'ocelot', 'panda', 'parrot', 'pig', 'polar_bear', 'rabbit', 'sheep', 'turtle', 'wolf')
-        
+
         mob = random.choice(water_mob) if water_flag else random.choice(normal_mob)
-            
+
         return mob
 
     def is_entity(self, tag):
@@ -261,19 +281,23 @@ class Gold_Experience(Common_func):
         return boolv
 
     def specific_entity_summon(self, tag):
-        result = self.seek_save_shunk()
+        '''
+        ブロックを消費してランダムな非敵対MOBを誕生させます。\n
+        消費したブロックは記録チャンクへ保存されます。
+        '''
+        result = self.seek_save_chunk()
         if not result[0]:   # 空きがない。
             #! 未実装
             #! ※1 共通記号は同処理のため関数化
             #! 古い１枠を空ける。
-            #! result = self.seek_save_shunk() もう一回シークする。
+            #! result = self.seek_save_chunk() もう一回シークする。
             pass
 
         # 着火されたTNTの爆発時間延長。(最大値は32767秒)9時間ちょっと。
         self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run data modify entity @s fuse set value 32767s')
         # item系なら消滅しないように延命。
         self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run data modify entity @s Age set value -32768')
-        
+
         # 特定のmobを召喚する。
         base_char_summon = 'summon minecraft:_MOB_ ~ ~ ~ {Tags:["GEcreature"],Passengers:[{id:"minecraft:armor_stand",Tags:["GEcreature","_COORDINATE_"],attributes:[{id:"minecraft:scale",base:0.0625d}],Invisible:1b,NoGravity:1b,Silent:1b,Invulnerable:1b}]}'
         base_char_summon = base_char_summon.replace(f'_MOB_', self.choice_mob())
@@ -293,7 +317,7 @@ class Gold_Experience(Common_func):
         boolv = True if result == '0s' else False
 
         return boolv
-    
+
     def add_tag_GEtarget(self, tag):
         deathtime = '{DeathTime:0s}'
         self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s if entity @n[name=!{self.name},tag=!{tag},nbt={deathtime},distance=..1] run tag @n[name=!{self.name},tag=!{tag},nbt={deathtime},distance=..1] add GEtarget')
@@ -315,3 +339,19 @@ class Gold_Experience(Common_func):
         if self.right_click:    # 攻撃を伴わないなら、回復も行う。
             self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run effect give @s minecraft:instant_health 1 0')
         return True
+
+    def is_GECreature(self, tag):
+        '''
+        ゴールド・エクスペリエンス自身が生み出した生物かどうか検知します。
+        '''
+        result = self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s if entity @e[name=!{self.name},tag=GEcreature,distance=..1] run data get entity {self.name} DeathTime')
+        boolv = True if result == '0s' else False
+
+        return boolv
+
+    def revert_GEC2inorganic(self):
+        '''
+        ゴールド・エクスペリエンスが生み出した生物を元に戻します。\n
+        スタンド使い自身が死亡した場合、すべての生物を元に戻したいので、拡張性を持たせたい。
+        '''
+        pass
