@@ -194,28 +194,19 @@ class Gold_Experience(Common_func):
         return result
 
     def specific_block_summon(self, tag):
-        result = self.seek_save_chunk()
-        if not result[0]:   # 空きがない。
+        coordinate = self.seek_save_chunk()
+        if not coordinate[0]:   # 空きがない。
             #! 未実装
             #! ※1 共通記号は同処理のため関数化
             #! 古い１枠を空ける。
-            #! result = self.seek_save_chunk() もう一回シークする。
+            #! coordinate = self.seek_save_chunk() もう一回シークする。
             pass
 
-        birthday = int(time.time())     # UNIX時刻を誕生日とする。
-        self.birthdays.append(birthday).sort()  # 誕生日リストに追加。ソートも行う。
-        self.ext.extention_command(f'tag @e[name=Gold_Experience_BirthdayList,type=armor_stand,limit=1] add {birthday}')
-
-        # 特定のmobを召喚する。
-        # PersistenceRequired:1b = デスポーンしなくなる。
-        base_char_summon = 'summon minecraft:_MOB_ ~ ~ ~ {Tags:["GEcreature"],PersistenceRequired:1b,Passengers:[{id:"minecraft:armor_stand",Tags:["GEcreature","_COORDINATE_","_BIRTHDAY_"],attributes:[{id:"minecraft:scale",base:0.0625d}],Invisible:1b,NoGravity:1b,Silent:1b,Invulnerable:1b}]}'
-        base_char_summon = base_char_summon.replace(f'_MOB_', self.choice_mob())
-        base_char_summon = base_char_summon.replace(f'_COORDINATE_', str([result[1],result[2],result[3]]))
-        base_char_summon = base_char_summon.replace(f'_BIRTHDAY_', birthday)    # UNIX時刻を誕生日とする。
-        self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run ' + base_char_summon)
+        # 特別なMOBを召喚する。
+        self._specific_summon_mob(tag, coordinate)
 
         #tag指定でネザーの天井裏へ退避。
-        self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s in the_nether run tp @s {result[1]} {result[2]} {result[3]}')
+        self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s in the_nether run tp @s {coordinate[1]} {coordinate[2]} {coordinate[3]}')
 
     def search_block_kinds(self, tag, kinds):
         '''
@@ -313,12 +304,12 @@ class Gold_Experience(Common_func):
         ブロックを消費してランダムな非敵対MOBを誕生させます。\n
         消費したブロックは記録チャンクへ保存されます。
         '''
-        result = self.seek_save_chunk()
-        if not result[0]:   # 空きがない。
+        coordinate = self.seek_save_chunk()
+        if not coordinate[0]:   # 空きがない。
             #! 未実装
             #! ※1 共通記号は同処理のため関数化
             #! 古い１枠を空ける。
-            #! result = self.seek_save_chunk() もう一回シークする。
+            #! coordinate = self.seek_save_chunk() もう一回シークする。
             pass
 
         # 着火されたTNTの爆発時間延長。(最大値は32767秒)9時間ちょっと。
@@ -326,6 +317,19 @@ class Gold_Experience(Common_func):
         # item系なら消滅しないように延命。
         self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run data modify entity @s Age set value -32768')
 
+        # 特別なMOBを召喚する。
+        self._specific_summon_mob(tag, coordinate)
+
+        # Motionをコピーする。
+        self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run data modify entity @e[tag=GEcreature,type=!armor_stand,limit=1] Motion set from entity @n[tag={tag},limit=1] Motion')
+
+        #tag指定でネザーの天井裏へ退避。
+        self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s in the_nether run tp @s {coordinate[1]} {coordinate[2]} {coordinate[3]}')
+
+    def _specific_summon_mob(self, tag, coordinate):
+        '''
+        特別なMOBの召喚する。
+        '''
         birthday = int(time.time())     # UNIX時刻を誕生日とする。
         self.birthdays.append(birthday).sort()  # 誕生日リストに追加。ソートも行う。
         self.ext.extention_command(f'tag @e[name=Gold_Experience_BirthdayList,type=armor_stand,limit=1] add {birthday}')
@@ -335,15 +339,9 @@ class Gold_Experience(Common_func):
         # PersistenceRequired:1b = デスポーンしなくなる。
         base_char_summon = 'summon minecraft:_MOB_ ~ ~ ~ {Tags:["GEcreature"],PersistenceRequired:1b,Passengers:[{id:"minecraft:armor_stand",Tags:["GEcreature","_COORDINATE_","_BIRTHDAY_"],attributes:[{id:"minecraft:scale",base:0.0625d}],Invisible:1b,NoGravity:1b,Silent:1b,Invulnerable:1b}]}'
         base_char_summon = base_char_summon.replace(f'_MOB_', self.choice_mob())
-        base_char_summon = base_char_summon.replace(f'_COORDINATE_', str([result[1],result[2],result[3]]))
+        base_char_summon = base_char_summon.replace(f'_COORDINATE_', str([coordinate[1],coordinate[2],coordinate[3]]))
         base_char_summon = base_char_summon.replace(f'_BIRTHDAY_', birthday)    # UNIX時刻を誕生日とする。
         self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run ' + base_char_summon)
-
-        # Motionをコピーする。
-        self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run data modify entity @e[tag=GEcreature,type=!armor_stand,limit=1] Motion set from entity @n[tag={tag},limit=1] Motion')
-
-        #tag指定でネザーの天井裏へ退避。
-        self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s in the_nether run tp @s {result[1]} {result[2]} {result[3]}')
 
     def is_mob(self, tag):
         # DeathTimeのパラメーターを持つ者はMOB
