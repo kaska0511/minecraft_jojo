@@ -6,7 +6,9 @@ class Gold_Experience(Common_func):
     def __init__(self, name, ext, controller) -> None:
         super().__init__(name, ext, controller)
         self.prepare_save_chunk()
+        self.summon_armorstand_GECbirthdayList()
         self.requiem = False
+        self.birthdays = []     # 要素数最大16個
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
@@ -56,6 +58,26 @@ class Gold_Experience(Common_func):
             for x in range(x_min, x_max, 2):
                 self.ext.extention_command(f'execute in the_nether run fill -{x} 128 {z} -{x+2} 130 {z+2} minecraft:bedrock hollow') # hollow:空洞
         self.ext.extention_command(f'execute in the_nether run fill -{x_min+1} 128 {z_min+1} -{x_max-1} 128 {z_max-1} minecraft:netherrack replace minecraft:bedrock')    # 火を設置するための対応。岩盤をネザーラックで置換。
+
+    def summon_armorstand_GECbirthdayList(self):
+        """
+        生成した生物の誕生日を記録する防具立てを召喚します。
+        もし既に生成されている場合はself.birthdaysを更新します。
+        """
+        # 重複生成を避けるため、存在確認。
+        result = self.ext.extention_command('data get entity @e[type=armor_stand,name=Gold_Experience_BirthdayList,limit=1] DeathTime')
+        if not result == '0s':
+            # 既に生成されているなら誕生日リストをプログラムにインプット。
+            temporary_data = self.ext.extention_command('data get entity @e[type=armor_stand,name=Gold_Experience_BirthdayList,limit=1] Tags')
+            if temporary_data is not None:  # 能力を一度も使用していない場合は空の場合がある。
+                self.birthdays = [int(str_data) for str_data in temporary_data if self.ext.is_int(str_data)] # listの中の数字を整数値(int型)へ変換。
+                self.birthdays.sort()   # 破壊的ソート。
+            return True
+
+        # 念の為unlessで確認しつつ召喚
+        self.ext.extention_command('execute unless entity @e[name=Gold_Experience_BirthdayList,type=minecraft:armor_stand] run summon minecraft:armor_stand 0 -74 0 {CustomName:"Gold_Experience_BirthdayList",Invulnerable:1,NoGravity:1}')
+        return True
+
 
     def seek_save_chunk(self):
         # 保存領域に空きがあるかチェックする。
@@ -180,10 +202,16 @@ class Gold_Experience(Common_func):
             #! result = self.seek_save_chunk() もう一回シークする。
             pass
 
+        birthday = int(time.time())     # UNIX時刻を誕生日とする。
+        self.birthdays.append(birthday).sort()  # 誕生日リストに追加。ソートも行う。
+        self.ext.extention_command(f'tag @e[name=Gold_Experience_BirthdayList,type=armor_stand,limit=1] add {birthday}')
+
         # 特定のmobを召喚する。
-        base_char_summon = 'summon minecraft:_MOB_ ~ ~ ~ {Tags:["GEcreature"],Passengers:[{id:"minecraft:armor_stand",Tags:["GEcreature","_COORDINATE_"],attributes:[{id:"minecraft:scale",base:0.0625d}],Invisible:1b,NoGravity:1b,Silent:1b,Invulnerable:1b}]}'
+        # PersistenceRequired:1b = デスポーンしなくなる。
+        base_char_summon = 'summon minecraft:_MOB_ ~ ~ ~ {Tags:["GEcreature"],PersistenceRequired:1b,Passengers:[{id:"minecraft:armor_stand",Tags:["GEcreature","_COORDINATE_","_BIRTHDAY_"],attributes:[{id:"minecraft:scale",base:0.0625d}],Invisible:1b,NoGravity:1b,Silent:1b,Invulnerable:1b}]}'
         base_char_summon = base_char_summon.replace(f'_MOB_', self.choice_mob())
         base_char_summon = base_char_summon.replace(f'_COORDINATE_', str([result[1],result[2],result[3]]))
+        base_char_summon = base_char_summon.replace(f'_BIRTHDAY_', birthday)    # UNIX時刻を誕生日とする。
         self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run ' + base_char_summon)
 
         #tag指定でネザーの天井裏へ退避。
@@ -298,10 +326,17 @@ class Gold_Experience(Common_func):
         # item系なら消滅しないように延命。
         self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run data modify entity @s Age set value -32768')
 
+        birthday = int(time.time())     # UNIX時刻を誕生日とする。
+        self.birthdays.append(birthday).sort()  # 誕生日リストに追加。ソートも行う。
+        self.ext.extention_command(f'tag @e[name=Gold_Experience_BirthdayList,type=armor_stand,limit=1] add {birthday}')
+
         # 特定のmobを召喚する。
-        base_char_summon = 'summon minecraft:_MOB_ ~ ~ ~ {Tags:["GEcreature"],Passengers:[{id:"minecraft:armor_stand",Tags:["GEcreature","_COORDINATE_"],attributes:[{id:"minecraft:scale",base:0.0625d}],Invisible:1b,NoGravity:1b,Silent:1b,Invulnerable:1b}]}'
+        # mobが死亡したことを検知するためにアマスタを乗せる対応を採る。
+        # PersistenceRequired:1b = デスポーンしなくなる。
+        base_char_summon = 'summon minecraft:_MOB_ ~ ~ ~ {Tags:["GEcreature"],PersistenceRequired:1b,Passengers:[{id:"minecraft:armor_stand",Tags:["GEcreature","_COORDINATE_","_BIRTHDAY_"],attributes:[{id:"minecraft:scale",base:0.0625d}],Invisible:1b,NoGravity:1b,Silent:1b,Invulnerable:1b}]}'
         base_char_summon = base_char_summon.replace(f'_MOB_', self.choice_mob())
         base_char_summon = base_char_summon.replace(f'_COORDINATE_', str([result[1],result[2],result[3]]))
+        base_char_summon = base_char_summon.replace(f'_BIRTHDAY_', birthday)    # UNIX時刻を誕生日とする。
         self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run ' + base_char_summon)
 
         # Motionをコピーする。
