@@ -132,7 +132,7 @@ class Gold_Experience(Common_func):
                 if self.is_mob(searcher_tag):
                     # 能力で生み出したMOBなら
                     if self.is_GECreature(searcher_tag):   # tagで検知
-                        pass # 元に戻す処理。
+                        self.revert_GEC2inorganic(searcher_tag) # もとに戻す。
                     else:   # 自然生成生物かプレイヤーなので、生命エネルギーを流す。
                         self.add_tag_GEtarget(searcher_tag)
                         self.pour_energy('GEtarget')
@@ -194,13 +194,11 @@ class Gold_Experience(Common_func):
         return result
 
     def specific_block_summon(self, tag):
+        if len(self.birthdays) == 16:   # 空きがない。
+            self.revert_GEC2inorganic()
+
+        # 記憶領域の座標を取得する。
         coordinate = self.seek_save_chunk()
-        if not coordinate[0]:   # 空きがない。
-            #! 未実装
-            #! ※1 共通記号は同処理のため関数化
-            #! 古い１枠を空ける。
-            #! coordinate = self.seek_save_chunk() もう一回シークする。
-            pass
 
         # 特別なMOBを召喚する。
         self._specific_summon_mob(tag, coordinate)
@@ -304,13 +302,11 @@ class Gold_Experience(Common_func):
         ブロックを消費してランダムな非敵対MOBを誕生させます。\n
         消費したブロックは記録チャンクへ保存されます。
         '''
+        if len(self.birthdays) == 16:   # 空きがない。
+            self.revert_GEC2inorganic()
+
+        # 記憶領域の座標を取得する。
         coordinate = self.seek_save_chunk()
-        if not coordinate[0]:   # 空きがない。
-            #! 未実装
-            #! ※1 共通記号は同処理のため関数化
-            #! 古い１枠を空ける。
-            #! coordinate = self.seek_save_chunk() もう一回シークする。
-            pass
 
         # 着火されたTNTの爆発時間延長。(最大値は32767秒)9時間ちょっと。
         self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run data modify entity @s fuse set value 32767s')
@@ -328,7 +324,7 @@ class Gold_Experience(Common_func):
 
     def _specific_summon_mob(self, tag, coordinate):
         '''
-        特別なMOBの召喚する。
+        特別なMOBを召喚する。
         '''
         birthday = int(time.time())     # UNIX時刻を誕生日とする。
         self.birthdays.append(birthday).sort()  # 誕生日リストに追加。ソートも行う。
@@ -337,9 +333,9 @@ class Gold_Experience(Common_func):
         # 特定のmobを召喚する。
         # mobが死亡したことを検知するためにアマスタを乗せる対応を採る。
         # PersistenceRequired:1b = デスポーンしなくなる。
-        base_char_summon = 'summon minecraft:_MOB_ ~ ~ ~ {Tags:["GEcreature"],PersistenceRequired:1b,Passengers:[{id:"minecraft:armor_stand",Tags:["GEcreature","_COORDINATE_","_BIRTHDAY_"],attributes:[{id:"minecraft:scale",base:0.0625d}],Invisible:1b,NoGravity:1b,Silent:1b,Invulnerable:1b}]}'
+        base_char_summon = 'summon minecraft:_MOB_ ~ ~ ~ {Tags:["GEcreature"],PersistenceRequired:1b,Passengers:[{id:"minecraft:armor_stand",CustomName:"Gold_Experience_note",Tags:["GEcreature","_COORDINATE_","_BIRTHDAY_"],attributes:[{id:"minecraft:scale",base:0.0625d}],Invisible:1b,NoGravity:1b,Silent:1b,Invulnerable:1b}]}'
         base_char_summon = base_char_summon.replace(f'_MOB_', self.choice_mob())
-        base_char_summon = base_char_summon.replace(f'_COORDINATE_', str([coordinate[1],coordinate[2],coordinate[3]]))
+        base_char_summon = base_char_summon.replace(f'_COORDINATE_', str(f'xyz_{coordinate[1]}.{coordinate[2]}.{coordinate[3]}'))
         base_char_summon = base_char_summon.replace(f'_BIRTHDAY_', birthday)    # UNIX時刻を誕生日とする。
         self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run ' + base_char_summon)
 
@@ -382,9 +378,74 @@ class Gold_Experience(Common_func):
 
         return boolv
 
-    def revert_GEC2inorganic(self):
+    def revert_GEC2inorganic(self, specified_tag=None, all_mode=False, kill_mode=False):
         '''
         ゴールド・エクスペリエンスが生み出した生物を元に戻します。\n
-        スタンド使い自身が死亡した場合、すべての生物を元に戻したいので、拡張性を持たせたい。
+        specified_tagにタグが指定されている場合、特定のMOBをもとに戻します。\n
+        逆に空の場合、最も長生きな生物を元に戻します。\n
+        all_modeが有効な場合、能力で生成したMOBをすべてもとに戻します。\n
+        例えばスタンド使い自身が死亡した場合、すべての生物を元に戻します。
+        '''
+        # 誕生日リストをソートする。
+        self.birthdays.sort()
+
+        for _ in range(len(self.birthdays) if all_mode else 1): # 全削除modeが有効ならlistの数だけ行う。そうでなければ一つだけ。
+            # 要素が0になったら終了。
+            if len(self.birthdays) == 0:
+                break
+
+            # 指定MOBと最も古いMOBのどちらかしか選べない。
+            if specified_tag:   # これがNoneでなければ指定のMOBをもとに戻すモード
+                # tagの最も近くにいるGold_Experience_noteからTags情報を取得する。
+                tags = self.ext.extention_command(f'execute as @e[tag={specified_tag},limit=1] at @s run data get entity @n[name=Gold_Experience_note,type=armor_stand,limit=1] Tags')
+                # tags と self.birthdays で共通のデータを取得する。今回の場合は誕生日に当たる。
+                birthday = list(set(tags) & set(self.birthdays))[0]
+                self.birthdays.remove(birthday) # self.birthdays から指定の誕生日を削除する。
+            else:   # ここを通る場合は最も古い生物を戻すモード
+                # 最も長生きな生物の誕生日(0番目)を抽出
+                birthday = self.birthdays.pop(0)
+
+            # 誕生日を元に素材の座標を調べる。
+            tags = self.ext.extention_command(f'data get entity @e[name=Gold_Experience_note,tag={birthday},type=armor_stand,limit=1] Tags')
+
+            temporary_coordinate = [tag.replace('xyz_', '') for tag in tags if 'xyz_' in tag] # xyz_1.2.3という文字列を取得する。この時'xyz_'は削除される。
+            coordinate = [int(str_data) for str_data in temporary_coordinate.split('.') if self.ext.is_int(str_data)] # 「:」で切り分け、整数型に変換する。
+
+            if kill_mode:
+                # 殺します。
+                self.ext.extention_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s on vehicle run kill @s')
+            else:
+                # 防具立てとMOBを分離
+                self.ext.extention_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run ride @s dismount')
+                # MOBを奈落へ移動
+                self.ext.extention_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s as @n[tag=GEcreature,type=!armor_stand,limit=1] at @s run ~ -74 ~')
+
+            # アマスタのtag情報に書かれている座標情報をもとにブロック・エンティティを引っ張ってくる。
+            # 最初にブロックを移動。
+            self.ext.extention_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run clone from minecraft:the_nether {coordinate[1]} {coordinate[2]} {coordinate[3]} {coordinate[1]} {coordinate[2]} {coordinate[3]} ~ ~ ~ masked move')
+            # 次にエンティティを移動。
+            self.ext.extention_command(f'execute in minecraft:the_nether as @e[x={coordinate[1]},y={coordinate[2]},z={coordinate[3]},distance=..1,limit=1] at @s run tp @s @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1]')
+
+            # 引っ張ってこれたのでアマスタを削除。
+            self.ext.extention_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run kill @s')
+
+            ## 誕生日を記録用防具立てから削除。
+            self.ext.extention_command(f'tag @e[name=Gold_Experience_BirthdayList,type=armor_stand,limit=1] remove {birthday}')
+
+    def counter_attack_GEcreature(self):
+        '''
+        ゴールド・エクスペリエンスが生み出した生物が攻撃された場合、反撃します。
+        '''
+        pass
+
+    def requiem(self):
+        '''
+        経験値が4 0になったら？（レベルは要件等）。経験値は消費する。（エクスペリエンスだしな・・・）
+        10分間効果を維持する。（効果時間は要件等）
+        ・レジスタンス 2 5 5レベル付与
+        ・弱体効果は常に解除
+            （タスクや時間停止中でも有効）
+        ・攻撃されたらそのmobに対して、killコマンドを実行。		（タスクや時間停止中でも有効）
+        ・レクイエム化前の能力は引き継ぐ。（生命を生み出す能力）
         '''
         pass
