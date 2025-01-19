@@ -120,6 +120,8 @@ class Gold_Experience(Common_func):
             if self.is_block(searcher_tag):
                 # 植物系の特別なブロックか？
                 if self.specific_block(searcher_tag):
+                    # 成長終了後植物の上にエンティティを移動させる。
+                    self.tp_on_tree(searcher_tag)
                     # 成長か生命化が正常終了
                     break
                 # 石などのありふれたブロック
@@ -192,6 +194,13 @@ class Gold_Experience(Common_func):
             result = False
 
         return result
+
+    def tp_on_tree(self, tag):
+        '''
+        木を誕生させた時、その近くにいるエンティティを木の上にテレポートさせます。\n
+        水平方向半径５ブロック、頭上方向10ブロックの範囲内のエンティティが対象。
+        '''
+        self.ext.extention_command(f'execute as @e[tag={tag}] at @s as @e[dx=5,dy=10,dz=5] positioned over motion_blocking run tp @s ~ ~ ~')
 
     def specific_block_summon(self, tag):
         if len(self.birthdays) == 16:   # 空きがない。
