@@ -20,6 +20,9 @@ class Gold_Experience(Common_func):
             self.right_click = False
             return
 
+        # 生成物がダメージを負っているかを検知。ダメージを負っていたら反撃させる。
+        self.counter_attack_GEcreature()
+
         item, tag = self.get_OffHandItem()
 
         if tag == type(self).__name__:
@@ -436,9 +439,10 @@ class Gold_Experience(Common_func):
 
     def counter_attack_GEcreature(self):
         '''
-        ゴールド・エクスペリエンスが生み出した生物が攻撃された場合、反撃します。
+        ゴールド・エクスペリエンスが生み出した生物が攻撃された場合、反撃します。\n
+        6のダメージを付与します。
         '''
-        pass
+        self.ext.extention_command(f'execute as @e[type=!item,type=!experience_orb] on attacker if entity @e[tag=GEcreature,type=!armor_stand,nbt=!{{HurtTime:0s}}] run damage @s 6 minecraft:magic by {self.name}')
 
     def requiem(self):
         '''
