@@ -5,8 +5,8 @@ from stands.Common_func import Common_func
 class Gold_Experience(Common_func):
     def __init__(self, name, ext, controller) -> None:
         super().__init__(name, ext, controller)
-        self.prepare_save_chunk()
-        self.summon_armorstand_GECbirthdayList()
+        self.prepare_save_chunk()   # 保存領域の準備
+        self.summon_armorstand_GECbirthdayList()    # 生成物の誕生日管理アマスタ準備
         self.requiem = False
         self.birthdays = []     # 要素数最大16個
 
@@ -31,7 +31,6 @@ class Gold_Experience(Common_func):
         self.left_click = False
 
 
-
     def cancel_stand(self):
         self.run_stand = False
         self.kill_stand()
@@ -48,11 +47,8 @@ class Gold_Experience(Common_func):
             is_load = True if result == '0s' else False
 
         # 16の記憶領域を作成。マグマや火など周りへの影響を極力避けるため、仕切りで用意する。
-        x_min = 1
-        x_max = 9
-
-        z_min = 0
-        z_max = 8
+        x_min, x_max = 1, 9
+        z_min, z_max = 0, 8
 
         for z in range(z_min, z_max, 2):
             for x in range(x_min, x_max, 2):
@@ -61,7 +57,7 @@ class Gold_Experience(Common_func):
 
     def summon_armorstand_GECbirthdayList(self):
         """
-        生成した生物の誕生日を記録する防具立てを召喚します。
+        生成した生物の誕生日を記録する防具立てを召喚します。\n
         もし既に生成されている場合はself.birthdaysを更新します。
         """
         # 重複生成を避けるため、存在確認。
@@ -84,11 +80,8 @@ class Gold_Experience(Common_func):
         # 空き領域を順番に探す。
         # -2 Y 1（始点）
         # -8 Y 7（終点）
-        x_min = 2
-        x_max = 8
-
-        z_min = 1
-        z_max = 7
+        x_min, x_max = 2, 8
+        z_min, z_max = 1, 7
 
         y = 129
         empty_flag = False
