@@ -118,13 +118,11 @@ class Gold_Experience(Common_func):
                 if self.specific_block(searcher_tag):
                     # 成長終了後植物の上にエンティティを移動させる。
                     self.tp_on_tree(searcher_tag)
-                    # 成長か生命化が正常終了
-                    break
                 # 石などのありふれたブロック
                 else:
                     # ブロックを消費し、生物を生成する。
                     self.specific_block_summon()
-                    break
+                break
             # 経験値以外のエンティティか？
             if self.is_entity(searcher_tag):
                 if self.is_mob(searcher_tag):
@@ -141,6 +139,9 @@ class Gold_Experience(Common_func):
                     self.specific_entity_summon('GEsaver')
                 # この処理に入れて、上記の処理が上手くいったかに関わらず終了。
                 break
+        else:
+            # 自分を回復させる処理。
+            self.pour_energy()
 
         # ヒットしなくても検索に使用したアマスタを削除。
         self.ext.extention_command(f'kill @e[tag={searcher_tag}]')
@@ -365,13 +366,18 @@ class Gold_Experience(Common_func):
     def rem_tag_GEsaver(self):
         self.ext.extention_command(f'tag @e[] remove GEsaver')
 
-    def pour_energy(self, tag):
-        # 子供系なら成長させる。-> Ageを0にする。
-        self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run data modify entity @s Age set value 0')
-        # 10分間追加の体力を付与。(ハート４個分)
-        self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run effect give @s minecraft:absorption 600 2 true')
-        if self.right_click:    # 攻撃を伴わないなら、回復も行う。
-            self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run effect give @s minecraft:instant_health 1 0')
+    def pour_energy(self, tag=None):
+        if tag is None:
+            # 能力者自身を回復
+            self.ext.extention_command(f'execute as {self.name} at @s run effect give @s minecraft:absorption 600 2 true')
+            self.ext.extention_command(f'execute as {self.name} at @s run effect give @s minecraft:instant_health 1 0')
+        else:
+            # 子供系なら成長させる。-> Ageを0にする。
+            self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run data modify entity @s Age set value 0')
+            # 10分間追加の体力を付与。(ハート４個分)
+            self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run effect give @s minecraft:absorption 600 2 true')
+            if self.right_click:    # 攻撃を伴わないなら、回復も行う。
+                self.ext.extention_command(f'execute as @e[tag={tag},limit=1] at @s run effect give @s minecraft:instant_health 1 0')
         return True
 
     def is_GECreature(self, tag):
