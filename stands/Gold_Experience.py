@@ -23,6 +23,9 @@ class Gold_Experience(Common_func):
         # 生成物がダメージを負っているかを検知。ダメージを負っていたら反撃させる。
         self.counter_attack_GEcreature()
 
+        # 生成物が死亡しているか検知。死亡していたら素材元を召喚する。
+        self.death_revert_GEC2inorganic()
+
         item, tag = self.get_OffHandItem()
 
         if tag == type(self).__name__:
@@ -436,12 +439,48 @@ class Gold_Experience(Common_func):
             self.ext.extention_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run clone from minecraft:the_nether {coordinate[1]} {coordinate[2]} {coordinate[3]} {coordinate[1]} {coordinate[2]} {coordinate[3]} ~ ~ ~ masked move')
             # 次にエンティティを移動。
             self.ext.extention_command(f'execute in minecraft:the_nether as @e[x={coordinate[1]},y={coordinate[2]},z={coordinate[3]},distance=..1,limit=1] at @s run tp @s @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1]')
-
+            # TNTの爆発までの時間を1秒前に設定。
+            self.ext.extention_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run data modify entity @e[type=tnt,distance=..2,limit=1] fuse set value 1s')
+            # itemの寿命を元に戻す。
+            self.ext.extention_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run data modify entity @e[type=item,distance=..2,limit=1] Age set value 0')
             # 引っ張ってこれたのでアマスタを削除。
             self.ext.extention_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run kill @s')
 
             ## 誕生日を記録用防具立てから削除。
             self.ext.extention_command(f'tag @e[name=Gold_Experience_BirthdayList,type=armor_stand,limit=1] remove {birthday}')
+
+    def death_revert_GEC2inorganic(self):
+        # エンティティが死亡しているか確認し、死亡していたら素材に戻す処理。
+        # 召喚した全エンティティをチェックする必要があるので、関数呼び出す毎に一体のみに限定して軽量化を図る。
+        for birthday in self.birthdays:
+            deathtime = self.ext.extention_command(f'execute as @e[name=Gold_Experience_note,tag={birthday},type=armor_stand,limit=1] at @s on vehicle run data get entity @s DeathTime')
+            if deathtime == '0s':   # 生存
+                yield False         # 終了
+            else:                   # 死亡
+                # 誕生日を元に素材の座標を調べる。
+                tags = self.ext.extention_command(f'data get entity @e[name=Gold_Experience_note,tag={birthday},type=armor_stand,limit=1] Tags')
+
+                temporary_coordinate = [tag.replace('xyz_', '') for tag in tags if 'xyz_' in tag] # xyz_1.2.3という文字列を取得する。この時'xyz_'は削除される。
+                coordinate = [int(str_data) for str_data in temporary_coordinate.split('.') if self.ext.is_int(str_data)] # 「:」で切り分け、整数型に変換する。
+
+                # アマスタのtag情報に書かれている座標情報をもとにブロック・エンティティを引っ張ってくる。
+                # 最初にブロックを移動。
+                self.ext.extention_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run clone from minecraft:the_nether {coordinate[1]} {coordinate[2]} {coordinate[3]} {coordinate[1]} {coordinate[2]} {coordinate[3]} ~ ~ ~ masked move')
+                # 次にエンティティを移動。
+                self.ext.extention_command(f'execute in minecraft:the_nether as @e[x={coordinate[1]},y={coordinate[2]},z={coordinate[3]},distance=..1,limit=1] at @s run tp @s @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1]')
+                # TNTの爆発までの時間を1秒前に設定。
+                self.ext.extention_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run data modify entity @e[type=tnt,distance=..2,limit=1] fuse set value 1s')
+                # itemの寿命を元に戻す。
+                self.ext.extention_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run data modify entity @e[type=item,distance=..2,limit=1] Age set value 0')
+                # 引っ張ってこれたのでアマスタを削除。
+                self.ext.extention_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run kill @s')
+
+                ## 誕生日を記録用防具立てから削除。
+                self.ext.extention_command(f'tag @e[name=Gold_Experience_BirthdayList,type=armor_stand,limit=1] remove {birthday}')
+                # self.birthdays から指定の誕生日を削除する。
+                self.birthdays.remove(birthday)
+
+                yield True
 
     def counter_attack_GEcreature(self):
         '''
