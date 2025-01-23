@@ -61,6 +61,18 @@ class Gold_Experience(Common_func):
                 self.ext.extention_command(f'execute in the_nether run fill -{x} 128 {z} -{x+2} 130 {z+2} minecraft:bedrock hollow') # hollow:空洞
         self.ext.extention_command(f'execute in the_nether run fill -{x_min+1} 128 {z_min+1} -{x_max-1} 128 {z_max-1} minecraft:netherrack replace minecraft:bedrock')    # 火を設置するための対応。岩盤をネザーラックで置換。
 
+        # tntとitemの延命を行うコマンドブロックを設置する。
+        self.modify_life_extension()
+
+    def modify_life_extension(self):
+        # tntとitemの延命を行うコマンドブロックを設置する。
+        # tnt
+        command = f'execute in the_nether as @e[type=tnt,x=0,y=128,z=0,dx=16,dy=16,dz=16] at @s run data modify entity @s fuse set value 32767s'
+        self.ext.extention_command(f'execute in the_nether run setblock 0 127 0 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+        # item
+        command = f'execute in the_nether as @e[type=item,x=0,y=128,z=0,dx=16,dy=16,dz=16] at @s run data modify entity @s Age set value -32768'
+        self.ext.extention_command(f'execute in the_nether run setblock 0 127 1 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+
     def summon_armorstand_GECbirthdayList(self):
         """
         生成した生物の誕生日を記録する防具立てを召喚します。\n
