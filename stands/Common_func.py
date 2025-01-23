@@ -51,7 +51,7 @@ class Common_func:
         #print(f'マウスポインターは {(x, y)} へ移動しました')
 
     def click(self, x, y, button, pressed):
-        #print(f'{button} が {'Pressed' if pressed else 'Released'} された座標： {(x, y)}') 
+        #print(f'{button} が {'Pressed' if pressed else 'Released'} された座標： {(x, y)}')
 
         if str(button) == 'Button.left' and self.is_Minecraftwindow()[0] == True:
             if self.os_name == 'darwin' and self.check_mouse_coordinate(x, y):
@@ -116,7 +116,7 @@ class Common_func:
             curr_pid = NSWorkspace.sharedWorkspace().activeApplication()['NSApplicationProcessIdentifier']
             options = kCGWindowListOptionOnScreenOnly
             windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
-            
+
             for window in windowList:
                 pid = window['kCGWindowOwnerPID']
                 if curr_pid == pid:
@@ -162,7 +162,7 @@ class Common_func:
             if curr_pid == pid:
                 (geometry_width := window['kCGWindowBounds']['Width'])
                 (geometry_height := window['kCGWindowBounds']['Height'])
-                
+
                 (geometry_X := window['kCGWindowBounds']['X'])
                 (geometry_Y := window['kCGWindowBounds']['Y'])
                 break
@@ -170,11 +170,11 @@ class Common_func:
         # STEP3.基準座標と比較し、その座標と同じなら適切な場所でクリックされたと判断する。
         if x == int(geometry_X+(geometry_width/2)) and y == int(geometry_Y+14+(geometry_height/2)):
             is_valid = True
-        
+
         return is_valid
 
     def get_uuid(self):
-        result = self.ext.extention_command(f'data get entity {self.name} UUID')
+        result = self.ext.extension_command(f'data get entity {self.name} UUID')
         return result
 
     def get_login_user(self):
@@ -189,7 +189,7 @@ class Common_func:
                 各プレイヤーの名前のリスト。
                 ex -> ['KASKA0511', 'hoge', 'fuga']
         '''
-        result = self.ext.extention_command('data get entity @e[type=minecraft:armor_stand,limit=1,name=List] Tags')
+        result = self.ext.extension_command('data get entity @e[type=minecraft:armor_stand,limit=1,name=List] Tags')
         return result
 
     def get_logout(self):
@@ -205,13 +205,8 @@ class Common_func:
         '''
 
         # データが取得できなかった場合はNoneが返る。
-        result = self.ext.extention_command(f'data get entity {self.name} DeathTime')
+        result = self.ext.extension_command(f'data get entity {self.name} DeathTime')
         return True if result is None else False      # 情報が取得できなかった。 = ワールドに存在しない。
-        """
-        if result is None:  # データが取得できない = ワールドから居なくなった。
-            return True
-        else:               # データが取得できる。 = プレイヤーがワールドにいる。
-            return False"""
 
 
     def bool_have_a_stand(self, item="*", tag=None):
@@ -245,7 +240,7 @@ class Common_func:
 
             for search in SEARCH:
                 final_substituent = substituent.replace(f'_SEARCH_', search)
-                have_a_stand = self.ext.extention_command(f'{final_substituent}')
+                have_a_stand = self.ext.extension_command(f'{final_substituent}')
                 if have_a_stand == '0s':
                     have_a_stand = True
                     break
@@ -266,7 +261,7 @@ class Common_func:
                 自分が死亡しているならTrue、死亡していないならFalseを返します。\n
                 ワールドに自分が見つからないならNoneを返します。
         '''
-        result = self.ext.extention_command(f'data get entity {self.name} DeathTime')
+        result = self.ext.extension_command(f'data get entity {self.name} DeathTime')
 
         if result is None:      # 情報が取得できなかった。 = ワールドに存在しない。
             return None
@@ -290,7 +285,7 @@ class Common_func:
                 エンティティが見つからないならNoneを返します。
         '''
         reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        result = self.ext.extention_command(f'data get entity nbt={{UUID:{uuid}}}] DeathTime')
+        result = self.ext.extension_command(f'data get entity nbt={{UUID:{uuid}}}] DeathTime')
 
         split_data = re.split(r' ', result)
         deathbool = None if split_data[0] == 'Found' or split_data[0] == 'No' else re.sub(reg, '', result).strip('"')    # uuidのエンティティがいないならNone
@@ -315,8 +310,8 @@ class Common_func:
                 ワールドに自分が見つからないならNoneを返します。
         '''
         reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        result_pos = self.ext.extention_command(f'data get entity {self.name} LastDeathLocation.pos')
-        result_dim = self.ext.extention_command(f'data get entity {self.name} LastDeathLocation.dimension')
+        result_pos = self.ext.extension_command(f'data get entity {self.name} LastDeathLocation.pos')
+        result_dim = self.ext.extension_command(f'data get entity {self.name} LastDeathLocation.dimension')
         split_data = re.split(r' ', result_pos) # プレイヤーがいるかどうかの検知なのでresult_dimに対しては不要
         pos = None if split_data[0] == 'Found' or split_data[0] == 'No' else re.sub(reg, '', result_pos).strip('"')    # uuidのエンティティがいないならNone
         dim = None if split_data[0] == 'Found' or split_data[0] == 'No' else re.sub(reg, '', result_dim).strip('"')    # uuidのエンティティがいないならNone
@@ -336,9 +331,7 @@ class Common_func:
         Return
             res : list
         '''
-        # 参加者リストを取得
-        #new_player = 'komine'
-        res = self.ext.extention_command(f'data get entity {self.name} Pos')        # 座標
+        res = self.ext.extension_command(f'data get entity {self.name} Pos')        # 座標
 
         return res
 
@@ -355,7 +348,7 @@ class Common_func:
         '''
         if name is None:
             name = self.name
-        res = self.ext.extention_command(f'data get entity {name} Rotation')   # 視線
+        res = self.ext.extension_command(f'data get entity {name} Rotation')   # 視線
         if res is None:
             return None
         else:
@@ -373,7 +366,7 @@ class Common_func:
             slotno : int
         '''
         reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        Slotres = self.ext.extention_command(f'data get entity {self.name} SelectedItemSlot')
+        Slotres = self.ext.extension_command(f'data get entity {self.name} SelectedItemSlot')
 
         split = re.split(r' ', Slotres)
         slotno = None if split[0] == 'Found' or split[0] == 'No' else int(re.sub(reg, '', Slotres).strip('"'))
@@ -393,8 +386,8 @@ class Common_func:
                 ex -> ("minecraft.clock", "DIO") or ("minecraft.clock", ["DIO","b"])
         '''
 
-        id = self.ext.extention_command(f'data get entity {self.name} SelectedItem.id')
-        tag = self.ext.extention_command(f'data get entity {self.name} SelectedItem.components."minecraft:custom_data".tag')
+        id = self.ext.extension_command(f'data get entity {self.name} SelectedItem.id')
+        tag = self.ext.extension_command(f'data get entity {self.name} SelectedItem.components."minecraft:custom_data".tag')
         id = None if id is None else id     # スロットが空など、もし見つからなかったらNoneで返す。
         tag = None if tag is None else tag  # アイテムにTagが無いならNoneで返す。
 
@@ -413,8 +406,8 @@ class Common_func:
                 ex -> ("minecraft.clock", "DIO") or ("minecraft.clock", ["DIO","b"])
         '''
 
-        id = self.ext.extention_command('data get entity '+ self.name +' Inventory[{Slot:-106b}].id')
-        tag = self.ext.extention_command('data get entity '+ self.name +' Inventory[{Slot:-106b}]."minecraft:custom_data".tag')
+        id = self.ext.extension_command('data get entity '+ self.name +' Inventory[{Slot:-106b}].id')
+        tag = self.ext.extension_command('data get entity '+ self.name +' Inventory[{Slot:-106b}]."minecraft:custom_data".tag')
         id = None if id is None else id     # スロットが空など、もし見つからなかったらNoneで返す。
         tag = None if tag is None else tag  # アイテムにTagが無いならNoneで返す。
 
@@ -432,7 +425,7 @@ class Common_func:
             OnG : boolean
                 地面に接触しているならTrue、接触していないならFalseを返します。
         '''
-        OnG = self.ext.extention_command(f'data get entity {player} OnGround')
+        OnG = self.ext.extension_command(f'data get entity {player} OnGround')
         OnG = True if OnG == '1b' else False
         return OnG
 
@@ -450,9 +443,9 @@ class Common_func:
                 ex -> "minecraft:horse", "[1963727455, 2072923448, -1958974380, 527210886]"
         '''
 
-        ride_name = self.ext.extention_command(f'data get entity {self.name} RootVehicle.Entity.id')
+        ride_name = self.ext.extension_command(f'data get entity {self.name} RootVehicle.Entity.id')
 
-        ride_uuid = self.ext.extention_command(f'data get entity {self.name} RootVehicle.Entity.UUID')
+        ride_uuid = self.ext.extension_command(f'data get entity {self.name} RootVehicle.Entity.UUID')
 
         return ride_name, ride_uuid
 
@@ -472,7 +465,7 @@ class Common_func:
                 動きのベクトルを返します。\n
                 何にも乗っていない場合はNoneを返します。
         '''
-        res = self.ext.extention_command(f'data get entity {self.name} RootVehicle.Entity.Motion')
+        res = self.ext.extension_command(f'data get entity {self.name} RootVehicle.Entity.Motion')
         if res is not None:
             ride_motion_bool = True if res == "[0.0d, 0.0d, 0.0d]" else False
             edit_result = res.strip('[d]')      # [d]のdはこの関数では必要。
@@ -506,7 +499,7 @@ class Common_func:
         #!! また現在はタスクAct4しか使わない関数のため再検討の余地あり。
         for dimention in dimentions:
             substituent = substituent.replace(f'_DIMENTION_', dimention)
-            dimention = self.ext.extention_command(f'{substituent}')
+            dimention = self.ext.extension_command(f'{substituent}')
             if dimention == '0s':
                 return dimention
         else:   # 対象が居ない、DimentionNBTを持たないプレイヤーではないなど
@@ -524,7 +517,7 @@ class Common_func:
                 インベントリ情報を文字列で返します。
         '''
         reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        inventory = self.ext.extention_command(f'data get entity {self.name} Inventory')
+        inventory = self.ext.extension_command(f'data get entity {self.name} Inventory')
 
         split_inve = re.split(r' ', inventory)
 
@@ -551,11 +544,11 @@ class Common_func:
                 そのアイテムが持つtag
         '''
 
-        id = self.ext.extention_command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].id')     # KASKA0511 has the following entity data: "minecraft:flint"
+        id = self.ext.extension_command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].id')     # KASKA0511 has the following entity data: "minecraft:flint"
         # tagに関して
         #   単一    KASKA0511 has the following entity data: "Killer"
         #   複数    KASKA0511 has the following entity data: ["DIO", "a"]
-        tag = self.ext.extention_command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].components."minecraft:custom_data".tag')
+        tag = self.ext.extension_command(f'data get entity {player} Inventory[{{Slot:{Slot}b}}].components."minecraft:custom_data".tag')
 
         return id, tag
 
@@ -570,7 +563,7 @@ class Common_func:
             health : float
                 プレイヤーの体力。
         '''
-        health = self.ext.extention_command(f'data get entity {self.name} Health')
+        health = self.ext.extension_command(f'data get entity {self.name} Health')
         health = float(health.rstrip('f'))
 
         return health
@@ -587,7 +580,7 @@ class Common_func:
             have : bool
                 真偽値
         '''
-        deathtime = self.ext.extention_command(f'execute as {self.name} if entity @a[name={self.name},tag={tag},limit=1] run data get entity @s DeathTime')
+        deathtime = self.ext.extension_command(f'execute as {self.name} if entity @a[name={self.name},tag={tag},limit=1] run data get entity @s DeathTime')
         have = True if deathtime == '0s' else False
 
         return have

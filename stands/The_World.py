@@ -15,8 +15,8 @@ class The_World(Common_func):
             return
 
         # 攻撃力と射程距離を増加させる。
-        self.ext.extention_command(f'effect give {self.name} minecraft:strength infinite 12 true') # ピグリンブルートを二発で倒せるレベルのパワーを付与。
-        self.ext.extention_command(f'attribute {self.name} minecraft:player.entity_interaction_range base set 10') # 攻撃射程距離10ブロックへ。
+        self.ext.extension_command(f'effect give {self.name} minecraft:strength infinite 12 true') # ピグリンブルートを二発で倒せるレベルのパワーを付与。
+        self.ext.extension_command(f'attribute {self.name} minecraft:player.entity_interaction_range base set 10') # 攻撃射程距離10ブロックへ。
 
         # 時を止められる時間が0秒で、スタプラによる時間停止が行われていたら、これ以降の処理は停止する。
         if self.timer == 0 and self.bool_have_tag('stop_time'):
@@ -48,7 +48,7 @@ class The_World(Common_func):
         self.ticket_target = True if self.controller.check_ticket_item(self.name, self.ticket_item[0], self.ticket_item[1]) else False
         # チケットアイテムを持ち、既にチェックポイント開放がされているならボーナス処理
         if self.ticket_target and self.controller.elapsed_time >= 300:
-            self.ext.extention_command(f'bossbar set minecraft:ticket visible false')   # ゲージが多すぎると目障りなので画面から不可視
+            self.ext.extension_command(f'bossbar set minecraft:ticket visible false')   # ゲージが多すぎると目障りなので画面から不可視
             self.controller.set_bonus_bossbar(self.name)
             self.controller.set_bonus_bossbar_visible(self.name, True)
             self.controller.set_bonus_bossbar_value(self.name, self.bonus_time)
@@ -72,7 +72,7 @@ class The_World(Common_func):
         # チェックポイント攻撃時処理
         if self.uuid == self.controller.passcheck_checkpoint(f'No{self.pass_point+1}'):
             # 同じUUIDであれば持ち物の内容にかかわらずデータを削除。
-            self.ext.extention_command(f'data remove entity @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] attack')
+            self.ext.extension_command(f'data remove entity @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] attack')
 
             if not self.controller.check_active(f'No{self.pass_point+1}') and self.controller.prepare:
                 # そのチェックポイントは誰も通過していないため、一位として扱っていいかチェックする。
@@ -112,18 +112,18 @@ class The_World(Common_func):
         # スタンド解除は実質下の関数。
         self.start_time()
         self.timer = 5
-        self.ext.extention_command(f'attribute {self.name} minecraft:player.entity_interaction_range base set 3') # 攻撃射程距離デフォルト（3ブロック）へ戻す。
-        self.ext.extention_command(f'effect clear {self.name} minecraft:strength')
+        self.ext.extension_command(f'attribute {self.name} minecraft:player.entity_interaction_range base set 3') # 攻撃射程距離デフォルト（3ブロック）へ戻す。
+        self.ext.extension_command(f'effect clear {self.name} minecraft:strength')
 
     def stop_time(self):
-        self.ext.extention_command('title @a times 0 0.8s 0.2s')
-        self.ext.extention_command('title @a subtitle "ザ・ワールド！！"')
-        self.ext.extention_command('title @a title "世界！！"')
-        self.ext.extention_command(f'execute as {self.name} at @s run tick freeze')
-        self.ext.extention_command(f'execute as {self.name} at @s run particle minecraft:flash ^ ^ ^ 0 0 0 0 0 force @a')  # 能力演出
-        self.ext.extention_command(f'playsound minecraft:block.bell.resonate master @a ~ ~ ~ 1 1 1')
-        self.ext.extention_command(f'playsound minecraft:entity.bee.death master @a ~ ~ ~ 4 0 1')
-        self.ext.extention_command(f'effect give @a minecraft:blindness 1 1 true')  # 能力演出
+        self.ext.extension_command('title @a times 0 0.8s 0.2s')
+        self.ext.extension_command('title @a subtitle "ザ・ワールド！！"')
+        self.ext.extension_command('title @a title "世界！！"')
+        self.ext.extension_command(f'execute as {self.name} at @s run tick freeze')
+        self.ext.extension_command(f'execute as {self.name} at @s run particle minecraft:flash ^ ^ ^ 0 0 0 0 0 force @a')  # 能力演出
+        self.ext.extension_command(f'playsound minecraft:block.bell.resonate master @a ~ ~ ~ 1 1 1')
+        self.ext.extension_command(f'playsound minecraft:entity.bee.death master @a ~ ~ ~ 4 0 1')
+        self.ext.extension_command(f'effect give @a minecraft:blindness 1 1 true')  # 能力演出
 
         self.stop_player_effect_list()
 
@@ -131,40 +131,40 @@ class The_World(Common_func):
             if player == self.name: # ザ・ワールド能力者の自分を除外
                 #pass
                 continue
-            self.ext.extention_command(f'execute as {player} at @s run summon minecraft:armor_stand ~ ~ ~ {{Invisible:1,Invulnerable:1,NoGravity:1,Tags:["The_World","{player}"]}}')
+            self.ext.extension_command(f'execute as {player} at @s run summon minecraft:armor_stand ~ ~ ~ {{Invisible:1,Invulnerable:1,NoGravity:1,Tags:["The_World","{player}"]}}')
         self.standard_time = time.time()    # count_down()のための処理。最初の一回はこれを基に1秒経過しているかを検知。
 
 
     def stop_player_effect_list(self):
-        self.ext.extention_command(f'tag @a[name=!{self.name}] add stop_time')  # 時間を止めていることを示すタグを自分以外のプレイヤーに付与。
-        self.ext.extention_command(f'execute as @a[name=!{self.name},nbt={{OnGround:0b}}] at @s run attribute @s minecraft:generic.gravity base set 0')
-        self.ext.extention_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.jump_strength base set 0')
-        self.ext.extention_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.movement_speed base set 0')
-        self.ext.extention_command(f'effect give @a[name=!{self.name}] minecraft:water_breathing {self.timer} 1 true')
-        self.ext.extention_command(f'effect give @a[name=!{self.name}] minecraft:fire_resistance {self.timer} 1 true')
-        self.ext.extention_command(f'effect give @a[name=!{self.name}] minecraft:slow_falling {self.timer} 5 true')
+        self.ext.extension_command(f'tag @a[name=!{self.name}] add stop_time')  # 時間を止めていることを示すタグを自分以外のプレイヤーに付与。
+        self.ext.extension_command(f'execute as @a[name=!{self.name},nbt={{OnGround:0b}}] at @s run attribute @s minecraft:generic.gravity base set 0')
+        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.jump_strength base set 0')
+        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.movement_speed base set 0')
+        self.ext.extension_command(f'effect give @a[name=!{self.name}] minecraft:water_breathing {self.timer} 1 true')
+        self.ext.extension_command(f'effect give @a[name=!{self.name}] minecraft:fire_resistance {self.timer} 1 true')
+        self.ext.extension_command(f'effect give @a[name=!{self.name}] minecraft:slow_falling {self.timer} 5 true')
         # https://x.com/sayanosasa/status/1806276291655778731   # 棘のダメージは無効化できなかったが、これがヒントになるかも
 
 
     def start_time(self):
-        self.ext.extention_command(f'title @a clear')
-        self.ext.extention_command(f'title @a title "時は動き出す..."')
-        self.ext.extention_command(f'title @a reset')
-        self.ext.extention_command(f'tag @a[name=!{self.name}] remove stop_time')  # 時間を止めていることを示すタグを取り除く。
-        self.ext.extention_command(f'playsound minecraft:block.bell.resonate master @a ~ ~ ~ 1 1 1')
-        self.ext.extention_command(f'effect give @a minecraft:blindness 1 1 true')
+        self.ext.extension_command(f'title @a clear')
+        self.ext.extension_command(f'title @a title "時は動き出す..."')
+        self.ext.extension_command(f'title @a reset')
+        self.ext.extension_command(f'tag @a[name=!{self.name}] remove stop_time')  # 時間を止めていることを示すタグを取り除く。
+        self.ext.extension_command(f'playsound minecraft:block.bell.resonate master @a ~ ~ ~ 1 1 1')
+        self.ext.extension_command(f'effect give @a minecraft:blindness 1 1 true')
 
-        self.ext.extention_command(f'tick unfreeze')
+        self.ext.extension_command(f'tick unfreeze')
 
-        self.ext.extention_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.gravity base set 0.08')
-        self.ext.extention_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.jump_strength base set 0.42')
-        self.ext.extention_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.movement_speed base set 0.1')
-        self.ext.extention_command(f'effect clear @a[name=!{self.name}] minecraft:water_breathing')
-        self.ext.extention_command(f'effect clear @a[name=!{self.name}] minecraft:fire_resistance')
-        self.ext.extention_command(f'effect clear @a[name=!{self.name}] minecraft:slow_falling')
+        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.gravity base set 0.08')
+        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.jump_strength base set 0.42')
+        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.movement_speed base set 0.1')
+        self.ext.extension_command(f'effect clear @a[name=!{self.name}] minecraft:water_breathing')
+        self.ext.extension_command(f'effect clear @a[name=!{self.name}] minecraft:fire_resistance')
+        self.ext.extension_command(f'effect clear @a[name=!{self.name}] minecraft:slow_falling')
 
         ## 各プレイヤーに重なるアマスタを切る。
-        self.ext.extention_command(f'kill @e[tag=The_World_fix]')
+        self.ext.extension_command(f'kill @e[tag=The_World_fix]')
 
         self.run_stand = False
         self.controller.run_The_World = False
@@ -179,23 +179,23 @@ class The_World(Common_func):
         # 最後に能力を発動させてから1分経過ごとに止められる時間が1秒増える。
         elapsed_time = int(time.time() - self.standard_time)
         if elapsed_time >= 60 and self.timer < 10:
-            self.ext.extention_command(f'tag {self.name} remove {self.timer}')  # 1.現在の停止時間を削除
+            self.ext.extension_command(f'tag {self.name} remove {self.timer}')  # 1.現在の停止時間を削除
             self.timer += 1
             self.standard_time = time.time()
-            self.ext.extention_command(f'tag {self.name} add {self.timer}')     # 2.更新された停止時間を記録
+            self.ext.extension_command(f'tag {self.name} add {self.timer}')     # 2.更新された停止時間を記録
 
 
     def count_down(self):
         # 時間停止中のカウントダウン。
         elapsed_time = int(time.time() - self.standard_time)
         if elapsed_time >= 1 and self.timer > 0:    # 一秒経過・・・
-            self.ext.extention_command(f'tag {self.name} remove {self.timer}')  # 1.現在の停止時間を削除
+            self.ext.extension_command(f'tag {self.name} remove {self.timer}')  # 1.現在の停止時間を削除
             self.timer -= 1     # 止められる時間をカウントダウン
-            self.ext.extention_command(f'tag {self.name} add {self.timer}')     # 2.更新された停止時間を記録
-            self.ext.extention_command(f'playsound minecraft:item.lodestone_compass.lock master @a ~ ~ ~ 1 2 1')
+            self.ext.extension_command(f'tag {self.name} add {self.timer}')     # 2.更新された停止時間を記録
+            self.ext.extension_command(f'playsound minecraft:item.lodestone_compass.lock master @a ~ ~ ~ 1 2 1')
             if self.timer != 0:
-                self.ext.extention_command(f'title @a clear')
-                self.ext.extention_command(f'title @a actionbar "{self.timer}秒前..."')
+                self.ext.extension_command(f'title @a clear')
+                self.ext.extension_command(f'title @a actionbar "{self.timer}秒前..."')
             self.standard_time = time.time()    # 基準時間を更新
 
             if self.timer == 0: # 止められる時間を消費しきったら「時は動き出す・・・」
@@ -234,4 +234,4 @@ class The_World(Common_func):
                 continue
 
             if rot != "None":
-                self.ext.extention_command(f'execute as @e[tag={player},tag=The_World_fix,limit=1] at @s run tp {player} ~ ~ ~ {rot[0]} {rot[1]}')
+                self.ext.extension_command(f'execute as @e[tag={player},tag=The_World_fix,limit=1] at @s run tp {player} ~ ~ ~ {rot[0]} {rot[1]}')
