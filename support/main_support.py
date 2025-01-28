@@ -28,7 +28,7 @@ def get_rcon_info(is_server):
     rip = '127.0.0.1'
     rport = None
     rpassword = 'password'
-    
+
     #サーバ側の場合
     if is_server:
         str_file = 'server.properties'
@@ -47,36 +47,36 @@ def get_rcon_info(is_server):
         rip = contns['sever_ip']
         rport = int(contns['rcon_port'])
         rpassword = contns['password']
-        
+
     return rip, rport, rpassword
 
 
 def make_dir(file_name):
     '''
     指定されたフォルダを作成します。
-    
+
     Parameter
         file_name : str
-        
+
     Return
         なし
     '''
     os.makedirs(file_name)
 
-    
+
 def make_stand_list():
     '''
     stand_list.jsonを作成します。
     基本的に一度しか実行されない。
     スタンド能力を新たに追加するときは注意が必要。
-    
+
     Parameter
         なし
-        
+
     Return
         なし
     '''
-    first = {"The_World": "1dummy", "TuskAct4": "1dummy", "Killer_Qeen": "1dummy", "Catch_The_Rainbow": "1dummy", "Twentieth_Century_Boy": "1dummy", "Little_Feat": "1dummy", "Cream": "1dummy", "Crazy_Diamond": "1dummy"}
+    first = {"The_World": "1dummy", "TuskAct4": "1dummy", "Killer_Qeen": "1dummy", "Catch_The_Rainbow": "1dummy", "Twentieth_Century_Boy": "1dummy", "Little_Feat": "1dummy", "Cream": "1dummy", "Crazy_Diamond": "1dummy", "Gold_Experience": "1dummy"}
     with open('./json_list/stand_list.json', 'w', encoding='utf-8') as f:
         json.dump(first, f, ensure_ascii=False)
 
@@ -202,7 +202,7 @@ def summon_stand_user_info(ext):
         if resp is None:
             #エンティティを新規で生成する
             set_entity_data(ext, entity_name, X, Y, Z, invulnerable, nogravity, stand_name, contents.get(stand_name))
-        #外部ファイルとワールドのエンティティが一致しない場合  
+        #外部ファイルとワールドのエンティティが一致しない場合
         elif resp != contents.get(stand_name):
             #外部ファイルを踏襲
             edit_entity_tag_data(ext, entity_name, contents.get(stand_name), resp, stand_name)
@@ -232,7 +232,7 @@ def get_entity_data(ext, types, tag, name, target=None):
     '''
     #コマンドの基本構文を生成
     cmd = f'data get entity @e[limit=1,%types%%tag%%name%] %target%'
-    
+
     #「%types%」箇所の置換
     cmd = cmd.replace(f'%types%', '') if types is None else cmd.replace(f'%types%', f'type={types},')
     #「%tag%」箇所の置換
@@ -242,7 +242,7 @@ def get_entity_data(ext, types, tag, name, target=None):
     #「%target%」箇所の置換
     cmd = cmd.replace(f'%target%', '') if target is None else cmd.replace(f'%target%', f'{target}')
 
-    return ext.extention_command(cmd)
+    return ext.extension_command(cmd)
 
 
 def set_entity_data(ext, types, X, Y, Z, invulnerable, nogravity, tags, name):
@@ -273,7 +273,7 @@ def set_entity_data(ext, types, X, Y, Z, invulnerable, nogravity, tags, name):
     '''
     #コマンドの基本構文を生成
     cmd = f'summon %types% %X% %Y% %Z% {{%invulnerable%%nogravity%%tag%%name%}}'
-    
+
     #「%types%」箇所の置換
     cmd = cmd.replace(f'%types%', '') if types is None else cmd.replace(f'%types%', f'{types}')
     #「%X%」箇所の置換
@@ -290,8 +290,8 @@ def set_entity_data(ext, types, X, Y, Z, invulnerable, nogravity, tags, name):
     cmd = cmd.replace(f'%tag%', '') if tags is None else cmd.replace(f'%tag%', f'Tags:[{tags}],')
     #「%name%」箇所の置換
     cmd = cmd.replace(f'%name%', '') if name is None else cmd.replace(f'%name%', f'CustomName:\'{name}\'')
-    
-    return ext.extention_command(cmd)
+
+    return ext.extension_command(cmd)
 
 
 def edit_entity_tag_data(ext, types, name, old_tags, new_tag):
@@ -319,10 +319,10 @@ def edit_entity_tag_data(ext, types, name, old_tags, new_tag):
     cmd = cmd.replace(f'%types%', '') if types is None else cmd.replace(f'%types%', f'type={types},')
     #「%name%」箇所の置換
     cmd = cmd.replace(f'%name%', '') if name is None else cmd.replace(f'%name%', f'name={name}')
-    
+
     #参加者リストの取得
     name_list = ext.get_joinner_list()
-    
+
     #参加者リストを元にold_tags内の氏名を検索
     """index = None
     for i in range(len(old_tags)):
@@ -331,8 +331,8 @@ def edit_entity_tag_data(ext, types, name, old_tags, new_tag):
             break"""
 
     #「%command%」、「%tag%」箇所を置換しコマンド実行
-    remove_resp = ext.extention_command(cmd.replace(f'%command%', 'remove').replace(f'%tag%', '') if old_tags[0] is None else cmd.replace(f'%command%', 'remove').replace(f'%tag%', f'{old_tags[0]}'))
-    addtag_resp = ext.extention_command(cmd.replace(f'%command%', 'add').replace(f'%tag%', '') if new_tag is None else cmd.replace(f'%command%', 'add').replace(f'%tag%', f'{new_tag}'))
+    remove_resp = ext.extension_command(cmd.replace(f'%command%', 'remove').replace(f'%tag%', '') if old_tags[0] is None else cmd.replace(f'%command%', 'remove').replace(f'%tag%', f'{old_tags[0]}'))
+    addtag_resp = ext.extension_command(cmd.replace(f'%command%', 'add').replace(f'%tag%', '') if new_tag is None else cmd.replace(f'%command%', 'add').replace(f'%tag%', f'{new_tag}'))
 
     return [remove_resp, addtag_resp]
 
@@ -360,7 +360,7 @@ def get_self_playername():
         str_dir = os.getenv('APPDATA') + '\\.minecraft'
         str_file = 'launcher_accounts_microsoft_store.json'
         contents = open_json(f'{str_dir}\\{str_file}')
-    
+
     return find_value(contents, 'name')
 
 
@@ -374,9 +374,9 @@ def gift_stand(ext):
 
     if none_cnt == 0:   # 空きがない（1dummyがいない）なら終わり。randintでマイナス値を参照することになり、Errorを起こしてしまう。
         return
-    
+
     # 参加者を検索
-    players = ext.extention_command('data get entity @e[type=minecraft:armor_stand,limit=1,name=List] Tags')
+    players = ext.extension_command('data get entity @e[type=minecraft:armor_stand,limit=1,name=List] Tags')
     #print(players)
     # スタンド割り当て処理
     for player in players:
@@ -422,46 +422,50 @@ def death_or_logout_check(stand):
         stand.cancel_stand()
 
 def stand_lost_check(ext, stand, my_standname):
-    item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート", "クリーム", "クレイジー・ダイヤモンド")
+    item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート", "クリーム", "クレイジー・ダイヤモンド", "ゴールド・エクスペリエンス")
 
     match my_standname:
         case 'The_World':
             if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
-                ext.extention_command('give ' + stand.name + ' clock[minecraft:custom_name="' + item_name_list[0] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+                ext.extension_command('give ' + stand.name + ' clock[minecraft:custom_name="' + item_name_list[0] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
         case 'TuskAct4':
             if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
-                ext.extention_command('give ' + stand.name + ' saddle')
-                ext.extention_command('give ' + stand.name + ' lead')
-                ext.extention_command('give ' + stand.name + ' bone[minecraft:custom_name="' + item_name_list[1] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+                ext.extension_command('give ' + stand.name + ' saddle')
+                ext.extension_command('give ' + stand.name + ' lead')
+                ext.extension_command('give ' + stand.name + ' bone[minecraft:custom_name="' + item_name_list[1] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
         case 'Killer_Qeen':
             if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':   # 全て失わないと再取得できないので注意
-                ext.extention_command('give ' + stand.name + ' gunpowder[minecraft:custom_name="' + item_name_list[2][0] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
-                ext.extention_command('give ' + stand.name + ' flint[minecraft:custom_name="' + item_name_list[2][1] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
-                ext.extention_command('give ' + stand.name + ' fire_charge[minecraft:custom_name="' + item_name_list[2][2] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+                ext.extension_command('give ' + stand.name + ' gunpowder[minecraft:custom_name="' + item_name_list[2][0] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+                ext.extension_command('give ' + stand.name + ' flint[minecraft:custom_name="' + item_name_list[2][1] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+                ext.extension_command('give ' + stand.name + ' fire_charge[minecraft:custom_name="' + item_name_list[2][2] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
         case 'Catch_The_Rainbow':
             if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
-                ext.extention_command('give ' + stand.name + ' skeleton_skull[minecraft:custom_name="' + item_name_list[3] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+                ext.extension_command('give ' + stand.name + ' skeleton_skull[minecraft:custom_name="' + item_name_list[3] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
         case 'Twentieth_Century_Boy':
             if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
-                ext.extention_command('give ' + stand.name + ' snowball[minecraft:custom_name="' + item_name_list[4] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+                ext.extension_command('give ' + stand.name + ' snowball[minecraft:custom_name="' + item_name_list[4] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
                 #stand.create_ticket_compass()
                 #stand.create_target_compass()
 
         case 'Little_Feat':
             if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
-                ext.extention_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[5] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+                ext.extension_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[5] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
         case 'Cream':
             if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
-                ext.extention_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[6] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+                ext.extension_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[6] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
         case 'Crazy_Diamond':
             if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
-                ext.extention_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[7] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+                ext.extension_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[7] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+
+        case 'Gold_Experience':
+            if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
+                ext.extension_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[8] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
         case _:
                 pass
@@ -480,13 +484,13 @@ def stand_list_json_rewrite_for_new_joinner(ext):
     Return
         bool
     '''
-    
+
     #「NEW」が付与されているアマスタのTag(プレイヤー名)を取得
     newList = ext.get_newjoinner_list()
-    
+
     #該当アマスタが存在する場合
-    if not newList is None: 
-        
+    if not newList is None:
+
         #スタンドリストを取得
         contents = open_json(f'./{STR_DIR}/{STR_STAND_FILE}')
         #空きスタンドの取得
@@ -496,12 +500,12 @@ def stand_list_json_rewrite_for_new_joinner(ext):
             return False
         #空きスタンド数の取得
         vacantStandNum = len(vacantStand)
-        
+
         for i in range(len(newList)):
             #空きスタンド数 - for文のループ回数が0以下になったらreturn
             if vacantStandNum - i <= 0:
                 return False
-            
+
             #空きスタンドの個数-1(index準拠)でランダム値を生成
             rand = random.randint(0,len(vacantStand) - 1)
             #空きスタンド能力(key)に対応するプレイヤー(value)を紐づける
@@ -510,9 +514,9 @@ def stand_list_json_rewrite_for_new_joinner(ext):
             save_json(contents, f'./{STR_DIR}/{STR_STAND_FILE}')
             #割り当てたスタンドを削除
             del vacantStand[rand]
-                
+
             #「NEW」が付与されているアマスタから新規参入者の名前を削除
-            ext.extention_command(f'tag @e[limit=1,type=minecraft:armor_stand,name=NEW] remove {newList[i]}')
+            ext.extension_command(f'tag @e[limit=1,type=minecraft:armor_stand,name=NEW] remove {newList[i]}')
     return True
 
 
@@ -523,16 +527,16 @@ def new_joinner_func(ext, myname):
     Parameter
         myname : str
         自身の名前
-        
+
         ext : MCRcon
             Rconのサーバ情報
 
     Return
         なし
     '''
-    ext.extention_command(f'execute unless entity @e[name=List,type=minecraft:armor_stand,tag={myname}] run tag @e[name=NEW,type=minecraft:armor_stand,limit=1] add {myname}')
-    ext.extention_command(f'execute unless entity @e[name=List,type=minecraft:armor_stand,tag={myname}] run tag @e[name=List,type=minecraft:armor_stand,limit=1] add {myname}')
-    
+    ext.extension_command(f'execute unless entity @e[name=List,type=minecraft:armor_stand,tag={myname}] run tag @e[name=NEW,type=minecraft:armor_stand,limit=1] add {myname}')
+    ext.extension_command(f'execute unless entity @e[name=List,type=minecraft:armor_stand,tag={myname}] run tag @e[name=List,type=minecraft:armor_stand,limit=1] add {myname}')
+
 def add_cooldown_datapack():
     world_name = 'world'
 

@@ -19,7 +19,7 @@ class Extension:
             df = json.load(f)
         for i in range(len(df)):
             userlist.append(df[i]['name'])
-        
+
         self.mcr.command()
 
 
@@ -51,7 +51,7 @@ class Extension:
             # stand_list.jsonのstand名を元にStandlistにスタンド名をtag付けする。
             for standname in list(stand_list.keys()):
                 self.mcr.command(f'tag @e[name=Standlist,type=minecraft:armor_stand,limit=1] add {standname}')
-            
+
             # stand_list.jsonのuser名を元にListにユーザー名をtag付けする。
             for username in list(stand_list.values()):
                 if username == "1dummy":
@@ -70,7 +70,7 @@ class Extension:
             name_list : list
                 リスト型の参加者名簿
         '''
-        result = self.extention_command('data get entity @e[name=NEW,type=minecraft:armor_stand,limit=1] Tags')
+        result = self.extension_command('data get entity @e[name=NEW,type=minecraft:armor_stand,limit=1] Tags')
         #result = 'aaaaaaaaaaaNEW has the following entity data: ["HSLQ12", "ARMZ1341", "16iw0lRf", "moyashi21", "KASKA0511"]HSLQ12 has .........'  # sample
         return result
 
@@ -85,7 +85,7 @@ class Extension:
             name_list : list
                 リスト型の参加者名簿
         '''
-        result = self.extention_command('data get entity @e[name=List,type=minecraft:armor_stand,limit=1] Tags')
+        result = self.extension_command('data get entity @e[name=List,type=minecraft:armor_stand,limit=1] Tags')
         #result = 'aaaaaaaaaaaList has the following entity data: ["HSLQ12", "ARMZ1341", "16iw0lRf", "moyashi21", "KASKA0511"]HSLQ12 has .........'  # sample
 
         return result
@@ -95,7 +95,7 @@ class Extension:
     def get_stand_list(self):
         '''
         スタンド名の一覧を取得します。
-        
+
         Parameter
             None
 
@@ -103,17 +103,17 @@ class Extension:
             stand_list : list
                 リスト型のスタンド名簿
         '''
-        result = self.extention_command('data get entity @e[name=Standlist,type=minecraft:armor_stand,limit=1] Tags')
+        result = self.extension_command('data get entity @e[name=Standlist,type=minecraft:armor_stand,limit=1] Tags')
         #result = 'aaaaaaaaaaaStandlist has the following entity data: ["The_World", "Killer", "TuskAct4"]HSLQ12 has .........' # sample
         return result
 
 
     #可読性を上げるため、listen_commands_returnではなく、この関数を呼び出す。
-    def extention_command(self, command, wanna_info_name=None):
+    def extension_command(self, command, wanna_info_name=None):
         '''
         同時にコマンドを実行されても使用できるmcr.command()の拡張関数です。\n
         ただし返り値について「プレイヤー名若しくはスタンドの情報しか取得できない」制約があります。\n
-        
+
         Parameter
             command : str
                 実行したい情報取得コマンド
@@ -126,13 +126,13 @@ class Extension:
             command_info : str
                 コマンドの実行結果
         '''
-        
+
         command_info = self._listen_commands_return(command, wanna_info_name)
         #print(f'return:     {command_info}')
         return command_info
 
 
-    # この関数ではなく基本的にextention_commandを呼び出すようにする。
+    # この関数ではなく基本的にextension_commandを呼び出すようにする。
     def _listen_commands_return(self, command, wanna_info_name):
         command_info = None
         #result = 'KASKA0511 has the following entity data: 20ARMZ1341 has the following entity data: 1HSLQ12 has the following entity data: 5'  # sample
@@ -320,7 +320,7 @@ class Extension:
                 result = result[0]
 
             return result
-        
+
         else:   #ここ冗長かも。_listen_commands_return
             if 'No player was found' in result:
                 return None
@@ -349,7 +349,7 @@ class Extension:
         '''
         コマンド実行結果から不要な文字列を削除し、整形します。\n
         返り値は文字列型またはリスト型で返します。\n
-        
+
         Parameter
             wanna_info_name : str
                 情報取得したいプレイヤー名またはスタンド名。
@@ -374,7 +374,7 @@ class Extension:
             string = string.replace('I; ', '')  # 「I; 」を削除 例：UUID
             string = re.split(r', ', string)    #「, 」でsplitし配列にする。
             #string = [float(s) for s in string if self.is_float(s)] # listの中の数字を数値(float型)へ変換。
-        
+
         return string
 
     def heavy_processing_for_locate(self, command_info):

@@ -407,7 +407,7 @@ class Common_func:
         '''
 
         id = self.ext.extension_command('data get entity '+ self.name +' Inventory[{Slot:-106b}].id')
-        tag = self.ext.extension_command('data get entity '+ self.name +' Inventory[{Slot:-106b}]."minecraft:custom_data".tag')
+        tag = self.ext.extension_command('data get entity '+ self.name +' Inventory[{Slot:-106b}].components."minecraft:custom_data".tag')
         id = None if id is None else id     # スロットが空など、もし見つからなかったらNoneで返す。
         tag = None if tag is None else tag  # アイテムにTagが無いならNoneで返す。
 
@@ -584,3 +584,20 @@ class Common_func:
         have = True if deathtime == '0s' else False
 
         return have
+
+    def within_range_XpLevel(self, xp):
+        '''
+        自分自身の経験値レベルを指定レベルを満たしているか知ることができます。
+
+        Parameter
+            xp : int
+                経験値レベル。
+
+        Return
+            within_range : bool
+                プレイヤーの経験値。
+        '''
+        deathtime = self.ext.extension_command(f'execute if entity @a[name={self.name},limit=1,level={int(xp)}..] data get entity {self.name} DeathTime')
+        within_range = True if deathtime == '0s' else False
+
+        return within_range

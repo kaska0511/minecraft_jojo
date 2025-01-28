@@ -22,6 +22,7 @@ from stands.Twentieth_Century_Boy import Twentieth_Century_Boy
 from stands.Little_Feat import Little_Feat
 from stands.Cream import Cream
 from stands.Crazy_Diamond import Crazy_Diamond
+from stands.Gold_Experience import Gold_Experience
 
 
 def main(ext, is_server):
@@ -87,6 +88,7 @@ def main(ext, is_server):
             continue
 
         new_standname = ext.extension_command(f'data get entity @e[name={ext.name},type=armor_stand,limit=1] Tags')[0]
+
         # プレイヤー名と紐づくスタンド名を取得し、変更があればそれに合わせて再初期化。
         if my_standname != new_standname:
             my_standname = ext.stand = new_standname
@@ -127,6 +129,9 @@ def main(ext, is_server):
 
                 case 'Crazy_Diamond':
                     stand = Crazy_Diamond(name=ext.name, ext=ext, controller=controller)
+
+                case 'Gold_Experience':
+                    stand = Gold_Experience(name=ext.name, ext=ext, controller=controller)
 
                 case _:
                         print('全てにマッチ')

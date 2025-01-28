@@ -163,7 +163,8 @@ class TuskAct4(Common_func):
         self.ext.extension_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run particle minecraft:explosion_emitter ~ ~ ~') # 当たったら爆発演出
         self.ext.extension_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run playsound minecraft:entity.generic.explode master @a ~ ~ ~ 4')
         self.ext.extension_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run damage @e[distance=..1,type=!item,tag=!checkpoint] 999999999999999999999 minecraft:explosion by {self.name}')
-        self.ext.extension_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run kill @e[distance=..1,type=!item,tag=!checkpoint]')   # ターゲットキル。接触しているものもキル。スタンド自身もキル。
+        # ゴールド・エクスペリエンス・レクイエムはkillしない特別措置。レクエイム化したプレイヤーにはrequiemのタグが付与されている。
+        self.ext.extension_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run kill @e[distance=..1,type=!item,tag=!checkpoint,tag=!requiem]')   # ターゲットキル。接触しているものもキル。スタンド自身もキル。
 
         # もしターゲットがいないなら処理。デスポーンやログアウト用
         result = self.ext.extension_command(f'execute unless entity @e[name=TuskAct4,limit=1] run data get entity {self.name} DeathTime') # tag=Tusk_Targetが居ないなら、スタンド使いのDeathTimeを取得する。

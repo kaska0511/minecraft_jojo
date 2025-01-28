@@ -52,7 +52,7 @@ class Gold_Experience(Common_func):
         is_load = False
         while not is_load:
             time.sleep(0.05)    # 1tick待つ。
-            result = self.ext.extension_command(f'execute in minecraft:the_nether if loaded -1 128 0 run data get entity @e[limit=1] DeathTime')
+            result = self.ext.extension_command(f'execute in minecraft:the_nether if loaded -1 128 0 run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')
             is_load = True if result == '0s' else False
 
         # 16の記憶領域を作成。マグマや火など周りへの影響を極力避けるため、仕切りで用意する。
@@ -83,7 +83,7 @@ class Gold_Experience(Common_func):
         """
         # 重複生成を避けるため、存在確認。
         result = self.ext.extension_command('data get entity @e[type=armor_stand,name=Gold_Experience_BirthdayList,limit=1] DeathTime')
-        if not result == '0s':
+        if result == '0s':
             # 既に生成されているなら誕生日リストをプログラムにインプット。
             temporary_data = self.ext.extension_command('data get entity @e[type=armor_stand,name=Gold_Experience_BirthdayList,limit=1] Tags')
             if temporary_data is not None:  # 能力を一度も使用していない場合は空の場合がある。
@@ -120,7 +120,7 @@ class Gold_Experience(Common_func):
                     empty_flag = True
                     break
 
-        return empty_flag, x, y, z
+        return empty_flag, -x, y, z
 
     def running_stand(self):
         # 目線の高さに合わせてsummonする。
@@ -138,7 +138,7 @@ class Gold_Experience(Common_func):
                 # 石などのありふれたブロック
                 else:
                     # ブロックを消費し、生物を生成する。
-                    self.specific_block_summon()
+                    self.specific_block_summon(searcher_tag)
                 break
             # 経験値以外のエンティティか？
             if self.is_entity(searcher_tag):
@@ -223,11 +223,11 @@ class Gold_Experience(Common_func):
         # 記憶領域の座標を取得する。
         coordinate = self.seek_save_chunk()
 
+        # tag指定でネザーの天井裏へ退避。
+        self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s run clone ~ ~ ~ ~ ~ ~ to minecraft:the_nether {coordinate[1]} {coordinate[2]} {coordinate[3]} replace move')
+
         # 特別なMOBを召喚する。
         self._specific_summon_mob(tag, coordinate)
-
-        #tag指定でネザーの天井裏へ退避。
-        self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s in the_nether run tp @s {coordinate[1]} {coordinate[2]} {coordinate[3]}')
 
     def search_block_kinds(self, tag, kinds):
         '''
@@ -236,7 +236,7 @@ class Gold_Experience(Common_func):
         boolv = False
 
         if type(kinds) == str:
-            result = self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s if block ~ ~ ~ {kind} run data get entity {self.name} DeathTime')
+            result = self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s if block ~ ~ ~ {kinds} run data get entity {self.name} DeathTime')
             boolv = True if result == '0s' else False
         elif type(kinds) == list or type(kinds) == tuple:
             for kind in kinds:
@@ -342,7 +342,7 @@ class Gold_Experience(Common_func):
         # Motionをコピーする。
         self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s run data modify entity @e[tag=GEcreature,type=!armor_stand,limit=1] Motion set from entity @n[tag={tag},limit=1] Motion')
 
-        #tag指定でネザーの天井裏へ退避。
+        # tag指定でネザーの天井裏へ退避。
         self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s in the_nether run tp @s {coordinate[1]} {coordinate[2]} {coordinate[3]}')
 
     def _specific_summon_mob(self, tag, coordinate):
@@ -350,7 +350,8 @@ class Gold_Experience(Common_func):
         特別なMOBを召喚する。
         '''
         birthday = int(time.time())     # UNIX時刻を誕生日とする。
-        self.birthdays.append(birthday).sort()  # 誕生日リストに追加。ソートも行う。
+        self.birthdays.append(birthday) # 誕生日リストに追加。
+        self.birthdays.sort()           # ソートも行う。
         self.ext.extension_command(f'tag @e[name=Gold_Experience_BirthdayList,type=armor_stand,limit=1] add {birthday}')
 
         # 特定のmobを召喚する。
@@ -359,7 +360,7 @@ class Gold_Experience(Common_func):
         base_char_summon = 'summon minecraft:_MOB_ ~ ~ ~ {Tags:["GEcreature"],PersistenceRequired:1b,Passengers:[{id:"minecraft:armor_stand",CustomName:"Gold_Experience_note",Tags:["GEcreature","_COORDINATE_","_BIRTHDAY_"],attributes:[{id:"minecraft:scale",base:0.0625d}],Invisible:1b,NoGravity:1b,Silent:1b,Invulnerable:1b}]}'
         base_char_summon = base_char_summon.replace(f'_MOB_', self.choice_mob())
         base_char_summon = base_char_summon.replace(f'_COORDINATE_', str(f'xyz_{coordinate[1]}.{coordinate[2]}.{coordinate[3]}'))
-        base_char_summon = base_char_summon.replace(f'_BIRTHDAY_', birthday)    # UNIX時刻を誕生日とする。
+        base_char_summon = base_char_summon.replace(f'_BIRTHDAY_', str(birthday))    # UNIX時刻を誕生日とする。
         self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s run ' + base_char_summon)
 
     def is_mob(self, tag):
@@ -470,7 +471,7 @@ class Gold_Experience(Common_func):
         # エンティティが死亡しているか確認し、死亡していたら素材に戻す処理。
         # 召喚した全エンティティをチェックする必要があるので、関数呼び出す毎に一体のみに限定して軽量化を図る。
         for birthday in self.birthdays:
-            deathtime = self.ext.extension_command(f'execute as @e[name=Gold_Experience_note,tag={birthday},type=armor_stand,limit=1] at @s on vehicle run data get entity @s DeathTime')
+            deathtime = self.ext.extension_command(f'execute as @e[name=Gold_Experience_note,tag={birthday},type=armor_stand,limit=1] at @s on vehicle run data get entity {self.name} DeathTime')
             if deathtime == '0s':   # 生存
                 yield False         # 終了
             else:                   # 死亡
@@ -504,7 +505,7 @@ class Gold_Experience(Common_func):
         ゴールド・エクスペリエンスが生み出した生物が攻撃された場合、反撃します。\n
         6のダメージを付与します。
         '''
-        self.ext.extension_command(f'execute as @e[type=!item,type=!experience_orb] on attacker if entity @e[tag=GEcreature,type=!armor_stand,nbt=!{{HurtTime:0s}}] run damage @s 6 minecraft:magic by {self.name}')
+        self.ext.extension_command(f'execute as @e[tag=GEcreature,type=!armor_stand,nbt=!{{HurtTime:0s}}] on attacker run damage @s 6 minecraft:magic by {self.name}')
 
     def requiem(self):
         '''
