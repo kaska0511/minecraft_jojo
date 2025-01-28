@@ -32,8 +32,16 @@ class Gold_Experience(Common_func):
         item, tag = self.get_OffHandItem()
 
         if tag == type(self).__name__:
-            if self.right_click or self.left_click:
-                self.running_stand()
+            if self.left_click and not self.right_click:
+                # 攻撃モード（鈍足付与）
+                self.left_running_stand()
+            if self.right_click and not self.left_click and self.press_key == 'shift':
+                # shiftを押していたら回復モード
+                self.right_energy_running_stand()
+            elif self.right_click and not self.left_click:
+                # 生物化 <-> 解除
+                self.right_running_stand()
+
 
         # 立ち上がったクリックフラグを下げる。
         self.right_click = False
@@ -122,13 +130,14 @@ class Gold_Experience(Common_func):
 
         return empty_flag, -x, y, z
 
-    def running_stand(self):
+    def right_running_stand(self):
+        # 生物化 <-> 解除
         # 目線の高さに合わせてsummonする。
         searcher_tag = 'GEsearcher'
         self.summon_searcher(searcher_tag)
 
-        for _ in range(25):     # アニメ版では射程距離C（5mくらい？）。5マス分を範囲にしたいので、range(25) * 前進マス(0.2) = 5マス。
-            self.ext.extension_command(f'execute as @e[tag={searcher_tag},limit=1] at @s run tp ^ ^ ^0.2')   # 視線をプレイヤーとリンクした状態で0.2マス分前進する。
+        for _ in range(10):     # アニメ版では射程距離C（5mくらい？）。5マス分を範囲にしたいので、range(10) * 前進マス(0.5) = 5マス。
+            self.ext.extension_command(f'execute as @e[tag={searcher_tag},limit=1] at @s run tp ^ ^ ^0.5')   # 視線をプレイヤーとリンクした状態で0.2マス分前進する。
             # 空気以外の何らかのブロックか？
             if self.is_block(searcher_tag):
                 # 植物系の特別なブロックか？
@@ -146,14 +155,32 @@ class Gold_Experience(Common_func):
                     # 能力で生み出したMOBなら
                     if self.is_GECreature(searcher_tag):   # tagで検知
                         self.revert_GEC2inorganic(searcher_tag) # もとに戻す。
-                    else:   # 自然生成生物かプレイヤーなので、生命エネルギーを流す。
-                        self.add_tag_GEtarget(searcher_tag)
-                        self.pour_energy('GEtarget')
-                        self.rem_tag_GEtarget()
                 else:   # 非生物（乗り物や落下するブロック、item）
                     # とりあえず早急にGEsaverというtagを付ける。
                     self.add_tag_GEsaver(searcher_tag)
                     self.specific_entity_summon('GEsaver')
+                # この処理に入れて、上記の処理が上手くいったかに関わらず終了。
+                break
+
+        # ヒットしなくても検索に使用したアマスタを削除。
+        self.ext.extension_command(f'kill @e[tag={searcher_tag}]')
+
+    def right_energy_running_stand(self):
+        # shiftを押していたら回復モード
+        # 目線の高さに合わせてsummonする。
+        searcher_tag = 'GEsearcher'
+        self.summon_searcher(searcher_tag)
+
+        for _ in range(10):     # アニメ版では射程距離C（5mくらい？）。5マス分を範囲にしたいので、range(10) * 前進マス(0.5) = 5マス。
+            self.ext.extension_command(f'execute as @e[tag={searcher_tag},limit=1] at @s run tp ^ ^ ^0.5')   # 視線をプレイヤーとリンクした状態で0.2マス分前進する。
+            if self.is_block(searcher_tag):
+                break
+            # 経験値以外のエンティティか？
+            if self.is_entity(searcher_tag):
+                # 自然生成生物かプレイヤーなので、生命エネルギーを流す。
+                self.add_tag_GEtarget(searcher_tag)
+                self.pour_energy('GEtarget')
+                self.rem_tag_GEtarget()
                 # この処理に入れて、上記の処理が上手くいったかに関わらず終了。
                 break
         else:
@@ -163,6 +190,26 @@ class Gold_Experience(Common_func):
         # ヒットしなくても検索に使用したアマスタを削除。
         self.ext.extension_command(f'kill @e[tag={searcher_tag}]')
 
+    def left_running_stand(self):
+        # 攻撃モード（鈍足付与）
+        # 目線の高さに合わせてsummonする。
+        searcher_tag = 'GEsearcher'
+        self.summon_searcher(searcher_tag)
+
+        for _ in range(10):     # アニメ版では射程距離C（5mくらい？）。5マス分を範囲にしたいので、range(10) * 前進マス(0.5) = 5マス。
+            self.ext.extension_command(f'execute as @e[tag={searcher_tag},limit=1] at @s run tp ^ ^ ^0.5')   # 視線をプレイヤーとリンクした状態で0.2マス分前進する。
+            # 空気以外の何らかのブロックか？
+            if self.is_block(searcher_tag):
+                break
+            # 経験値以外のエンティティか？
+            if self.is_entity(searcher_tag):
+                if self.is_mob(searcher_tag):
+                    pass
+                    #! 鈍足を付与
+                break
+
+        # ヒットしなくても検索に使用したアマスタを削除。
+        self.ext.extension_command(f'kill @e[tag={searcher_tag}]')
 
     def summon_searcher(self, tag):
         # 目線の高さに合わせてsummonする。
