@@ -12,6 +12,7 @@ class Gold_Experience(Common_func):
         self.summon_armorstand_GECbirthdayList()    # 生成物の誕生日管理アマスタ準備
         self.requiem = False
         self.birthdays = []     # 要素数最大16個
+        self.rotate_birthdays = []  # 死亡確認用
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
@@ -50,7 +51,17 @@ class Gold_Experience(Common_func):
 
     def cancel_stand(self):
         self.run_stand = False
+        self.requiem = False
+        self.revert_GEC2inorganic(all_mode=True)
         self.kill_stand()
+
+    def append_rotate_birthdays(self, birthday):
+        if len(self.rotate_birthdays) == 0: # 初回はそのまま追加。
+            self.rotate_birthdays.append(birthday)
+        else:
+            max_index = self.rotate_birthdays.index(max(self.rotate_birthdays))
+            self.rotate_birthdays.insert(max_index+1, birthday)
+        return
 
     def prepare_save_chunk(self):
         # チャンクを永久ロード
@@ -403,6 +414,7 @@ class Gold_Experience(Common_func):
         birthday = int(time.time())     # UNIX時刻を誕生日とする。
         self.birthdays.append(birthday) # 誕生日リストに追加。
         self.birthdays.sort()           # ソートも行う。
+        self.append_rotate_birthdays(birthday)  # 単純に追加するのではなく、最大値の隣に追加する。
         self.ext.extension_command(f'tag @e[name=Gold_Experience_BirthdayList,type=armor_stand,limit=1] add {birthday}')
 
         # 特定のmobを召喚する。
@@ -494,6 +506,7 @@ class Gold_Experience(Common_func):
             else:   # ここを通る場合は最も古い生物を戻すモード
                 # 最も長生きな生物の誕生日(0番目)を抽出
                 birthday = self.birthdays.pop(0)
+            self.rotate_birthdays.remove(int(birthday))  # rotate_birthdaysからも削除する。
 
             # 誕生日を元に素材の座標を調べる。
             tags = self.ext.extension_command(f'data get entity @e[name=Gold_Experience_note,tag={birthday},type=armor_stand,limit=1] Tags')
@@ -529,36 +542,39 @@ class Gold_Experience(Common_func):
     def death_revert_GEC2inorganic(self):
         # エンティティが死亡しているか確認し、死亡していたら素材に戻す処理。
         # 召喚した全エンティティをチェックする必要があるので、関数呼び出す毎に一体のみに限定して軽量化を図る。
-        for birthday in self.birthdays:
-            deathtime = self.ext.extension_command(f'execute as @e[name=Gold_Experience_note,tag={birthday},type=armor_stand,limit=1] at @s on vehicle run data get entity {self.name} DeathTime')
-            if deathtime == '0s':   # 生存
-                yield False         # 終了
-            else:                   # 死亡
-                # 誕生日を元に素材の座標を調べる。
-                tags = self.ext.extension_command(f'data get entity @e[name=Gold_Experience_note,tag={birthday},type=armor_stand,limit=1] Tags')
+        birthday = self.rotate_birthdays[0] # 一番古い生物の誕生日を取得する。
+        deathtime = self.ext.extension_command(f'execute as @e[name=Gold_Experience_note,tag={birthday},type=armor_stand,limit=1] at @s on vehicle run data get entity {self.name} DeathTime')
+        if deathtime == '0s':   # 生存
+            self.rotate_birthdays[1:] + self.rotate_birthdays[:1]  # 一番古い生物を最後尾に移動する。
+            return True         # 終了
+        else:                   # 死亡
+            # 誕生日を元に素材の座標を調べる。
+            tags = self.ext.extension_command(f'data get entity @e[name=Gold_Experience_note,tag={birthday},type=armor_stand,limit=1] Tags')
 
-                temporary_coordinate_list = [tag.replace('xyz_', '') for tag in tags if 'xyz_' in tag] # xyz_1.2.3という文字列を取得する。この時'xyz_'は削除される。
-                temporary_coordinate = temporary_coordinate_list[0]     # 一つしかないはずなので、0番目を取得する。
-                coordinate = [int(str_data) for str_data in temporary_coordinate.split('.') if self.ext.is_int(str_data)] # 「:」で切り分け、整数型に変換する。
+            temporary_coordinate_list = [tag.replace('xyz_', '') for tag in tags if 'xyz_' in tag] # xyz_1.2.3という文字列を取得する。この時'xyz_'は削除される。
+            temporary_coordinate = temporary_coordinate_list[0]     # 一つしかないはずなので、0番目を取得する。
+            coordinate = [int(str_data) for str_data in temporary_coordinate.split('.') if self.ext.is_int(str_data)] # 「.」で切り分け、整数型に変換する。
 
-                # アマスタのtag情報に書かれている座標情報をもとにブロック・エンティティを引っ張ってくる。
-                # 最初にブロックを移動。
-                self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run clone from minecraft:the_nether {coordinate[0]} {coordinate[1]} {coordinate[2]} {coordinate[0]} {coordinate[1]} {coordinate[2]} ~ ~ ~ masked move')
-                # 次にエンティティを移動。
-                self.ext.extension_command(f'execute in minecraft:the_nether as @e[x={coordinate[0]},y={coordinate[1]},z={coordinate[2]},distance=..1,limit=1] at @s run tp @s @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1]')
-                # TNTの爆発までの時間を1秒前に設定。
-                self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run data modify entity @e[type=tnt,distance=..2,limit=1] fuse set value 1s')
-                # itemの寿命を元に戻す。
-                self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run data modify entity @e[type=item,distance=..2,limit=1] Age set value 0')
-                # 引っ張ってこれたのでアマスタを削除。
-                self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run kill @s')
+            # アマスタのtag情報に書かれている座標情報をもとにブロック・エンティティを引っ張ってくる。
+            # 最初にブロックを移動。
+            self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run clone from minecraft:the_nether {coordinate[0]} {coordinate[1]} {coordinate[2]} {coordinate[0]} {coordinate[1]} {coordinate[2]} ~ ~ ~ masked move')
+            # 次にエンティティを移動。
+            self.ext.extension_command(f'execute in minecraft:the_nether as @e[x={coordinate[0]},y={coordinate[1]},z={coordinate[2]},distance=..1,limit=1] at @s run tp @s @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1]')
+            # TNTの爆発までの時間を1秒前に設定。
+            self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run data modify entity @e[type=tnt,distance=..2,limit=1] fuse set value 1s')
+            # itemの寿命を元に戻す。
+            self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run data modify entity @e[type=item,distance=..2,limit=1] Age set value 0')
+            # 引っ張ってこれたのでアマスタを削除。
+            self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run kill @s')
 
-                ## 誕生日を記録用防具立てから削除。
-                self.ext.extension_command(f'tag @e[name=Gold_Experience_BirthdayList,type=armor_stand,limit=1] remove {birthday}')
-                # self.birthdays から指定の誕生日を削除する。
-                self.birthdays.remove(birthday)
+            ## 誕生日を記録用防具立てから削除。
+            self.ext.extension_command(f'tag @e[name=Gold_Experience_BirthdayList,type=armor_stand,limit=1] remove {birthday}')
+            # self.birthdays から指定の誕生日を削除する。
+            self.birthdays.remove(birthday)
+            # rotate_birthdaysからも削除する。
+            self.rotate_birthdays.remove(birthday)
 
-                yield True
+            return True
 
     def counter_attack_GEcreature(self):
         '''
