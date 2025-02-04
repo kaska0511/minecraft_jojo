@@ -38,7 +38,7 @@ class Gold_Experience(Common_func):
             if self.right_click and not self.left_click and self.press_key == 'shift':
                 # shiftを押していたら回復モード
                 self.right_energy_running_stand()
-            elif self.right_click and not self.left_click:
+            if self.right_click and not self.left_click and self.press_key != 'shift':
                 # 生物化 <-> 解除
                 self.right_running_stand()
 
@@ -119,7 +119,7 @@ class Gold_Experience(Common_func):
                 block_result = self.ext.extension_command(f'execute in the_nether if block -{x} {y} {z} air run data get entity {self.name} DeathTime')
                 if block_result != '0s':    # 何らかのブロックあり。次へ。
                     continue
-                entity_result = self.ext.extension_command(f'execute in the_nether if entity @e[distance=..1,x=-{x},y={y},z={z}] run data get entity {self.name} DeathTime')
+                entity_result = self.ext.extension_command(f'execute in the_nether unless entity @e[x=-{x},y={y},z={z},distance=..1] run data get entity {self.name} DeathTime')
                 if entity_result != '0s':   # 何らかのエンティティあり。次へ。
                     continue
 
@@ -127,6 +127,10 @@ class Gold_Experience(Common_func):
                 if block_result == '0s' and entity_result == '0s':
                     empty_flag = True
                     break
+
+            # ブロックもエンティティも居ない。座標を記録し終了。
+            if empty_flag:
+                break
 
         return empty_flag, -x, y, z
 
@@ -204,8 +208,7 @@ class Gold_Experience(Common_func):
             # 経験値以外のエンティティか？
             if self.is_entity(searcher_tag):
                 if self.is_mob(searcher_tag):
-                    pass
-                    #! 鈍足を付与
+                    self.attack_effect(searcher_tag)
                 break
 
         # ヒットしなくても検索に使用したアマスタを削除。
@@ -261,7 +264,8 @@ class Gold_Experience(Common_func):
         木を誕生させた時、その近くにいるエンティティを木の上にテレポートさせます。\n
         水平方向半径５ブロック、頭上方向10ブロックの範囲内のエンティティが対象。
         '''
-        self.ext.extension_command(f'execute as @e[tag={tag}] at @s as @e[dx=5,dy=10,dz=5] positioned over motion_blocking run tp @s ~ ~ ~')
+        # name=!Gold_Experience_noteはアマスタを除外するため。
+        self.ext.extension_command(f'execute as @e[tag={tag}] at @s as @e[dx=5,dy=10,dz=5,name=!Gold_Experience_note] positioned over motion_blocking run tp @s ~ ~ ~')
 
     def specific_block_summon(self, tag):
         if len(self.birthdays) == MAXIMUM_NUM_OF_CREATURE:   # 空きがない。
@@ -418,6 +422,12 @@ class Gold_Experience(Common_func):
 
         return boolv
 
+    def attack_effect(self, tag):
+        '''
+        攻撃時のエフェクトを記述します。\n
+        '''
+        self.ext.extension_command(f'execute as @e[tag={tag},distance..1,limit=1] at @s run effect give @s minecraft:slowness 3 3 true')
+
     def add_tag_GEtarget(self, tag):
         deathtime = '{DeathTime:0s}'
         self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s if entity @n[name=!{self.name},tag=!{tag},nbt={deathtime},distance=..1] run tag @n[name=!{self.name},tag=!{tag},nbt={deathtime},distance=..1] add GEtarget')
@@ -478,8 +488,9 @@ class Gold_Experience(Common_func):
                 # tagの最も近くにいるGold_Experience_noteからTags情報を取得する。
                 tags = self.ext.extension_command(f'execute as @e[tag={specified_tag},limit=1] at @s run data get entity @n[name=Gold_Experience_note,type=armor_stand,limit=1] Tags')
                 # tags と self.birthdays で共通のデータを取得する。今回の場合は誕生日に当たる。
-                birthday = list(set(tags) & set(self.birthdays))[0]
-                self.birthdays.remove(birthday) # self.birthdays から指定の誕生日を削除する。
+                str_birthdays = list(map(str, self.birthdays))
+                birthday = list(set(tags) & set(str_birthdays))[0]
+                self.birthdays.remove(int(birthday)) # self.birthdays から指定の誕生日を削除する。
             else:   # ここを通る場合は最も古い生物を戻すモード
                 # 最も長生きな生物の誕生日(0番目)を抽出
                 birthday = self.birthdays.pop(0)
@@ -487,7 +498,8 @@ class Gold_Experience(Common_func):
             # 誕生日を元に素材の座標を調べる。
             tags = self.ext.extension_command(f'data get entity @e[name=Gold_Experience_note,tag={birthday},type=armor_stand,limit=1] Tags')
 
-            temporary_coordinate = [tag.replace('xyz_', '') for tag in tags if 'xyz_' in tag] # xyz_1.2.3という文字列を取得する。この時'xyz_'は削除される。
+            temporary_coordinate_list = [tag.replace('xyz_', '') for tag in tags if 'xyz_' in tag] # xyz_1.2.3という文字列を取得する。この時'xyz_'は削除される。
+            temporary_coordinate = temporary_coordinate_list[0]     # 一つしかないはずなので、0番目を取得する。
             coordinate = [int(str_data) for str_data in temporary_coordinate.split('.') if self.ext.is_int(str_data)] # 「:」で切り分け、整数型に変換する。
 
             if kill_mode:
@@ -497,13 +509,13 @@ class Gold_Experience(Common_func):
                 # 防具立てとMOBを分離
                 self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run ride @s dismount')
                 # MOBを奈落へ移動
-                self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s as @n[tag=GEcreature,type=!armor_stand,limit=1] at @s run ~ -74 ~')
+                self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s as @n[tag=GEcreature,type=!armor_stand,limit=1] at @s run tp ~ -74 ~')
 
             # アマスタのtag情報に書かれている座標情報をもとにブロック・エンティティを引っ張ってくる。
             # 最初にブロックを移動。
-            self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run clone from minecraft:the_nether {coordinate[1]} {coordinate[2]} {coordinate[3]} {coordinate[1]} {coordinate[2]} {coordinate[3]} ~ ~ ~ masked move')
+            self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run clone from minecraft:the_nether {coordinate[0]} {coordinate[1]} {coordinate[2]} {coordinate[0]} {coordinate[1]} {coordinate[2]} ~ ~ ~ masked move')
             # 次にエンティティを移動。
-            self.ext.extension_command(f'execute in minecraft:the_nether as @e[x={coordinate[1]},y={coordinate[2]},z={coordinate[3]},distance=..1,limit=1] at @s run tp @s @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1]')
+            self.ext.extension_command(f'execute in minecraft:the_nether as @e[x={coordinate[0]},y={coordinate[1]},z={coordinate[2]},distance=..1,limit=1] at @s run tp @s @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1]')
             # TNTの爆発までの時間を1秒前に設定。
             self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run data modify entity @e[type=tnt,distance=..2,limit=1] fuse set value 1s')
             # itemの寿命を元に戻す。
@@ -525,14 +537,15 @@ class Gold_Experience(Common_func):
                 # 誕生日を元に素材の座標を調べる。
                 tags = self.ext.extension_command(f'data get entity @e[name=Gold_Experience_note,tag={birthday},type=armor_stand,limit=1] Tags')
 
-                temporary_coordinate = [tag.replace('xyz_', '') for tag in tags if 'xyz_' in tag] # xyz_1.2.3という文字列を取得する。この時'xyz_'は削除される。
+                temporary_coordinate_list = [tag.replace('xyz_', '') for tag in tags if 'xyz_' in tag] # xyz_1.2.3という文字列を取得する。この時'xyz_'は削除される。
+                temporary_coordinate = temporary_coordinate_list[0]     # 一つしかないはずなので、0番目を取得する。
                 coordinate = [int(str_data) for str_data in temporary_coordinate.split('.') if self.ext.is_int(str_data)] # 「:」で切り分け、整数型に変換する。
 
                 # アマスタのtag情報に書かれている座標情報をもとにブロック・エンティティを引っ張ってくる。
                 # 最初にブロックを移動。
-                self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run clone from minecraft:the_nether {coordinate[1]} {coordinate[2]} {coordinate[3]} {coordinate[1]} {coordinate[2]} {coordinate[3]} ~ ~ ~ masked move')
+                self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run clone from minecraft:the_nether {coordinate[0]} {coordinate[1]} {coordinate[2]} {coordinate[0]} {coordinate[1]} {coordinate[2]} ~ ~ ~ masked move')
                 # 次にエンティティを移動。
-                self.ext.extension_command(f'execute in minecraft:the_nether as @e[x={coordinate[1]},y={coordinate[2]},z={coordinate[3]},distance=..1,limit=1] at @s run tp @s @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1]')
+                self.ext.extension_command(f'execute in minecraft:the_nether as @e[x={coordinate[0]},y={coordinate[1]},z={coordinate[2]},distance=..1,limit=1] at @s run tp @s @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1]')
                 # TNTの爆発までの時間を1秒前に設定。
                 self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run data modify entity @e[type=tnt,distance=..2,limit=1] fuse set value 1s')
                 # itemの寿命を元に戻す。
