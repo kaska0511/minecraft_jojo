@@ -11,6 +11,7 @@ class Gold_Experience(Common_func):
         self.prepare_save_chunk()   # 保存領域の準備
         self.summon_armorstand_GECbirthdayList()    # 生成物の誕生日管理アマスタ準備
         self.requiem = False
+        self.requiem_limit_time = 0
         self.birthdays = []     # 要素数最大16個
         self.rotate_birthdays = []  # 死亡確認用
 
@@ -28,6 +29,10 @@ class Gold_Experience(Common_func):
             self.left_click = False
             self.right_click = False
             return
+
+        # レクイエム化時間が終了したら解除。
+        if self.requiem and self.requiem_limit_time <= time.time():
+            self.disable_requiem()
 
         # 生成物がダメージを負っているかを検知。ダメージを負っていたら反撃させる。
         self.counter_attack_GEcreature()
@@ -55,10 +60,7 @@ class Gold_Experience(Common_func):
                         self.activate_requiem()
                 else:
                     if self.within_range_XpLevel(10):
-                        self.ext.extension_command(f'xp add {self.name} -10 levels')
-                        item_name = 'スタンドの矢'
-                        tag = 'stand_arrow'
-                        self.ext.extension_command('give ' + self.name + ' spectral_arrow[minecraft:custom_name="' + item_name + '",minecraft:custom_data={tag:"' + tag + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+                        self.gift_stand_arrow()
 
         # 立ち上がったクリックフラグを下げる。
         self.right_click = False
@@ -599,6 +601,16 @@ class Gold_Experience(Common_func):
         '''
         self.ext.extension_command(f'execute as @e[tag=GEcreature,type=!armor_stand,nbt=!{{HurtTime:0s}}] on attacker run damage @s 6 minecraft:magic by {self.name}')
 
+    def gift_stand_arrow(self):
+        '''
+        経験値10消費してスタンドの矢をプレイヤーに贈ります。\n
+        スタンドの矢はレクイエム化する際に必要です。
+        '''
+        self.ext.extension_command(f'xp add {self.name} -10 levels')
+        item_name = 'スタンドの矢'
+        tag = 'stand_arrow'
+        self.ext.extension_command('give ' + self.name + ' spectral_arrow[minecraft:custom_name="' + item_name + '",minecraft:custom_data={tag:"' + tag + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+
     def activate_requiem(self):
         '''
         経験値が40になったら？（レベルは要件等）。経験値は消費する。
@@ -607,6 +619,7 @@ class Gold_Experience(Common_func):
         ・レクイエム化前の能力は引き継ぐ。（生命を生み出す能力）
         '''
         self.requiem = True
+        self.requiem_limit_time = time.time() + 600 # 10分間の効果時間
         self.ext.extension_command(f'tag {self.name} add requiem')
         self.ext.extension_command(f'xp add {self.name} -40 levels')
         self.ext.extension_command(f'effect give {self.name} minecraft:resistance infinite 255 true')          # 耐性
@@ -652,5 +665,6 @@ class Gold_Experience(Common_func):
 
     def disable_requiem(self):
         self.requiem = False
+        self.requiem_limit_time = 0
         self.ext.extension_command(f'tag {self.name} remove requiem')
         self.ext.extension_command(f'effect clear {self.name} minecraft:resistance')          # 耐性解除
