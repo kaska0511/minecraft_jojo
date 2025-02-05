@@ -18,6 +18,11 @@ class Gold_Experience(Common_func):
         if self.name == "1dummy" or self.get_logout():
             return
 
+        # レクイエム化した際の定期処理。
+        # 時が止まっていても有効な処理。
+        if self.requiem:
+            self.cron_for_requiem()
+
         # 時間停止中はこれ以降の処理は行わない。
         if self.bool_have_tag('stop_time'):
             self.left_click = False
@@ -42,7 +47,18 @@ class Gold_Experience(Common_func):
             if self.right_click and not self.left_click and self.press_key != 'shift':
                 # 生物化 <-> 解除
                 self.right_running_stand()
-
+            if self.press_key == 'g':
+                # レクイエム化 or 準備
+                # スタンドの矢を持っている検知するため、bool_have_a_stand()を代用
+                if self.bool_have_a_stand('spectral_arrow', 'stand_arrow'):
+                    if self.within_range_XpLevel(40):
+                        self.activate_requiem()
+                else:
+                    if self.within_range_XpLevel(10):
+                        self.ext.extension_command(f'xp add {self.name} -10 levels')
+                        item_name = 'スタンドの矢'
+                        tag = 'stand_arrow'
+                        self.ext.extension_command('give ' + self.name + ' spectral_arrow[minecraft:custom_name="' + item_name + '",minecraft:custom_data={tag:"' + tag + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
         # 立ち上がったクリックフラグを下げる。
         self.right_click = False
@@ -51,8 +67,8 @@ class Gold_Experience(Common_func):
 
     def cancel_stand(self):
         self.run_stand = False
-        self.requiem = False
         self.revert_GEC2inorganic(all_mode=True)
+        self.disable_requiem()
         self.kill_stand()
 
     def append_rotate_birthdays(self, birthday):
@@ -263,7 +279,7 @@ class Gold_Experience(Common_func):
             result = self.crops_process(tag)
         # 上記以外の植物か？ -> 成長も生命化も、何もしない。
         elif self.search_block_kinds(tag, exeption_block_list):
-            result = True
+            result = False
         # 上記以外のありふれたブロックであれば生命化。
         else:
             result = False
@@ -513,7 +529,7 @@ class Gold_Experience(Common_func):
 
             temporary_coordinate_list = [tag.replace('xyz_', '') for tag in tags if 'xyz_' in tag] # xyz_1.2.3という文字列を取得する。この時'xyz_'は削除される。
             temporary_coordinate = temporary_coordinate_list[0]     # 一つしかないはずなので、0番目を取得する。
-            coordinate = [int(str_data) for str_data in temporary_coordinate.split('.') if self.ext.is_int(str_data)] # 「:」で切り分け、整数型に変換する。
+            coordinate = [int(str_data) for str_data in temporary_coordinate.split('.') if self.ext.is_int(str_data)] # 「.」で切り分け、整数型に変換する。
 
             if kill_mode:
                 # 殺します。
@@ -583,14 +599,58 @@ class Gold_Experience(Common_func):
         '''
         self.ext.extension_command(f'execute as @e[tag=GEcreature,type=!armor_stand,nbt=!{{HurtTime:0s}}] on attacker run damage @s 6 minecraft:magic by {self.name}')
 
-    def requiem(self):
+    def activate_requiem(self):
         '''
-        経験値が4 0になったら？（レベルは要件等）。経験値は消費する。（エクスペリエンスだしな・・・）
+        経験値が40になったら？（レベルは要件等）。経験値は消費する。
         10分間効果を維持する。（効果時間は要件等）
         ・レジスタンス 2 5 5レベル付与
-        ・弱体効果は常に解除
-            （タスクや時間停止中でも有効）
-        ・攻撃されたらそのmobに対して、killコマンドを実行。		（タスクや時間停止中でも有効）
         ・レクイエム化前の能力は引き継ぐ。（生命を生み出す能力）
         '''
-        pass
+        self.requiem = True
+        self.ext.extension_command(f'tag {self.name} add requiem')
+        self.ext.extension_command(f'xp add {self.name} -40 levels')
+        self.ext.extension_command(f'effect give {self.name} minecraft:resistance infinite 255 true')          # 耐性
+
+    def cron_for_requiem(self):
+        '''
+        レクイエム化した際の定期処理。
+        ・弱体効果は常に解除。
+        ・攻撃されたらそのmobに対して、killコマンドを実行。		（タスクや時間停止中でも有効）
+        '''
+        # 弱体効果は常に解除
+        self._clear_minus_effect()
+        # プレイヤーが攻撃した場合はその対象を殺す。
+        # 参考：ttps://www.reddit.com/r/MinecraftCommands/comments/1epqz4b/execute_on_target_doesnt_work/
+        self.ext.extension_command(f'execute as @e at @s on attacker if entity {self.name} run damage @e[distance=..1,limit=1] 999999999999999999999 minecraft:explosion by {self.name}')
+        self.ext.extension_command(f'execute as @e at @s on attacker if entity {self.name} run kill @e[distance=..1,limit=1]')
+
+        # 攻撃を受けたら跳ね返りで殺す。先にダメージを与える。それで死亡しなければkillコマンド。
+        self.ext.extension_command(f'execute as @e[name={self.name},limit=1] on attacker run damage @s 999999999999999999999 minecraft:explosion by {self.name}')
+        self.ext.extension_command(f'execute as @e[name={self.name},limit=1] on attacker run kill @s')
+
+    def _clear_minus_effect(self):
+        self.ext.extension_command(f'effect clear {self.name} slowness')             # 移動速度低下
+        self.ext.extension_command(f'effect clear {self.name} mining_fatigue')       # 採掘速度低下
+        self.ext.extension_command(f'effect clear {self.name} instant_damage')       # 即時ダメージ
+        self.ext.extension_command(f'effect clear {self.name} nausea')               # 吐き気
+        self.ext.extension_command(f'effect clear {self.name} blindness')            # 盲目
+        self.ext.extension_command(f'effect clear {self.name} hunger')               # 空腹
+        self.ext.extension_command(f'effect clear {self.name} weakness')             # 弱体化
+        self.ext.extension_command(f'effect clear {self.name} poison')               # 毒
+        self.ext.extension_command(f'effect clear {self.name} wither')               # 衰弱
+        #self.ext.extension_command(f'effect clear {self.name} glowing')             # 発光  # 発光がマイナス効果なのかは状況によりけり
+        #self.ext.extension_command(f'effect clear {self.name} levitation')          # 浮遊  # 浮遊がマイナス効果なのかは状況によりけり
+        self.ext.extension_command(f'effect clear {self.name} bad_luck')             # 不運
+        self.ext.extension_command(f'effect clear {self.name} bad_omen')             # 不吉な予感
+        self.ext.extension_command(f'effect clear {self.name} darkness')             # 暗闇
+        self.ext.extension_command(f'effect clear {self.name} infested')             # 虫食い
+        self.ext.extension_command(f'effect clear {self.name} oozing')               # 滲出
+        self.ext.extension_command(f'effect clear {self.name} weaving')              # 機織り
+        self.ext.extension_command(f'effect clear {self.name} wind_charged')         # ウィンドチャージ
+        self.ext.extension_command(f'effect clear {self.name} raid_omen')            # 襲撃の凶兆
+        self.ext.extension_command(f'effect clear {self.name} trial_omen')           # 試練の予感
+
+    def disable_requiem(self):
+        self.requiem = False
+        self.ext.extension_command(f'tag {self.name} remove requiem')
+        self.ext.extension_command(f'effect clear {self.name} minecraft:resistance')          # 耐性解除
