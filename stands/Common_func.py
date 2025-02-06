@@ -597,7 +597,7 @@ class Common_func:
             within_range : bool
                 プレイヤーの経験値。
         '''
-        deathtime = self.ext.extension_command(f'execute if entity @a[name={self.name},limit=1,level={int(xp)}..] data get entity {self.name} DeathTime')
+        deathtime = self.ext.extension_command(f'execute if entity @a[name={self.name},limit=1,level={int(xp)}..] run data get entity {self.name} DeathTime')
         within_range = True if deathtime == '0s' else False
 
         return within_range

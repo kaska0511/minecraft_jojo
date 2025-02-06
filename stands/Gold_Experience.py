@@ -1,5 +1,6 @@
 import time
 import random
+import copy
 from stands.Common_func import Common_func
 
 # 生成可能な生物の最大数
@@ -8,12 +9,13 @@ MAXIMUM_NUM_OF_CREATURE = 16
 class Gold_Experience(Common_func):
     def __init__(self, name, ext, controller) -> None:
         super().__init__(name, ext, controller)
+        self.birthdays = []     # 要素数最大16個
+        self.rotate_birthdays = []  # 死亡確認用のローテーションリスト
         self.prepare_save_chunk()   # 保存領域の準備
         self.summon_armorstand_GECbirthdayList()    # 生成物の誕生日管理アマスタ準備
         self.requiem = False
         self.requiem_limit_time = 0
-        self.birthdays = []     # 要素数最大16個
-        self.rotate_birthdays = []  # 死亡確認用
+
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
@@ -55,7 +57,7 @@ class Gold_Experience(Common_func):
             if self.press_key == 'g':
                 # レクイエム化 or 準備
                 # スタンドの矢を持っている検知するため、bool_have_a_stand()を代用
-                if self.bool_have_a_stand('spectral_arrow', 'stand_arrow'):
+                if self.bool_have_a_stand(tag='stand_arrow'):
                     if self.within_range_XpLevel(40):
                         self.activate_requiem()
                 else:
@@ -126,6 +128,7 @@ class Gold_Experience(Common_func):
             if temporary_data is not None:  # 能力を一度も使用していない場合は空の場合がある。
                 self.birthdays = [int(str_data) for str_data in temporary_data if self.ext.is_int(str_data)] # listの中の数字を整数値(int型)へ変換。
                 self.birthdays.sort()   # 破壊的ソート。
+                self.rotate_birthdays = copy.deepcopy(self.birthdays)   # ローテーション用のリストを作成。deepcopyで元のリストとは別のリストを作成。
             return True
 
         # 念の為unlessで確認しつつ召喚
@@ -560,6 +563,10 @@ class Gold_Experience(Common_func):
     def death_revert_GEC2inorganic(self):
         # エンティティが死亡しているか確認し、死亡していたら素材に戻す処理。
         # 召喚した全エンティティをチェックする必要があるので、関数呼び出す毎に一体のみに限定して軽量化を図る。
+
+        if len(self.rotate_birthdays) == 0: # 一体も生きていない。
+            return True
+
         birthday = self.rotate_birthdays[0] # 一番古い生物の誕生日を取得する。
         deathtime = self.ext.extension_command(f'execute as @e[name=Gold_Experience_note,tag={birthday},type=armor_stand,limit=1] at @s on vehicle run data get entity {self.name} DeathTime')
         if deathtime == '0s':   # 生存
