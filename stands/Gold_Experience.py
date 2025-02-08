@@ -178,8 +178,7 @@ class Gold_Experience(Common_func):
             if self.is_block(searcher_tag):
                 # 植物系の特別なブロックか？
                 if self.specific_block(searcher_tag):
-                    # 成長終了後植物の上にエンティティを移動させる。
-                    self.tp_on_tree(searcher_tag)
+                    pass
                 # 石などのありふれたブロック
                 else:
                     # ブロックを消費し、生物を生成する。
@@ -284,7 +283,7 @@ class Gold_Experience(Common_func):
             result = self.crops_process(tag)
         # 上記以外の植物か？ -> 成長も生命化も、何もしない。
         elif self.search_block_kinds(tag, exeption_block_list):
-            result = False
+            result = True
         # 上記以外のありふれたブロックであれば生命化。
         else:
             result = False
@@ -358,6 +357,9 @@ class Gold_Experience(Common_func):
             self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s run place feature minecraft:{trees[n]}')
         elif type(trees[n]) == tuple or type(trees[n]) == list:
             self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s run place feature minecraft:{random.choice(trees[n])}')
+
+        # 木を生やした後、エンティティを木の上にテレポートさせる。
+        self.tp_on_tree(tag)
 
         return True # 正常終了
 
