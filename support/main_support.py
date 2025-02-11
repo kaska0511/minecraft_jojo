@@ -76,7 +76,7 @@ def make_stand_list():
     Return
         なし
     '''
-    first = {"The_World": "1dummy", "TuskAct4": "1dummy", "Killer_Qeen": "1dummy", "Catch_The_Rainbow": "1dummy", "Twentieth_Century_Boy": "1dummy", "Little_Feat": "1dummy", "Cream": "1dummy", "Crazy_Diamond": "1dummy", "Gold_Experience": "1dummy"}
+    first = {"The_World": "1dummy", "TuskAct4": "1dummy", "Killer_Queen": "1dummy", "Catch_The_Rainbow": "1dummy", "Twentieth_Century_Boy": "1dummy", "Little_Feat": "1dummy", "Cream": "1dummy", "Crazy_Diamond": "1dummy", "Gold_Experience": "1dummy"}
     with open('./json_list/stand_list.json', 'w', encoding='utf-8') as f:
         json.dump(first, f, ensure_ascii=False)
 
@@ -435,7 +435,7 @@ def stand_lost_check(ext, stand, my_standname):
                 ext.extension_command('give ' + stand.name + ' lead')
                 ext.extension_command('give ' + stand.name + ' bone[minecraft:custom_name="' + item_name_list[1] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
 
-        case 'Killer_Qeen':
+        case 'Killer_Queen':
             if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':   # 全て失わないと再取得できないので注意
                 ext.extension_command('give ' + stand.name + ' gunpowder[minecraft:custom_name="' + item_name_list[2][0] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
                 ext.extension_command('give ' + stand.name + ' flint[minecraft:custom_name="' + item_name_list[2][1] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')

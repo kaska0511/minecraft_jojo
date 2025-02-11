@@ -16,7 +16,7 @@ from Steel_Ball_Run_Race.SBR import *
 from stands.Common_func import Common_func
 from stands.The_World import The_World
 from stands.TuskAct4 import TuskAct4
-from stands.Killer_Qeen import Killer_Qeen
+from stands.Killer_Queen import Killer_Queen
 from stands.Catch_The_Rainbow import Catch_The_Rainbow
 from stands.Twentieth_Century_Boy import Twentieth_Century_Boy
 from stands.Little_Feat import Little_Feat
@@ -56,7 +56,7 @@ def main(ext, is_server):
     controller.start()
     controller.ticket_start()
 
-    #controller.participant = (world.name,tusk.name,kqeen.name,rain.name,boy.name,feat.name)
+    #controller.participant = (world.name,tusk.name,kQueen.name,rain.name,boy.name,feat.name)
     controller.make_bonus_bar()
 
     controller.add_bossbar("ticket", "チェックポイント解放まで", "blue", 300)
@@ -112,8 +112,8 @@ def main(ext, is_server):
                 case 'TuskAct4':
                     stand = TuskAct4(name=ext.name, ext=ext, controller=controller)
 
-                case 'Killer_Qeen':
-                    stand = Killer_Qeen(name=ext.name, ext=ext, controller=controller)
+                case 'Killer_Queen':
+                    stand = Killer_Queen(name=ext.name, ext=ext, controller=controller)
 
                 case 'Catch_The_Rainbow':
                     stand = Catch_The_Rainbow(name=ext.name, ext=ext, controller=controller)
@@ -150,7 +150,7 @@ def main(ext, is_server):
             controller.set_bonus_bossbar("ticket")
             controller.set_bonus_bossbar_visible("ticket", True)
             controller.set_bossbar_value("ticket", controller.elapsed_time)"""
-        #indicate_bonus_bossbar(True,controller,world,tusk,kqeen,rain,boy)
+        #indicate_bonus_bossbar(True,controller,world,tusk,kqueen,rain,boy)
 
         #target = find_target(controller,stand)
 
@@ -179,7 +179,7 @@ def main(ext, is_server):
 
         if controller.ticket_update_flag:
             controller.ticket_update_flag = False
-            update_all_ticketcompass(world,tusk,kqeen,rain,boy,feat)"""
+            update_all_ticketcompass(world,tusk,kqueen,rain,boy,feat)"""
 
 
 def gui_main(page: Page):

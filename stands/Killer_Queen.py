@@ -3,7 +3,7 @@ import math
 import time
 from stands.Common_func import Common_func
 
-class Killer_Qeen(Common_func):
+class Killer_Queen(Common_func):
     def __init__(self, name, ext, controller) -> None:
         super().__init__(name, ext, controller)
         self.observe_pos = None
@@ -25,7 +25,7 @@ class Killer_Qeen(Common_func):
             return
 
         item, tag = self.get_OffHandItem()
-        if tag == "Killer_Qeen":
+        if tag == "Killer_Queen":
 
             if item == "minecraft:gunpowder" and self.right_click:
                 #print("ブロック爆弾化発動")
@@ -137,7 +137,7 @@ class Killer_Qeen(Common_func):
             # 既にアクティブ化されているなら自分のチェックポイントを加算。
             # 通過者共通処理。
             if self.controller.check_active(f'No{self.pass_point+1}'):
-                self.controller.second_place_pass_process(self.name, 'Killer_Qeen', self.pass_point, self.point_pos)
+                self.controller.second_place_pass_process(self.name, 'Killer_Queen', self.pass_point, self.point_pos)
                 self.bonus_start_time = time.time()
                 self.bonus_time = None
                 self.bonus_cnt = 0
@@ -173,7 +173,7 @@ class Killer_Qeen(Common_func):
     def set_bomb(self):
         discovery = False
         # 目線の高さに合わせてsummonする。
-        substituent = 'execute as _NAME_ at @s run summon minecraft:armor_stand ~ ~ ~ {CustomName:"Killer_Qeen",attributes:[{id:"minecraft:scale",base:0.0625d}],Tags:["searcher"],Silent:1,Invulnerable:1,Invisible:1,NoGravity:1}'
+        substituent = 'execute as _NAME_ at @s run summon minecraft:armor_stand ~ ~ ~ {CustomName:"Killer_Queen",attributes:[{id:"minecraft:scale",base:0.0625d}],Tags:["searcher"],Silent:1,Invulnerable:1,Invisible:1,NoGravity:1}'
         substituent = substituent.replace(f'_NAME_', self.name)
         self.ext.extension_command(substituent)
 
@@ -200,7 +200,7 @@ class Killer_Qeen(Common_func):
         collision_flag = False
         for block in exclude_list:
             # run 以降は if block が当てはまった場合に実行される。
-            res = self.ext.extension_command(f'execute as @e[name=Killer_Qeen,tag={tag},limit=1] at @s if block ~ ~ ~ {block} run data get entity @e[name=Killer_Qeen,tag={tag},limit=1] DeathTime')  # アマスタに重なるブロックが除外ブロックか検知
+            res = self.ext.extension_command(f'execute as @e[name=Killer_Queen,tag={tag},limit=1] at @s if block ~ ~ ~ {block} run data get entity @e[name=Killer_Queen,tag={tag},limit=1] DeathTime')  # アマスタに重なるブロックが除外ブロックか検知
             if res == '0s':  # 除外リストに当てはまったら0sが返ってくるはず。
                 break
             elif block == 'barrier':    # 最後まで調べてresが空なら爆弾に変えてもよいブロックに重なった判定
@@ -211,7 +211,7 @@ class Killer_Qeen(Common_func):
 
     def get_armor_stand_pos(self, tag):
         edit_pos = self.bomb_pos
-        res = self.ext.extension_command(f'data get entity @e[name=Killer_Qeen,tag={tag},limit=1] Pos')
+        res = self.ext.extension_command(f'data get entity @e[name=Killer_Queen,tag={tag},limit=1] Pos')
         #print(res)
         # 返り値がNoneだったり、[]のようにうまく取得できなかった場合は現在のself.bomb_posを返す。
         if res is None:
@@ -241,7 +241,7 @@ class Killer_Qeen(Common_func):
         if not self.summon_flag:    # 複数召喚させない
             self.summon_flag = True
             self.run_stand = True
-            substituent = 'execute as _NAME_ at @s run summon minecraft:armor_stand ~ ~ ~ {CustomName:"Killer_Qeen",Small:1,Tags:["air_bomb"],Silent:1,Invulnerable:1,Invisible:1,NoGravity:1}'
+            substituent = 'execute as _NAME_ at @s run summon minecraft:armor_stand ~ ~ ~ {CustomName:"Killer_Queen",Small:1,Tags:["air_bomb"],Silent:1,Invulnerable:1,Invisible:1,NoGravity:1}'
             substituent = substituent.replace(f'_NAME_', self.name)
             self.ext.extension_command(substituent)
 
