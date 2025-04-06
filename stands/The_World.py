@@ -137,9 +137,9 @@ class The_World(Common_func):
 
     def stop_player_effect_list(self):
         self.ext.extension_command(f'tag @a[name=!{self.name}] add stop_time')  # 時間を止めていることを示すタグを自分以外のプレイヤーに付与。
-        self.ext.extension_command(f'execute as @a[name=!{self.name},nbt={{OnGround:0b}}] at @s run attribute @s minecraft:generic.gravity base set 0')
-        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.jump_strength base set 0')
-        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.movement_speed base set 0')
+        self.ext.extension_command(f'execute as @a[name=!{self.name},nbt={{OnGround:0b}}] at @s run attribute @s minecraft:gravity base set 0')
+        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:jump_strength base set 0')
+        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:movement_speed base set 0')
         self.ext.extension_command(f'effect give @a[name=!{self.name}] minecraft:water_breathing {self.timer} 1 true')
         self.ext.extension_command(f'effect give @a[name=!{self.name}] minecraft:fire_resistance {self.timer} 1 true')
         self.ext.extension_command(f'effect give @a[name=!{self.name}] minecraft:slow_falling {self.timer} 5 true')
@@ -156,9 +156,9 @@ class The_World(Common_func):
 
         self.ext.extension_command(f'tick unfreeze')
 
-        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.gravity base set 0.08')
-        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.jump_strength base set 0.42')
-        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:generic.movement_speed base set 0.1')
+        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:gravity base set 0.08')
+        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:jump_strength base set 0.42')
+        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:movement_speed base set 0.1')
         self.ext.extension_command(f'effect clear @a[name=!{self.name}] minecraft:water_breathing')
         self.ext.extension_command(f'effect clear @a[name=!{self.name}] minecraft:fire_resistance')
         self.ext.extension_command(f'effect clear @a[name=!{self.name}] minecraft:slow_falling')

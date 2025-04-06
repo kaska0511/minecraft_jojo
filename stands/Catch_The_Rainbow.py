@@ -57,38 +57,38 @@ class Catch_The_Rainbow(Common_func):
             # 体力値に応じてダメージ軽減を付与。
             self.effect_Resistance()
             # 落下ダメージの倍率0にする = 落下ダメージを受けない。
-            self.ext.extension_command(f'attribute {self.name} minecraft:generic.fall_damage_multiplier base set 0')
+            self.ext.extension_command(f'attribute {self.name} minecraft:fall_damage_multiplier base set 0')
 
             # 上昇と下降両方押している場合→その場で停止
             if self.press_key == 'space' and self.press_key == 'shift':
                 if active_minecraft:
-                    self.ext.extension_command(f'attribute {self.name} minecraft:generic.gravity base set 0')
+                    self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set 0')
             else:   # 少なくとも両方を押していない。
                 if self.press_key == 'space' and active_minecraft:   # 空中でspaceを押した and マイクラウィンドウactive and カーソルが非表示
                     #print(f'space押した!{keyboard.is_pressed('space')}')
                     if self.ability_limit == 0: # どの高度でも雨が降る
-                        self.ext.extension_command(f'attribute {self.name} minecraft:generic.gravity base set -0.01')
+                        self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set -0.01')
                     if self.ability_limit == 1: # 高度次第で変化するバイオームで上昇を128ブロックまでに制限
                         pos = self.ext.extension_command(f'data get entity {self.name} Pos')
                         if pos is None: # スタンド使いが居ない。処理終了。
                             return False
                         if round(float(pos[1].rstrip('d'))) <= 128:  # pos[1] = '70.40762608459386d' →　70
-                            self.ext.extension_command(f'attribute {self.name} minecraft:generic.gravity base set -0.01')
+                            self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set -0.01')
 
                 elif self.press_key == 'shift' and active_minecraft:   # shiftを押した and マイクラウィンドウactive and カーソルが非表示
                     #print(f'shift押した!{keyboard.is_pressed('shift')}')
-                    self.ext.extension_command(f'attribute {self.name} minecraft:generic.gravity base set 0.01')
+                    self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set 0.01')
 
                 else:   # 上昇も下降もしようとしてない→その場で留まる。
-                    self.ext.extension_command(f'attribute {self.name} minecraft:generic.gravity base set 0')
+                    self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set 0')
                     if self.get_Onground(self.name):
-                        self.ext.extension_command(f'attribute {self.name} minecraft:generic.gravity base set 0.08')
+                        self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set 0.08')
 
         if not self.double_spacekey:    # 飛行状態解除。落下ダメージは受けない。
-            self.ext.extension_command(f'attribute {self.name} minecraft:generic.gravity base set 0.08')
+            self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set 0.08')
 
         if self.run_stand:
-            self.ext.extension_command(f'attribute {self.name} minecraft:generic.movement_speed base set 0.3')
+            self.ext.extension_command(f'attribute {self.name} minecraft:movement_speed base set 0.3')
 
         else:   # 仮面を外したらetc...
             self.cancel_stand()
@@ -163,9 +163,9 @@ class Catch_The_Rainbow(Common_func):
     def cancel_stand(self):
         self.run_stand = False
         self.double_spacekey = False
-        self.ext.extension_command(f'attribute {self.name} minecraft:generic.fall_damage_multiplier base set 1')    # 落下ダメージを受けるようにする。
-        self.ext.extension_command(f'attribute {self.name} minecraft:generic.gravity base set 0.08')    # デフォルトで落下するようにする。
-        self.ext.extension_command(f'attribute {self.name} minecraft:generic.movement_speed base set 0.1')  # 移動速度上昇を元に戻す。
+        self.ext.extension_command(f'attribute {self.name} minecraft:fall_damage_multiplier base set 1')    # 落下ダメージを受けるようにする。
+        self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set 0.08')    # デフォルトで落下するようにする。
+        self.ext.extension_command(f'attribute {self.name} minecraft:movement_speed base set 0.1')  # 移動速度上昇を元に戻す。
         self.ext.extension_command(f'kill @e[tag=rain_knife]')
         self.ext.extension_command(f'effect clear {self.name} minecraft:resistance')
 

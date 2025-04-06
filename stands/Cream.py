@@ -19,13 +19,13 @@ class Cream(Common_func):
                 return
 
         item, tag = self.get_OffHandItem()
-
+        print(self.right_click)
         if tag == "Cream" and self.right_click:
             # 能力発動検知と初期設定
             if  self.run_stand == False:
                 # スペクテイターモードに変更
                 self.run_stand = True
-                self.ext.extension_command(f'attribute {self.name} minecraft:generic.gravity base set 0')
+                self.ext.extension_command(f'attribute {self.name} minecraft:base set 0')
                 self.ext.extension_command(f'execute as {self.name} at @s run gamemode spectator')
                 self.effect_stand()
 
@@ -53,7 +53,7 @@ class Cream(Common_func):
                 self.ext.extension_command(f'execute as {self.name} at @s rotated 90 0 run fill ^-1 ^0 ^-1 ^1 ^2 ^1 air destroy')
 
             if not self.is_Minecraftwindow():   # 上記のダメージ処理はそのままに、マイクラ以外を操作していたらこれ以下の処理は行わない。
-                self.ext.extension_command(f'attribute {self.name} minecraft:generic.gravity base set 0')   # サバイバル状態だけど浮いたままにする。
+                self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set 0')   # サバイバル状態だけど浮いたままにする。
                 self.ext.extension_command(f'execute as {self.name} at @s run gamemode survival')           # 覗き見ている場合はダメージを受ける状態へ
                 return
 
@@ -66,7 +66,7 @@ class Cream(Common_func):
 
             else:   # 動いていないと判定する。
                 self.clear_effect()
-                self.ext.extension_command(f'attribute {self.name} minecraft:generic.gravity base set 0')   # サバイバル状態だけど浮いたままにする。
+                self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set 0')   # サバイバル状態だけど浮いたままにする。
                 self.ext.extension_command(f'execute as {self.name} at @s run gamemode survival')           # 覗き見ている場合はダメージを受ける状態へ
                 #self.ext.extension_command(f'effect clear {self.name} minecraft:invisibility')              # 透明化解除
 
@@ -76,7 +76,7 @@ class Cream(Common_func):
         self.clear_effect()
         #self.ext.extension_command(f'effect clear {self.name} minecraft:invisibility')
         self.ext.extension_command(f'execute as {self.name} at @s run gamemode survival')
-        self.ext.extension_command(f'attribute {self.name} minecraft:generic.gravity base set 0.08')
+        self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set 0.08')
 
     def effect_stand(self):
         #self.ext.extension_command(f'effect give {self.name} minecraft:invisibility infinite 255 true')       # 透明化
