@@ -406,8 +406,8 @@ class Common_func:
                 ex -> ("minecraft.clock", "DIO") or ("minecraft.clock", ["DIO","b"])
         '''
 
-        id = self.ext.extension_command('data get entity '+ self.name +' Inventory[{Slot:-106b}].id')
-        tag = self.ext.extension_command('data get entity '+ self.name +' Inventory[{Slot:-106b}].components."minecraft:custom_data".tag')
+        id = self.ext.extension_command('data get entity '+ self.name +' equipment.offhand.id')
+        tag = self.ext.extension_command('data get entity '+ self.name +' equipment.offhand.components."minecraft:custom_data".tag')
         id = None if id is None else id     # スロットが空など、もし見つからなかったらNoneで返す。
         tag = None if tag is None else tag  # アイテムにTagが無いならNoneで返す。
 
