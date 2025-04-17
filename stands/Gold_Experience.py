@@ -216,7 +216,9 @@ class Gold_Experience(Common_func):
         for _ in range(10):     # アニメ版では射程距離C（5mくらい？）。5マス分を範囲にしたいので、range(10) * 前進マス(0.5) = 5マス。
             self.ext.extension_command(f'execute as @e[tag={searcher_tag},limit=1] at @s run tp ^ ^ ^0.5')   # 視線をプレイヤーとリンクした状態で0.2マス分前進する。
             if self.is_block(searcher_tag):
-                break
+                # 植物系の特別なブロックか？
+                if self.specific_block(searcher_tag):
+                    pass
             # 経験値以外のエンティティか？
             if self.is_entity(searcher_tag):
                 # 自然生成生物かプレイヤーなので、生命エネルギーを流す。
