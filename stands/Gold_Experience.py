@@ -48,11 +48,14 @@ class Gold_Experience(Common_func):
         item, tag = self.get_OffHandItem()
 
         if tag == type(self).__name__:
+            # スタンドアイテムをオフハンドに持っている場合は射程距離を5ブロックにする。
+            self.ext.extension_command(f'attribute {self.name} minecraft:entity_interaction_range base set 5')
+
             if self.left_click and not self.right_click:
                 # 攻撃モード（鈍足付与）
                 self.left_running_stand()
             if self.right_click and not self.left_click and self.press_key == 'shift':
-                # shiftを押していたら回復モード
+                # shiftを押していたら回復・成長促進モード
                 self.right_energy_running_stand()
             if self.right_click and not self.left_click and self.press_key != 'shift':
                 # 生物化 <-> 解除
@@ -66,6 +69,8 @@ class Gold_Experience(Common_func):
                 else:
                     if self.within_range_XpLevel(10):
                         self.gift_stand_arrow()
+        else:
+            self.ext.extension_command(f'attribute {self.name} minecraft:entity_interaction_range base reset')
 
         # 立ち上がったクリックフラグを下げる。
         self.right_click = False
@@ -229,23 +234,7 @@ class Gold_Experience(Common_func):
 
     def left_running_stand(self):
         # 攻撃モード（鈍足付与）
-        # 目線の高さに合わせてsummonする。
-        searcher_tag = 'GEsearcher'
-        self.summon_searcher(searcher_tag)
-
-        for _ in range(10):     # アニメ版では射程距離C（5mくらい？）。5マス分を範囲にしたいので、range(10) * 前進マス(0.5) = 5マス。
-            self.ext.extension_command(f'execute as @e[tag={searcher_tag},limit=1] at @s run tp ^ ^ ^0.5')   # 視線をプレイヤーとリンクした状態で0.2マス分前進する。
-            # 空気以外の何らかのブロックか？
-            if self.is_block(searcher_tag):
-                break
-            # 経験値以外のエンティティか？
-            if self.is_entity(searcher_tag):
-                if self.is_mob(searcher_tag):
-                    self.attack_effect(searcher_tag)
-                break
-
-        # ヒットしなくても検索に使用したアマスタを削除。
-        self.ext.extension_command(f'kill @e[tag={searcher_tag}]')
+        self.attack_effect()
 
     def summon_searcher(self, tag):
         # 目線の高さに合わせてsummonする。
@@ -459,11 +448,11 @@ class Gold_Experience(Common_func):
 
         return boolv
 
-    def attack_effect(self, tag):
+    def attack_effect(self):
         '''
         攻撃時のエフェクトを記述します。\n
         '''
-        self.ext.extension_command(f'execute as @e[tag={tag},distance..1,limit=1] at @s run effect give @s minecraft:slowness 3 3 true')
+        self.ext.extension_command(f'execute as @e at @s on attacker if entity {self.name} run effect give @e[distance=..1,limit=1] minecraft:slowness 3 5 true')
 
     def add_tag_GEtarget(self, tag):
         deathtime = '{DeathTime:0s}'
@@ -642,7 +631,7 @@ class Gold_Experience(Common_func):
         self.requiem_limit_time = time.time() + 600 # 10分間の効果時間
         self.ext.extension_command(f'tag {self.name} add requiem')
         self.ext.extension_command(f'xp add {self.name} -40 levels')
-        self.ext.extension_command(f'effect give {self.name} minecraft:resistance infinite 255 true')          # 耐性
+        self.ext.extension_command(f'effect give {self.name} minecraft:resistance 600 255 true')          # 耐性
 
     def cron_for_requiem(self):
         '''
@@ -687,4 +676,3 @@ class Gold_Experience(Common_func):
         self.requiem = False
         self.requiem_limit_time = 0
         self.ext.extension_command(f'tag {self.name} remove requiem')
-        self.ext.extension_command(f'effect clear {self.name} minecraft:resistance')          # 耐性解除
