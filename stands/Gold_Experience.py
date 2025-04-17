@@ -60,17 +60,22 @@ class Gold_Experience(Common_func):
             if self.right_click and not self.left_click and self.press_key != 'shift':
                 # 生物化 <-> 解除
                 self.right_running_stand()
-            if self.press_key == 'g':
-                # レクイエム化 or 準備
-                # スタンドの矢を持っている検知するため、bool_have_a_stand()を代用
-                if self.bool_have_a_stand(tag='stand_arrow'):
-                    if self.within_range_XpLevel(40):
-                        self.activate_requiem()
-                else:
-                    if self.within_range_XpLevel(10):
-                        self.gift_stand_arrow()
         else:
             self.ext.extension_command(f'attribute {self.name} minecraft:entity_interaction_range base reset')
+
+        if self.press_key == 'g':
+            # レクイエムの準備
+            # スタンドの矢を持っている検知するため、bool_have_a_stand()を代用
+            if not self.bool_have_a_stand(tag='stand_arrow'):
+                if self.within_range_XpLevel(10):
+                    self.gift_stand_arrow()
+
+        # レクイエム化できるか？
+        # スタンドの矢を持ち、右クリックし経験値を40消費する。
+        item, tag = self.get_SelectedItem()
+        if tag == 'stand_arrow' and self.right_click:
+            if self.within_range_XpLevel(40):
+                self.activate_requiem()
 
         # 立ち上がったクリックフラグを下げる。
         self.right_click = False
