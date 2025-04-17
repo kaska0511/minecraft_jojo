@@ -26,6 +26,9 @@ class Gold_Experience(Common_func):
         if self.requiem:
             self.cron_for_requiem()
 
+        # 生み出した生物情報がどこでも参照できるようにする。
+        self.ext.extension_command(f'execute as @e[name=Gold_Experience_note] at @s run forceload add ~ ~')
+
         # 時間停止中はこれ以降の処理は行わない。
         if self.bool_have_tag('stop_time'):
             self.left_click = False
@@ -73,7 +76,6 @@ class Gold_Experience(Common_func):
         self.run_stand = False
         self.revert_GEC2inorganic(all_mode=True)
         self.disable_requiem()
-        self.kill_stand()
 
     def append_rotate_birthdays(self, birthday):
         if len(self.rotate_birthdays) == 0: # 初回はそのまま追加。
@@ -534,6 +536,10 @@ class Gold_Experience(Common_func):
             # 誕生日を元に素材の座標を調べる。
             tags = self.ext.extension_command(f'data get entity @e[name=Gold_Experience_note,tag={birthday},type=armor_stand,limit=1] Tags')
 
+            # 引っ張ってきた情報がNoneなら恐らくエンティティは存在はするが情報を読み込めない状況。
+            if tags is None:
+                return
+
             temporary_coordinate_list = [tag.replace('xyz_', '') for tag in tags if 'xyz_' in tag] # xyz_1.2.3という文字列を取得する。この時'xyz_'は削除される。
             temporary_coordinate = temporary_coordinate_list[0]     # 一つしかないはずなので、0番目を取得する。
             coordinate = [int(str_data) for str_data in temporary_coordinate.split('.') if self.ext.is_int(str_data)] # 「.」で切り分け、整数型に変換する。
@@ -542,10 +548,12 @@ class Gold_Experience(Common_func):
                 # 殺します。
                 self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s on vehicle run kill @s')
             else:
+                # 対象MOBにtagを付与
+                self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run tag @n[tag=GEcreature,type=!armor_stand,limit=1] add GEreverter')
                 # 防具立てとMOBを分離
                 self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s run ride @s dismount')
-                # MOBを奈落へ移動
-                self.ext.extension_command(f'execute as @e[tag=GEcreature,tag=xyz_{temporary_coordinate},limit=1] at @s as @n[tag=GEcreature,type=!armor_stand,limit=1] at @s run tp ~ -74 ~')
+                # 対象MOBを奈落へ移動
+                self.ext.extension_command(f'execute as @e[tag=GEreverter] at @s run tp ~ -74 ~')
 
             # アマスタのtag情報に書かれている座標情報をもとにブロック・エンティティを引っ張ってくる。
             # 最初にブロックを移動。
@@ -574,6 +582,9 @@ class Gold_Experience(Common_func):
         if deathtime == '0s':   # 生存
             self.rotate_birthdays[1:] + self.rotate_birthdays[:1]  # 一番古い生物を最後尾に移動する。
             return True         # 終了
+        elif deathtime is None:
+            # 存在はするが読み込めないだけ。一回スルー。
+            return True
         else:                   # 死亡
             # 誕生日を元に素材の座標を調べる。
             tags = self.ext.extension_command(f'data get entity @e[name=Gold_Experience_note,tag={birthday},type=armor_stand,limit=1] Tags')
