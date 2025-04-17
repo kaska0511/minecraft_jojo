@@ -618,7 +618,7 @@ class Gold_Experience(Common_func):
         self.ext.extension_command(f'xp add {self.name} -10 levels')
         item_name = 'スタンドの矢'
         tag = 'stand_arrow'
-        self.ext.extension_command('give ' + self.name + ' spectral_arrow[minecraft:custom_name="' + item_name + '",minecraft:custom_data={tag:"' + tag + '"},minecraft:enchantments={levels:{"minecraft:vanishing_curse":1},show_in_tooltip:false}]')
+        self.ext.extension_command('give ' + self.name + ' spectral_arrow[minecraft:custom_name="' + item_name + '",minecraft:custom_data={tag:"' + tag + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
 
     def activate_requiem(self):
         '''
