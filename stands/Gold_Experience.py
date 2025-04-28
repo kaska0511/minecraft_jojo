@@ -69,6 +69,10 @@ class Gold_Experience(Common_func):
         else:
             self.ext.extension_command(f'attribute {self.name} minecraft:entity_interaction_range base reset')
 
+        if 'r' in self.press_keys:
+            #! 最も近い生成物リバート処理を追加
+            self.revert_GEC2inorganic(near_mode=True)
+
         if 'g' in self.press_keys:
             # レクイエムの準備
             # スタンドの矢を持っている検知するため、bool_have_a_stand()を代用
@@ -506,7 +510,7 @@ class Gold_Experience(Common_func):
 
         return boolv
 
-    def revert_GEC2inorganic(self, specified_tag=None, all_mode=False, kill_mode=False):
+    def revert_GEC2inorganic(self, specified_tag=None, all_mode=False, near_mode=False, kill_mode=False):
         '''
         ゴールド・エクスペリエンスが生み出した生物を元に戻します。\n
         specified_tagにタグが指定されている場合、特定のMOBをもとに戻します。\n
@@ -526,6 +530,14 @@ class Gold_Experience(Common_func):
             if specified_tag:   # これがNoneでなければ指定のMOBをもとに戻すモード
                 # tagの最も近くにいるGold_Experience_noteからTags情報を取得する。
                 tags = self.ext.extension_command(f'execute as @e[tag={specified_tag},limit=1] at @s run data get entity @n[name=Gold_Experience_note,type=armor_stand,limit=1] Tags')
+                # tags と self.birthdays で共通のデータを取得する。今回の場合は誕生日に当たる。
+                str_birthdays = list(map(str, self.birthdays))
+                birthday = list(set(tags) & set(str_birthdays))[0]
+                self.birthdays.remove(int(birthday)) # self.birthdays から指定の誕生日を削除する。
+            elif near_mode:
+                print('近いモード')
+                # プレイヤーの最も近くにいるGold_Experience_noteからTags情報を取得する。
+                tags = self.ext.extension_command(f'execute as @a[name={self.name},limit=1] at @s run data get entity @n[name=Gold_Experience_note,type=armor_stand,limit=1] Tags')
                 # tags と self.birthdays で共通のデータを取得する。今回の場合は誕生日に当たる。
                 str_birthdays = list(map(str, self.birthdays))
                 birthday = list(set(tags) & set(str_birthdays))[0]
