@@ -5,6 +5,8 @@ from stands.Common_func import Common_func
 
 # 生成可能な生物の最大数
 MAXIMUM_NUM_OF_CREATURE = 16
+EX_4_CONS_ARROW = 10
+EX_4_CONS_REQUIEM = 40
 
 class Gold_Experience(Common_func):
     def __init__(self, name, ext, controller) -> None:
@@ -51,30 +53,34 @@ class Gold_Experience(Common_func):
             # スタンドアイテムをオフハンドに持っている場合は射程距離を5ブロックにする。
             self.ext.extension_command(f'attribute {self.name} minecraft:entity_interaction_range base set 5')
 
-            if self.left_click and not self.right_click:
-                # 攻撃モード（鈍足付与）
-                self.left_running_stand()
-            if self.right_click and not self.left_click and self.press_key == 'shift':
-                # shiftを押していたら回復・成長促進モード
-                self.right_energy_running_stand()
-            if self.right_click and not self.left_click and self.press_key != 'shift':
-                # 生物化 <-> 解除
-                self.right_running_stand()
+            # 攻撃モード（鈍足付与）
+            self.attack_effect()
+            
+            if self.right_click and not self.left_click:
+                if 'shift' in self.press_keys:
+                    # shiftを押していたら生物化 <-> 解除
+                    print('生物化 <-> 解除')
+                    self.right_running_stand()
+                else:
+                    # 回復・成長促進モード
+                    print('回復・成長促進')
+                    self.right_energy_running_stand()
+
         else:
             self.ext.extension_command(f'attribute {self.name} minecraft:entity_interaction_range base reset')
 
-        if self.press_key == 'g':
+        if 'g' in self.press_keys:
             # レクイエムの準備
             # スタンドの矢を持っている検知するため、bool_have_a_stand()を代用
             if not self.bool_have_a_stand(tag='stand_arrow'):
-                if self.within_range_XpLevel(10):
+                if self.within_range_XpLevel(EX_4_CONS_ARROW):
                     self.gift_stand_arrow()
 
         # レクイエム化できるか？
         # スタンドの矢を持ち、右クリックし経験値を40消費する。
         item, tag = self.get_SelectedItem()
         if tag == 'stand_arrow' and self.right_click:
-            if self.within_range_XpLevel(40):
+            if self.within_range_XpLevel(EX_4_CONS_REQUIEM):
                 self.activate_requiem()
 
         # 立ち上がったクリックフラグを下げる。
@@ -240,8 +246,7 @@ class Gold_Experience(Common_func):
         self.ext.extension_command(f'kill @e[tag={searcher_tag}]')
 
     def left_running_stand(self):
-        # 攻撃モード（鈍足付与）
-        self.attack_effect()
+        pass
 
     def summon_searcher(self, tag):
         # 目線の高さに合わせてsummonする。
@@ -276,6 +281,7 @@ class Gold_Experience(Common_func):
         # 苗木か？ -> 成長
         if self.search_block_kinds(tag, '#minecraft:saplings'):
             result = self.saplings_process(tag)
+            
         # 作物か？ -> 成長
         elif self.search_block_kinds(tag, '#minecraft:bee_growables'):  # 作物のグループはcropsだが、bee_growablesであればスイートベリーも含む。
             result = self.crops_process(tag)
@@ -622,10 +628,10 @@ class Gold_Experience(Common_func):
         経験値10消費してスタンドの矢をプレイヤーに贈ります。\n
         スタンドの矢はレクイエム化する際に必要です。
         '''
-        self.ext.extension_command(f'xp add {self.name} -10 levels')
+        self.ext.extension_command(f'xp add {self.name} -{EX_4_CONS_ARROW} levels')
         item_name = 'スタンドの矢'
         tag = 'stand_arrow'
-        self.ext.extension_command('give ' + self.name + ' spectral_arrow[minecraft:custom_name="' + item_name + '",minecraft:custom_data={tag:"' + tag + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
+        self.ext.extension_command('give ' + self.name + ' spectral_arrow[minecraft:custom_name="' + item_name + '",minecraft:custom_data={tag:"' + tag + '"},minecraft:consumable={animation:spear,has_consume_particles:false,sound:entity.wither.spawn,consume_seconds:0.1},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
 
     def activate_requiem(self):
         '''
@@ -637,7 +643,7 @@ class Gold_Experience(Common_func):
         self.requiem = True
         self.requiem_limit_time = time.time() + 600 # 10分間の効果時間
         self.ext.extension_command(f'tag {self.name} add requiem')
-        self.ext.extension_command(f'xp add {self.name} -40 levels')
+        self.ext.extension_command(f'xp add {self.name} -{EX_4_CONS_REQUIEM} levels')
         self.ext.extension_command(f'effect give {self.name} minecraft:resistance 600 255 true')          # 耐性
 
     def cron_for_requiem(self):
