@@ -25,7 +25,7 @@ class Common_func:
         self.run_stand = False
         self.right_click = False
         self.left_click = False
-        self.press_key = ''
+        self.press_keys = set()
         self.last_press_time = 0   # 最後のキー押下時刻
         self.double_spacekey = False
 
@@ -53,6 +53,10 @@ class Common_func:
     def click(self, x, y, button, pressed):
         #print(f'{button} が {'Pressed' if pressed else 'Released'} された座標： {(x, y)}')
 
+        # クリックの立ち上げフラグは各loop関数内で下げているので問題ない。
+        if not pressed:
+            return
+
         if str(button) == 'Button.left' and self.is_Minecraftwindow()[0] == True:
             if self.os_name == 'darwin' and self.check_mouse_coordinate(x, y):
                 self.left_click = pressed      # Pressed : True, Released : False
@@ -71,17 +75,22 @@ class Common_func:
     def press(self, key):
         try:
             #print(f'アルファベット {str(key.char)} が押されました')
-            self.press_key = str(key.char).lower()  # 小文字に変換しつつ
+            self.press_keys.add(str(key.char).lower())  # 小文字に変換しつつ
         except AttributeError:
             #print(f'スペシャルキー {str(key)} が押されました')
-            self.press_key = str(key).replace('Key.', '')   # Key.space -> space
+            self.press_keys.add(str(key).replace('Key.', ''))   # Key.space -> space
 
-        if self.press_key == 'space':
+        if 'space' in self.press_keys:
             self.on_space_key_event()
 
     def release(self, key):
         #print(f'{key} が離されました')
-        self.press_key = ''
+        try:
+            #print(f'アルファベット {str(key.char)} が離されました')
+            self.press_keys.discard(str(key.char).lower())  # 小文字に変換しつつ
+        except AttributeError:
+            #print(f'スペシャルキー {str(key)} が離されました')
+            self.press_keys.discard(str(key).replace('Key.', ''))   # Key.space -> space
         """if key == keyboard.Key.esc:     # escが押された場合
             self.mouse_listener.stop()       # mouseのListenerを止める
             self.keyboard_listener.stop()    # keyboardのlistenerを止める"""
