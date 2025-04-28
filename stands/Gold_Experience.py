@@ -457,6 +457,9 @@ class Gold_Experience(Common_func):
         base_char_summon = base_char_summon.replace(f'_BIRTHDAY_', str(birthday))    # UNIX時刻を誕生日とする。
         self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s run ' + base_char_summon)
 
+        # 演出（見た目）
+        self.recovery_particle(tag)
+
     def is_mob(self, tag):
         # DeathTimeのパラメーターを持つ者はMOB
         deathtime = '{DeathTime:0s}'
@@ -489,6 +492,8 @@ class Gold_Experience(Common_func):
             # 能力者自身を回復
             self.ext.extension_command(f'execute as {self.name} at @s run effect give @s minecraft:absorption 600 2 true')
             self.ext.extension_command(f'execute as {self.name} at @s run effect give @s minecraft:instant_health 1 0')
+            # 演出（見た目）
+            self.ext.extension_command(f'execute as {self.name} at @s run particle minecraft:happy_villager ^ ^ ^ 1 1 1 10 60 force @a')
         else:
             # 子供系なら成長させる。-> Ageを0にする。
             self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s run data modify entity @s Age set value 0')
@@ -499,6 +504,9 @@ class Gold_Experience(Common_func):
                 self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s if entity @e[type=#minecraft:undead] run effect give @s minecraft:instant_damage 1 0')
                 # アンデッド以外 -> instant_health
                 self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s if entity @e[type=!#minecraft:undead] run effect give @s minecraft:instant_health 1 0')
+
+            # 演出（見た目）
+            self.recovery_particle(tag)
         return True
 
     def is_GECreature(self, tag):
@@ -701,3 +709,10 @@ class Gold_Experience(Common_func):
         self.requiem = False
         self.requiem_limit_time = 0
         self.ext.extension_command(f'tag {self.name} remove requiem')
+
+    def recovery_particle(self, tag):
+        '''
+        成長促進パーティクルを発生させます。\n
+        '''
+        # 成長促進パーティクルを発生させる。
+        self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s run particle minecraft:happy_villager ^ ^ ^ 1 1 1 10 60 force @a')
