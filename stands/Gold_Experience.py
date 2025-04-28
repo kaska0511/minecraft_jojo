@@ -602,11 +602,8 @@ class Gold_Experience(Common_func):
         birthday = self.rotate_birthdays[0] # 一番古い生物の誕生日を取得する。
         deathtime = self.ext.extension_command(f'execute as @e[name=Gold_Experience_note,tag={birthday},type=armor_stand,limit=1] at @s on vehicle run data get entity {self.name} DeathTime')
         if deathtime == '0s':   # 生存
-            self.rotate_birthdays[1:] + self.rotate_birthdays[:1]  # 一番古い生物を最後尾に移動する。
+            self.rotate_birthdays = self.rotate_birthdays[1:] + self.rotate_birthdays[:1]  # 一番古い生物を最後尾に移動する。
             return True         # 終了
-        elif deathtime is None:
-            # 存在はするが読み込めないだけ。一回スルー。
-            return True
         else:                   # 死亡
             # 誕生日を元に素材の座標を調べる。
             tags = self.ext.extension_command(f'data get entity @e[name=Gold_Experience_note,tag={birthday},type=armor_stand,limit=1] Tags')
