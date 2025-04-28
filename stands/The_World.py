@@ -16,7 +16,7 @@ class The_World(Common_func):
 
         # 攻撃力と射程距離を増加させる。
         self.ext.extension_command(f'effect give {self.name} minecraft:strength infinite 12 true') # ピグリンブルートを二発で倒せるレベルのパワーを付与。
-        self.ext.extension_command(f'attribute {self.name} minecraft:player.entity_interaction_range base set 10') # 攻撃射程距離10ブロックへ。
+        self.ext.extension_command(f'attribute {self.name} minecraft:entity_interaction_range base set 10') # 攻撃射程距離10ブロックへ。
 
         # 時を止められる時間が0秒で、スタプラによる時間停止が行われていたら、これ以降の処理は停止する。
         if self.timer == 0 and self.bool_have_tag('stop_time'):
@@ -112,7 +112,7 @@ class The_World(Common_func):
         # スタンド解除は実質下の関数。
         self.start_time()
         self.timer = 5
-        self.ext.extension_command(f'attribute {self.name} minecraft:player.entity_interaction_range base set 3') # 攻撃射程距離デフォルト（3ブロック）へ戻す。
+        self.ext.extension_command(f'attribute {self.name} minecraft:entity_interaction_range base set 3') # 攻撃射程距離デフォルト（3ブロック）へ戻す。
         self.ext.extension_command(f'effect clear {self.name} minecraft:strength')
 
     def stop_time(self):
@@ -156,9 +156,9 @@ class The_World(Common_func):
 
         self.ext.extension_command(f'tick unfreeze')
 
-        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:gravity base set 0.08')
-        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:jump_strength base set 0.42')
-        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:movement_speed base set 0.1')
+        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:gravity base reset')
+        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:jump_strength base reset')
+        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:movement_speed base reset')
         self.ext.extension_command(f'effect clear @a[name=!{self.name}] minecraft:water_breathing')
         self.ext.extension_command(f'effect clear @a[name=!{self.name}] minecraft:fire_resistance')
         self.ext.extension_command(f'effect clear @a[name=!{self.name}] minecraft:slow_falling')
