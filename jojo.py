@@ -85,6 +85,9 @@ def main(ext, is_server):
         # ここでext.nameがワールドにいるか検知。Noneの時ワールドに居ない。いなければcontinueする。
         # 後続の処理はいる前提で動作するので、エラーが発生しないように修正。
         if ext.extension_command(f'data get entity {ext.name} DeathTime') is None:
+            if stand is not None:
+                # 能力者が死んでいたり、ログアウトしていたりしたら能力を解除
+                death_or_logout_check(stand)
             continue
 
         new_standname = ext.extension_command(f'data get entity @e[name={ext.name},type=armor_stand,limit=1] Tags')[0]
