@@ -25,7 +25,7 @@ class Killer_Queen(Common_func):
             return
 
         item, tag = self.get_OffHandItem()
-        if tag == "Killer_Queen":
+        if tag == type(self).__name__:
 
             if item == "minecraft:gunpowder" and self.right_click:
                 #print("ブロック爆弾化発動")

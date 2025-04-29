@@ -26,7 +26,7 @@ class The_World(Common_func):
 
         self.watch_time()
         item, tag = self.get_OffHandItem()
-        if tag == "The_World" and self.run_stand == False:
+        if tag == type(self).__name__ and self.run_stand == False:
             if self.right_click and self.run_stand == False and self.timer != 0:
                 # 右クリックした人が本人なら能力発動
                 self.run_stand = True

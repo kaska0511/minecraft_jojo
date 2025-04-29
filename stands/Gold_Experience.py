@@ -56,11 +56,11 @@ class Gold_Experience(Common_func):
             if self.right_click and not self.left_click:
                 if 'shift' in self.press_keys:
                     # shiftを押していたら生物化 <-> 解除
-                    print('生物化 <-> 解除')
+                    # print('生物化 <-> 解除')
                     self.right_running_stand()
                 else:
                     # 回復・成長促進モード
-                    print('回復・成長促進')
+                    # print('回復・成長促進')
                     self.right_energy_running_stand()
 
         else:
@@ -123,6 +123,7 @@ class Gold_Experience(Common_func):
         self.ext.extension_command(f'execute in the_nether run fill -{x_min+1} 128 {z_min+1} -{x_max-1} 128 {z_max-1} minecraft:netherrack replace minecraft:bedrock')    # 火を設置するための対応。岩盤をネザーラックで置換。
 
         # tntとitemの延命を行うコマンドブロックを設置する。
+        # 生成物がダメージを負っているかを検知。ダメージを負っていたら反撃させる。
         self.prepare_command_block()
 
     def prepare_command_block(self):

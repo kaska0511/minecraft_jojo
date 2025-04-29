@@ -17,7 +17,7 @@ class Crazy_Diamond(Common_func):
 
         item, tag = self.get_OffHandItem()
 
-        if tag == "Crazy_Diamond":
+        if tag == type(self).__name__:
             # スタンド発現時は破壊速度を上昇
             self.ext.extension_command(f'attribute {self.name} minecraft:block_break_speed base set 200')
 

@@ -427,13 +427,13 @@ def stand_lost_check(ext, stand, my_standname):
     match my_standname:
         case 'The_World':
             if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
-                ext.extension_command('give ' + stand.name + ' clock[minecraft:custom_name="' + item_name_list[0] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
+                ext.extension_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[0] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
 
         case 'TuskAct4':
             if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
                 ext.extension_command('give ' + stand.name + ' saddle')
                 ext.extension_command('give ' + stand.name + ' lead')
-                ext.extension_command('give ' + stand.name + ' bone[minecraft:custom_name="' + item_name_list[1] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
+                ext.extension_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[1] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
 
         case 'Killer_Queen':
             if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':   # 全て失わないと再取得できないので注意
@@ -447,7 +447,7 @@ def stand_lost_check(ext, stand, my_standname):
 
         case 'Twentieth_Century_Boy':
             if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
-                ext.extension_command('give ' + stand.name + ' snowball[minecraft:custom_name="' + item_name_list[4] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
+                ext.extension_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[4] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
                 #stand.create_ticket_compass()
                 #stand.create_target_compass()
 

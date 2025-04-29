@@ -43,7 +43,8 @@ class Your_Stand_Info(Container):
         )
 
         self.Left_Text = Text(
-            value = f"引用元:https://jojoasbr.bn-ent.net/character/"
+            value = f"引用元:https://jojoasbr.bn-ent.net/character/",
+            selectable=True
         )
         self.Left_Column = Column(
             alignment = MainAxisAlignment.CENTER,
@@ -58,30 +59,36 @@ class Your_Stand_Info(Container):
             size = 40,
             weight = FontWeight.BOLD,
             bgcolor = colors.BLUE_600,
+            selectable=True,
         )
         self.individual_stand_name = Text(
             value = STAND_NAME[self.YOUR_STAND].value,
             size = 20,
+            selectable=True,
         )
         self.stand_overview = Text(
             value = "スタンド概要",
             size = 40,
             weight = FontWeight.BOLD,
             bgcolor = colors.ORANGE_800,
+            selectable=True,
         )
         self.individual_stand_overview = Text(
             value = STAND_OVERVIEW[self.YOUR_STAND].value,
             size = 20,
+            selectable=True,
         )
         self.stand_detail = Text(
             value = "スタンド詳細",
             size = 40,
             weight=FontWeight.BOLD,
             bgcolor = colors.GREEN_700,
+            selectable=True,
         )
         self.individual_stand_detail = Text(
             value = STAND_DETAIL[self.YOUR_STAND].value,
             size = 20,
+            selectable=True,
         )
         self.Right_Column = Column(
             alignment = MainAxisAlignment.START,              # 垂直方向トップに移動。
