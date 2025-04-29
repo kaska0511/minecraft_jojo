@@ -41,9 +41,6 @@ class Gold_Experience(Common_func):
         if self.requiem and self.requiem_limit_time <= time.time():
             self.disable_requiem()
 
-        # 生成物がダメージを負っているかを検知。ダメージを負っていたら反撃させる。
-        self.counter_attack_GEcreature()
-
         # 生成物が死亡しているか検知。死亡していたら素材元を召喚する。
         self.death_revert_GEC2inorganic()
 
@@ -126,9 +123,9 @@ class Gold_Experience(Common_func):
         self.ext.extension_command(f'execute in the_nether run fill -{x_min+1} 128 {z_min+1} -{x_max-1} 128 {z_max-1} minecraft:netherrack replace minecraft:bedrock')    # 火を設置するための対応。岩盤をネザーラックで置換。
 
         # tntとitemの延命を行うコマンドブロックを設置する。
-        self.modify_life_extension()
+        self.prepare_command_block()
 
-    def modify_life_extension(self):
+    def prepare_command_block(self):
         # tntとitemの延命を行うコマンドブロックを設置する。
         # tnt
         command = f'execute in the_nether as @e[type=tnt,x=0,y=128,z=0,dx=16,dy=16,dz=16] at @s run data modify entity @s fuse set value 32767s'
@@ -136,6 +133,10 @@ class Gold_Experience(Common_func):
         # item
         command = f'execute in the_nether as @e[type=item,x=0,y=128,z=0,dx=16,dy=16,dz=16] at @s run data modify entity @s Age set value -32768'
         self.ext.extension_command(f'execute in the_nether run setblock 0 127 1 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+
+        # 生成物がダメージを負っているかを検知。ダメージを負っていたら反撃させる。
+        command = f'execute as @e[tag=GEcreature,type=!armor_stand,nbt=!{{HurtTime:0s}}] on attacker run damage @s 6 minecraft:magic by {self.name}'
+        self.ext.extension_command(f'execute in the_nether run setblock 0 127 2 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
 
     def summon_armorstand_GECbirthdayList(self):
         """
@@ -543,7 +544,6 @@ class Gold_Experience(Common_func):
                 birthday = list(set(tags) & set(str_birthdays))[0]
                 self.birthdays.remove(int(birthday)) # self.birthdays から指定の誕生日を削除する。
             elif near_mode:
-                print('近いモード')
                 # プレイヤーの最も近くにいるGold_Experience_noteからTags情報を取得する。
                 tags = self.ext.extension_command(f'execute as @a[name={self.name},limit=1] at @s run data get entity @n[name=Gold_Experience_note,type=armor_stand,limit=1] Tags')
                 # tags と self.birthdays で共通のデータを取得する。今回の場合は誕生日に当たる。
