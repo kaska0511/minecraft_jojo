@@ -76,7 +76,7 @@ def make_stand_list():
     Return
         なし
     '''
-    first = {"The_World": "1dummy", "TuskAct4": "1dummy", "Killer_Queen": "1dummy", "Catch_The_Rainbow": "1dummy", "Twentieth_Century_Boy": "1dummy", "Little_Feat": "1dummy", "Cream": "1dummy", "Crazy_Diamond": "1dummy", "Gold_Experience": "1dummy"}
+    first = {"The_World": "1dummy", "TuskAct4": "1dummy", "Killer_Queen": "1dummy", "Catch_The_Rainbow": "1dummy", "Twentieth_Century_Boy": "1dummy", "Little_Feat": "1dummy", "Cream": "1dummy", "Crazy_Diamond": "1dummy", "Gold_Experience": "1dummy", "King_Crimson": "1dummy"}
     with open('./json_list/stand_list.json', 'w', encoding='utf-8') as f:
         json.dump(first, f, ensure_ascii=False)
 
@@ -422,7 +422,7 @@ def death_or_logout_check(stand):
         stand.cancel_stand()
 
 def stand_lost_check(ext, stand, my_standname):
-    item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート", "クリーム", "クレイジー・ダイヤモンド", "ゴールド・エクスペリエンス")
+    item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート", "クリーム", "クレイジー・ダイヤモンド", "ゴールド・エクスペリエンス", "キング・クリムゾン")
 
     match my_standname:
         case 'The_World':
@@ -467,6 +467,9 @@ def stand_lost_check(ext, stand, my_standname):
             if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
                 ext.extension_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[8] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
 
+        case 'King_Crimson':
+            if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
+                ext.extension_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[9] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
         case _:
                 pass
 

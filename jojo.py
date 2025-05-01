@@ -23,7 +23,7 @@ from stands.Little_Feat import Little_Feat
 from stands.Cream import Cream
 from stands.Crazy_Diamond import Crazy_Diamond
 from stands.Gold_Experience import Gold_Experience
-
+from stands.King_Crimson import King_Crimson
 
 def main(ext, is_server):
 
@@ -135,6 +135,9 @@ def main(ext, is_server):
 
                 case 'Gold_Experience':
                     stand = Gold_Experience(name=ext.name, ext=ext, controller=controller)
+
+                case 'King_Crimson':
+                    stand = King_Crimson(name=ext.name, ext=ext, controller=controller)
 
                 case _:
                         print('全てにマッチ')

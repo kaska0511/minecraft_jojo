@@ -15,6 +15,7 @@ class IMAGES_BASE64(StrEnum):
     CREAM = ''
     CRAZY_DIAMOND = ''
     GOLD_EXPERIENCE = ''
+    KING_CRIMSON = ''
 
 # jsonから読み取った情報をEnumで扱うために変換する
 class CONVERT_STAND_NAME(StrEnum):
@@ -27,6 +28,7 @@ class CONVERT_STAND_NAME(StrEnum):
     CREAM = 'Cream'
     CRAZY_DIAMOND = 'Crazy_Diamond'
     GOLD_EXPERIENCE = 'Gold_Experience'
+    KING_CRIMSON = 'King_Crimson'
 
 # Rcon_Server画面に表示させるスタンド一覧。現在は各部主人公とラスボスのみ記載。
 class HOME_IMAGE(Enum):
@@ -36,6 +38,7 @@ class HOME_IMAGE(Enum):
     KILLER_QUEEN = 4
     TUSKACT4 = 5
     GOLD_EXPERIENCE = 6
+    KING_CRIMSON = 7
 
 # 日本語のスタンド名
 class STAND_NAME(StrEnum):
@@ -48,6 +51,7 @@ class STAND_NAME(StrEnum):
     CREAM = 'クリーム'
     CRAZY_DIAMOND = 'クレイジー・ダイヤモンド'
     GOLD_EXPERIENCE = 'ゴールド・エクスペリエンス'
+    KING_CRIMSON = 'キング・クリムゾン'
 
 # スタンド情報概要
 class STAND_OVERVIEW(StrEnum):
@@ -60,6 +64,7 @@ class STAND_OVERVIEW(StrEnum):
     CREAM = '透明化し無敵状態になります。体の周りのブロックを削り取りmobに強力なダメージを与えます。'
     CRAZY_DIAMOND = 'mobやアイテムを瞬時に治癒することができます。（ただし自分自身を治癒することのみ不可能。）'
     GOLD_EXPERIENCE = '生命エネルギーをブロックに流し生物を生み出します。また生命エネルギーは自分を含めたあらゆる生物を回復させます。'
+    KING_CRIMSON = '時間を15秒間消し去ることができます。また、エピタフを発動することで3秒間受けるダメージを軽減させることができます。'
 
 # スタンド情報詳細
 class STAND_DETAIL(StrEnum):
@@ -122,8 +127,13 @@ class STAND_DETAIL(StrEnum):
                       'また、生み出した生物は攻撃を受けると攻撃者に反撃する、反撃術を持ちます。\n\n'\
                       '能力3：右クリックを押下することで動植物に生命エネルギーを流し込み成長促進、回復を行います。\n'\
                       'これはアンデッドなどを区別しません。\n\n'\
-                      '能力4：経験値を消費することで10分間攻守ともに無敵になります。\n'\
+                      '能力4（レクイエム）：経験値を消費することで10分間攻守ともに無敵になります。\n'\
                       '与ダメージ時：そのMOBは死亡します。\n' \
                       '被ダメージ時：ダメージは無効化され、攻撃を行ったMOBは死亡します。\n'\
-                      '手順1. 経験値10以上の時、「gキー」押下後に経験値を10消費し、スタンドの矢を手に入れます。\n'\
+                      '手順1. 経験値10以上の時、「Gキー」押下後に経験値を10消費し、スタンドの矢を手に入れます。\n'\
                       '手順2. 経験値40以上の時、スタンドの矢を使用すると経験値を40消費し、無敵状態になります。\n\n'
+
+    KING_CRIMSON = '能力1：時間を消し去ることができます。消し去った時間は最大15秒間です。\n'\
+                      '能力2：エピタフを発動することで、3秒間受けるダメージを軽減させることができます。\n'\
+                      '能力3：エピタフの発動中、視線を動かすことで、次に受けるダメージを無効化します。\n\n'\
+                      '注意点：エピタフの発動中は、時を止めていても時間は進みます。\n'

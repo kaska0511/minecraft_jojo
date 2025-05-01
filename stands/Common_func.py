@@ -364,23 +364,20 @@ class Common_func:
             rot = (res[0].rstrip("f"), res[1].rstrip("f"))
             return rot
 
-    def get_SelectedItemSlot(self):
+    def is_SelectedItemSlot(self, num):
         '''
-        自分が選択しているメインスロットの番号（0~9）を取得します。
+        自分が選択しているメインスロットの番号（0~9）が何か知ることができます。
 
         Parameter
-            None
+            num : str | int
 
         Return
-            slotno : int
+            is_slotnum : bool
         '''
-        reg = r'[a-zA-Z_0-9]+ *[a-zA-Z_0-9]* has the following entity data: '
-        Slotres = self.ext.extension_command(f'data get entity {self.name} SelectedItemSlot')
+        slotnum = self.ext.extension_command('execute if entity @a[name=KASKA0511,limit=1,nbt={SelectedItemSlot:'+ str(num) +'}] run data get entity '+ self.name +' DeathTime')
+        is_slotnum = True if slotnum == '0s' else False
 
-        split = re.split(r' ', Slotres)
-        slotno = None if split[0] == 'Found' or split[0] == 'No' else int(re.sub(reg, '', Slotres).strip('"'))
-
-        return slotno
+        return is_slotnum
 
     def get_SelectedItem(self):
         '''
