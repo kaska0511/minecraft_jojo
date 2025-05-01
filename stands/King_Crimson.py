@@ -43,19 +43,23 @@ class King_Crimson(Common_func):
         # 能力発動処理
         if self.run_stand == False and self.right_click:
             if self.get_OffHandItem()[1] == type(self).__name__:
-                self.run_stand = True
                 if self.is_SelectedItemSlot(0):
-                    if self.main_runtime == 0:
+                    if self.main_runtime == 0 and self.main_cooldown_time == 0:
                         # スロットが0の時、メイン能力を発動する。
                         self.main_ability()
                 else:
-                    if self.epi_runtime == 0:
+                    if self.epi_runtime == 0 and self.epi_cooldown_time == 0:
                         # スロットが0以外の時、エピタフを発動する。
+                        self.run_stand = True
+                        self.ability_mode = 'epi'
                         self.epitaph()
 
 
         # 立ち上げフラグを下げる。
         self.right_click = False
+
+    def cancel_stand(self):
+        pass
 
     def ability_time_counter(self):
         ## 能力発動中のカウントアップ処理
@@ -87,11 +91,15 @@ class King_Crimson(Common_func):
             self.timer_4_cooldown()
 
             # クールダウン時間が十分に満たされたら、クールダウンタイムをリセットする。
-            if self._main_abi_cooldown >= self.main_cooldown_time:
+            if self.main_cooldown_time >= self._main_abi_cooldown:
+                # 能力発動時間をリセットする。
+                self.main_runtime = 0
                 # メイン
                 self.main_cooldown_time = 0
                 self.main_basetime_cooldown = 0
-            if self._epi_abi_cooldown >= self.epi_cooldown_time:
+            if self.epi_cooldown_time >= self._epi_abi_cooldown:
+                # 能力発動時間をリセットする。
+                self.epi_runtime = 0
                 # エピタフ
                 self.epi_cooldown_time = 0
                 self.epi_basetime_cooldown = 0
@@ -102,14 +110,15 @@ class King_Crimson(Common_func):
 
         # クールダウン時間を計測するための変数を初期化する。
         if self.ability_mode == 'main':
-            # 能力発動時間をリセットする。
-            self.main_runtime = 0
+            # ゲームモード変更
+            self.ext.extension_command(f'gamemode survival {self.name}')    # サバイバルモードに戻す。
+            # 本当はスペクテイターモードで浮遊させたくないが、空を飛んだ場合、落下死する可能性があるのでダメージカット。
+            self.ext.extension_command(f'execute as {self.name} at @s run effect give @s minecraft:registance 5 4 true')        # 5秒だけ80%ダメージカット耐性
+            # 近接攻撃の範囲を元に戻す。
             self.ext.extension_command(f'execute as {self.name} at @s run attribute @s minecraft:entity_interaction_range base reset')  # 近接攻撃の範囲を元に戻す。
             self.ext.extension_command('tick rate 20')
             self.main_basetime_cooldown = int(time.time())
         if self.ability_mode == 'epi':
-            # 能力発動時間をリセットする。
-            self.epi_runtime = 0
             self.ext.extension_command(f'execute as {self.name} at @s run attribute @s minecraft:knockback_resistance base reset')  # ノックバック耐性を元に戻す。
             self.epi_basetime_cooldown = int(time.time())
 
@@ -119,25 +128,17 @@ class King_Crimson(Common_func):
     def main_ability(self):
         # 繰り返し呼び出される関数
         # メイン能力の発動処理
-        self.ability_mode = 'main'
         self.basetime = int(time.time())
 
         # メイン能力の発動時間を計測する。
         runtime = self._main_abi_maxtime - self.main_runtime
-        print(f'メイン：{runtime}秒前・・・')
-        self.ext.extension_command(f'execute as {self.name} at @s run effect give @s minecraft:invisibility {runtime} 255 true')    # 透明化
-        self.ext.extension_command(f'execute as {self.name} at @s run effect give @s minecraft:jump_boost {runtime} 3 true')        # ジャンプ力上昇
-        self.ext.extension_command(f'execute as {self.name} at @s run effect give @s minecraft:resistance {runtime} 255 true')      # 耐性
-        self.ext.extension_command(f'execute as {self.name} at @s run effect give @s minecraft:fire_resistance {runtime} 255 true') # 火炎耐性
-        self.ext.extension_command(f'execute as {self.name} at @s run effect clear @s minecraft:glowing')    # 輝く効果を解除する。
+
+        # ゲームモード変更
+        self.ext.extension_command(f'gamemode spectator {self.name}')    # スペクテイターモードにする。
 
         # 能力発動中は他者に攻撃できない。
+        # また他エンティティへ憑依できないようにする。
         self.ext.extension_command(f'execute as {self.name} at @s run attribute @s minecraft:entity_interaction_range base set 0')  # 近接攻撃の範囲を0にする。
-
-        # 投擲物は自分の周りへテレポートさせる。
-        print(self.uuid)
-        uuid = f'[I; {self.uuid[0]}, {self.uuid[1]}, {self.uuid[2]}, {self.uuid[3]}]'
-        self.ext.extension_command('execute as @e[type=#minecraft:impact_projectiles,nbt={Owner:'+ uuid +'}] at @s run tp @s '+ self.name)
 
         if runtime == 1:
             # メイン能力の発動時間が1秒になったら他のプレイヤーにも演出を行う。
@@ -146,13 +147,11 @@ class King_Crimson(Common_func):
     def epitaph(self):
         # 繰り返し呼び出される関数
         # エピタフの発動処理
-        self.ability_mode = 'epi'
         self.basetime = int(time.time())
 
         # エピタフの発動時間を計測する。
         runtime = self._epi_abi_maxtime - self.epi_runtime
 
-        print(f'エピタフ：{runtime}秒前・・・')
         self.ext.extension_command(f'execute as {self.name} at @s run effect give @s minecraft:resistance {runtime} 4 true')        # 耐性
         self.ext.extension_command(f'execute as {self.name} at @s run attribute @s minecraft:knockback_resistance base set 0.9')    # ノックバック耐性(90%耐性)
 
@@ -164,8 +163,10 @@ class King_Crimson(Common_func):
             self.basetime = now_time
             if self.ability_mode == 'main':
                 self.main_runtime += 1
+                print(f'メイン：{self.main_runtime}秒経過・・・')
             elif self.ability_mode == 'epi':
                 self.epi_runtime += 1
+                print(f'エピタフ：{self.epi_runtime}秒経過・・・')
 
     def timer_4_cooldown(self):
         # クールダウン時間を計測する。
@@ -177,10 +178,12 @@ class King_Crimson(Common_func):
             if self.main_basetime_cooldown < now_time:
                 self.main_basetime_cooldown = now_time
                 self.main_cooldown_time += 1
+                print(f'メインクールダウン：{self.main_cooldown_time}秒経過')
         if self.epi_basetime_cooldown != 0:
             if self.epi_basetime_cooldown < now_time:
                 self.epi_basetime_cooldown = now_time
                 self.epi_cooldown_time += 1
+                print(f'エピタフクールダウン：{self.epi_cooldown_time}秒経過')
 
     def all_direction(self, time):
         # 他のプレイヤーに対する演出
