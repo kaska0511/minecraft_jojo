@@ -27,13 +27,13 @@ class King_Crimson(Common_func):
         if self.name == "1dummy" or self.get_logout():
             return
 
+        # スタンドアイテムをオフハンドにセットしているとき攻撃力を上昇させる。
+        self.set_attack_damage()
+
         # 時間停止中はこれ以降の処理は行わない。能力発動を検知しない。
         if self.bool_have_tag('stop_time'):
             self.left_click = False
             self.right_click = False
-            if self.run_stand:
-                # もし発動中に時間停止が行われたら現状維持
-                pass
             return
 
         self.ability_time_counter()  # 能力発動時間の計測処理
@@ -54,12 +54,20 @@ class King_Crimson(Common_func):
                         self.ability_mode = 'epi'
                         self.epitaph()
 
-
         # 立ち上げフラグを下げる。
         self.right_click = False
 
     def cancel_stand(self):
-        pass
+        self.ext.extension_command(f'attribute {self.name} minecraft:attack_damage base reset')
+        self.ext.extension_command(f'execute as {self.name} at @s run attribute @s minecraft:knockback_resistance base reset')
+        self.ext.extension_command(f'effect clear {self.name}')
+        self.ext.extension_command(f'gamemode survival {self.name}')    # サバイバルモードに戻す。
+
+    def set_attack_damage(self, damage=6):
+        if self.get_OffHandItem()[1] == type(self).__name__:
+            self.ext.extension_command(f'attribute {self.name} minecraft:attack_damage base set {damage}')
+        else:
+            self.ext.extension_command(f'attribute {self.name} minecraft:attack_damage base reset')
 
     def ability_time_counter(self):
         ## 能力発動中のカウントアップ処理
