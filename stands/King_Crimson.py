@@ -3,12 +3,12 @@ from stands.Common_func import Common_func
 
 class King_Crimson(Common_func):
     # 能力のクールタイム
-    _main_abi_cooldown = 300
-    _epi_abi_cooldown = 10
+    _main_abi_cooldown = 30
+    _epi_abi_cooldown = 5
 
     # 能力の最大発動時間
-    _main_abi_maxtime = 15
-    _epi_abi_maxtime = 3
+    _main_abi_maxtime = 5
+    _epi_abi_maxtime = 5
 
     def __init__(self, name, ext, controller) -> None:
         super().__init__(name, ext, controller)
@@ -230,7 +230,7 @@ class King_Crimson(Common_func):
 
     def particle_blood_eyes(self):
         # 血の目潰しのパーティクルを付与する。
-        self.ext.extension_command('execute as @a[tag=KC_blood_eyes] at @s anchored eyes run particle minecraft:dust{color:[1.0,0.0,0.0],scale:4} ^ ^ ^0.5 0 0 0 1 0 force @a')
+        self.ext.extension_command('execute as @a[tag=KC_blood_eyes] at @s anchored eyes run particle minecraft:dust{color:[1.0,0.0,0.0],scale:4} ^ ^ ^0.5 0 0 0 1 10 force @a')
 
     def blood_eyes(self):
         # 血の目潰しの処理
