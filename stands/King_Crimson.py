@@ -27,8 +27,8 @@ class King_Crimson(Common_func):
         if self.name == "1dummy" or self.get_logout():
             return
 
-        # スタンドアイテムをオフハンドにセットしているとき攻撃力を上昇させる。
-        self.set_attack_damage()
+        # スタンドアイテムをオフハンドにセットしているとき攻撃力と採掘速度を上昇させる。
+        self.set_attribute()
 
         # 時間停止中はこれ以降の処理は行わない。能力発動を検知しない。
         if self.bool_have_tag('stop_time'):
@@ -67,11 +67,14 @@ class King_Crimson(Common_func):
         self.ext.extension_command(f'effect clear {self.name}')
         self.ext.extension_command(f'gamemode survival {self.name}')    # サバイバルモードに戻す。
 
-    def set_attack_damage(self, damage=6):
+    def set_attribute(self):
         if self.get_OffHandItem()[1] == type(self).__name__:
+            damage=6
             self.ext.extension_command(f'attribute {self.name} minecraft:attack_damage base set {damage}')
+            self.ext.extension_command(f'attribute {self.name} minecraft:block_break_speed base set 100')
         else:
             self.ext.extension_command(f'attribute {self.name} minecraft:attack_damage base reset')
+            self.ext.extension_command(f'attribute {self.name} minecraft:block_break_speed base reset')
 
     def ability_time_counter(self):
         ## 能力発動中のカウントアップ処理
