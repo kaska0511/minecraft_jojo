@@ -112,7 +112,8 @@ class The_World(Common_func):
         # スタンド解除は実質下の関数。
         self.start_time()
         self.timer = 5
-        self.ext.extension_command(f'attribute {self.name} minecraft:entity_interaction_range base set 3') # 攻撃射程距離デフォルト（3ブロック）へ戻す。
+        self.ext.extension_command(f'tag @a[name=!{self.name}] remove stop_time')  # 時間を止めていることを示すタグを取り除く。
+        self.ext.extension_command(f'attribute {self.name} minecraft:entity_interaction_range base reset') # 攻撃射程距離デフォルト（3ブロック）へ戻す。
         self.ext.extension_command(f'effect clear {self.name} minecraft:strength')
 
     def stop_time(self):

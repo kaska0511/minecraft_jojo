@@ -22,7 +22,7 @@ class Cream(Common_func):
 
         item, tag = self.get_OffHandItem()
         print(self.right_click)
-        if tag == "Cream" and self.right_click:
+        if tag == type(self).__name__ and self.right_click:
             # 能力発動検知と初期設定
             if  self.run_stand == False:
                 # スペクテイターモードに変更
@@ -38,6 +38,9 @@ class Cream(Common_func):
 
         # 能力発動処理
         if self.run_stand:
+            # 近接攻撃を0にしないと他エンティティに憑依できてしまうため、0にする。
+            # 近接攻撃の範囲を0にすることで、他エンティティに憑依できないようにする。
+            self.ext.extension_command(f'execute as {self.name} at @s run attribute @s minecraft:entity_interaction_range base set 0')
             # ダメージ処理
             self.damage_within_range()
 
@@ -80,6 +83,7 @@ class Cream(Common_func):
         #self.ext.extension_command(f'effect clear {self.name} minecraft:invisibility')
         self.ext.extension_command(f'execute as {self.name} at @s run gamemode survival')
         self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set 0.08')
+        self.ext.extension_command(f'execute as {self.name} at @s run attribute @s minecraft:entity_interaction_range base reset')
 
     def effect_stand(self):
         #self.ext.extension_command(f'effect give {self.name} minecraft:invisibility infinite 255 true')       # 透明化

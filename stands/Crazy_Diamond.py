@@ -79,7 +79,7 @@ class Crazy_Diamond(Common_func):
 
         else:
             # スタンド発現していない時は通常通りの速度へ
-            self.ext.extension_command(f'attribute {self.name} minecraft:block_break_speed base set 1')
+            self.ext.extension_command(f'attribute {self.name} minecraft:block_break_speed base reset')
 
 
     def cancel_stand(self):

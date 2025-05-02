@@ -34,6 +34,8 @@ def main(ext, is_server):
         add_cooldown_datapack()
         # ゲームルール設定
         ext.extension_command("gamerule sendCommandFeedback false")
+        # titleコマンドの基本表示設定（時間）
+        ext.extension_command('title @a times 0 0.8s 0.2s')
         # 情報取得用チャンクを強制ロード設定
         ext.extension_command("forceload add 0 0")
         while not ext.extension_command(f'forceload query 0 0'): # ロードするまで待つ。
