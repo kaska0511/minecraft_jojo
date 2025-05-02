@@ -40,12 +40,16 @@ class King_Crimson(Common_func):
 
         self.cooldown_time_counter()  # クールダウン時間の計測処理
 
+        self.blood_eyes()  # 血の目潰しの処理
+
         # 能力発動処理
         if self.run_stand == False and self.right_click:
             if self.get_OffHandItem()[1] == type(self).__name__:
                 if self.is_SelectedItemSlot(0):
                     if self.main_runtime == 0 and self.main_cooldown_time == 0:
                         # スロットが0の時、メイン能力を発動する。
+                        self.run_stand = True
+                        self.ability_mode = 'main'
                         self.main_ability()
                 else:
                     if self.epi_runtime == 0 and self.epi_cooldown_time == 0:
@@ -199,3 +203,28 @@ class King_Crimson(Common_func):
         self.ext.extension_command(f'effect give @a[name!={self.name}] minecraft:speed {time} 15 true')
         self.ext.extension_command(f'effect give @a[name!={self.name}] minecraft:dolphins_grace {time} 255 true')
         self.ext.extension_command(f'effect give @a[name!={self.name}] minecraft:haste {time} 255 true')
+
+    def add_tag_4_blood(self):
+        # 血の目潰しを付与するためのタグを付与する。
+        self.ext.extension_command(f'execute as {self.name} at @s run tag @a[name!={self.name},distance=..5] add KC_blood_eyes')
+
+    def remove_tag_4_blood(self):
+        # 血の目潰しを付与するためのタグを削除する。
+        self.ext.extension_command(f'tag @a[] remove KC_blood_eyes')
+
+    def particle_blood_eyes(self):
+        # 血の目潰しのパーティクルを付与する。
+        self.ext.extension_command('execute as @a[tag=KC_blood_eyes] at @s anchored eyes run particle minecraft:dust{color:[1.0,0.0,0.0],scale:4} ^ ^ ^0.5 0 0 0 1 0 force @a')
+
+    def blood_eyes(self):
+        # 血の目潰しの処理
+        if self.main_runtime != 0 and self.main_cooldown_time == 0:
+            # メイン能力の発動中は血の目潰しの準備、タグを付与する。
+            self.add_tag_4_blood()
+        if 1<= self.main_cooldown_time <= 5:
+            # メイン能力発動後のクールダウンタイム中5秒間は血の目潰しパーティクルを付与する。
+            self.particle_blood_eyes()
+        if self.main_cooldown_time > 5:
+            #　クールダウンが5秒経ったら、血の目潰しのタグを削除する。
+            # パーティクルを外す。
+            self.remove_tag_4_blood()
