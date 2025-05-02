@@ -28,10 +28,10 @@ class Rcon_Server(Container):
         self.padding = 40
         self.width = 1280
         self.height = 810
-        self.image_src_base64 = BACK_GROUND
+        self.image_src = BACK_GROUND
 
         self.Left_Image = Image(
-            src_base64 = IMAGES_BASE64[random.choice(list(HOME_IMAGE)).name],
+            src = IMAGES[random.choice(list(HOME_IMAGE)).name],
             height = 800,
             #width = 570
         )

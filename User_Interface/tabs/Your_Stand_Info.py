@@ -37,7 +37,7 @@ class Your_Stand_Info(Container):
         ################################ 画面左側
         self.Left_Image = Image(
             #src_base64 = random.choice(list(IMAGES_BASE64)),
-            src_base64 = IMAGES_BASE64[self.YOUR_STAND].value,
+            src = IMAGES[self.YOUR_STAND].value,
             #height = 640,
             width = 350 # ※1 = 1100 - ※2
         )
