@@ -27,8 +27,8 @@ class Killer_Queen(Common_func):
         item, tag = self.get_OffHandItem()
         if tag == type(self).__name__:
 
-            if item == "minecraft:gunpowder" and self.right_click:
-                #print("ブロック爆弾化発動")
+            if self.is_SelectedItemSlot(0) and self.right_click:
+                self.ext.extension_command(f'title {self.name} actionbar "ブロックを爆弾に変えたッ！"')
                 self.ext.extension_command(f'kill @e[tag=air_bomb]')
                 self.summon_flag = False
 
@@ -39,13 +39,13 @@ class Killer_Queen(Common_func):
                 self.mode = 2
                 self.summon_Sheer_Heart_Attack()
             """
-            if item == "minecraft:fire_charge" and self.right_click: # 猫をテイムしているなら判定も入れられると良い。
-                #print("空気爆弾発射")
+            if self.is_SelectedItemSlot(1) and self.right_click: # 猫をテイムしているなら判定も入れられると良い。
+                self.ext.extension_command(f'title {self.name} actionbar "空気爆弾を発射した..."')
                 self.mode = 3
                 self.summon_air_bomb()
 
-            if item == "minecraft:flint" and self.right_click and self.run_stand == True:
-                #print("爆弾着火")
+            if self.is_SelectedItemSlot(2) and self.right_click and self.run_stand == True:
+                self.ext.extension_command(f'title {self.name} actionbar "点火！"')
                 self.ext.extension_command(f'execute as {self.name} at @s run playsound minecraft:item.lodestone_compass.lock master @a[distance=..8] ~ ~ ~ 200 2')
                 self.ext.extension_command(f'particle minecraft:lava {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]} 1.5 1.5 1.5 0 10 normal @a')
                 #self.ext.extension_command(f'execute as {self.name} at @s run setblock {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]} minecraft:tnt destroy') # test用

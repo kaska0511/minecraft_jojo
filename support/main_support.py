@@ -422,7 +422,7 @@ def death_or_logout_check(stand):
         stand.cancel_stand()
 
 def stand_lost_check(ext, stand, my_standname):
-    item_name_list = ("ザ・ワールド", "タスクAct4", ("キラークイーン_ブロック爆弾", "キラークイーン_着火剤", "キラークイーン_空気爆弾"), "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート", "クリーム", "クレイジー・ダイヤモンド", "ゴールド・エクスペリエンス", "キング・クリムゾン")
+    item_name_list = ("ザ・ワールド", "タスクAct4", "キラークイーン", "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート", "クリーム", "クレイジー・ダイヤモンド", "ゴールド・エクスペリエンス", "キング・クリムゾン")
 
     match my_standname:
         case 'The_World':
@@ -437,9 +437,7 @@ def stand_lost_check(ext, stand, my_standname):
 
         case 'Killer_Queen':
             if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':   # 全て失わないと再取得できないので注意
-                ext.extension_command('give ' + stand.name + ' gunpowder[minecraft:custom_name="' + item_name_list[2][0] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
-                ext.extension_command('give ' + stand.name + ' flint[minecraft:custom_name="' + item_name_list[2][1] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
-                ext.extension_command('give ' + stand.name + ' fire_charge[minecraft:custom_name="' + item_name_list[2][2] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
+                ext.extension_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[2] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
 
         case 'Catch_The_Rainbow':
             if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
