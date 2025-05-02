@@ -48,15 +48,26 @@ class King_Crimson(Common_func):
                 if self.is_SelectedItemSlot(0):
                     if self.main_runtime == 0 and self.main_cooldown_time == 0:
                         # スロットが0の時、メイン能力を発動する。
+                        # タイトルを表示する。
+                        self.ext.extension_command(f'title {self.name} subtitle "我以外の全ての時間は消し飛ぶッ！"')
+                        self.ext.extension_command(f'title {self.name} title "キング・クリムゾン！！"')
                         self.run_stand = True
                         self.ability_mode = 'main'
                         self.main_ability()
+                    else:
+                        # クールダウンタイム中は能力を発動できない。
+                        self.ext.extension_command(f'title {self.name} actionbar "メイン能力のクールダウン中:残り{self._main_abi_cooldown - self.main_cooldown_time}秒..."')
                 else:
                     if self.epi_runtime == 0 and self.epi_cooldown_time == 0:
                         # スロットが0以外の時、エピタフを発動する。
+                        self.ext.extension_command(f'title {self.name} subtitle "これは「試練」だ..."')
+                        self.ext.extension_command(f'title {self.name} title "エピタフ..."')
                         self.run_stand = True
                         self.ability_mode = 'epi'
                         self.epitaph()
+                    else:
+                        # クールダウンタイム中は能力を発動できない。
+                        self.ext.extension_command(f'title {self.name} actionbar "エピタフのクールダウン中:残り{self._epi_abi_cooldown - self.epi_cooldown_time}秒..."')
 
         # 立ち上げフラグを下げる。
         self.right_click = False
@@ -179,9 +190,11 @@ class King_Crimson(Common_func):
             if self.ability_mode == 'main':
                 self.main_runtime += 1
                 print(f'メイン：{self.main_runtime}秒経過・・・')
+                self.ext.extension_command(f'title {self.name} actionbar "残り{self._main_abi_maxtime - self.main_runtime}秒..."')
             elif self.ability_mode == 'epi':
                 self.epi_runtime += 1
                 print(f'エピタフ：{self.epi_runtime}秒経過・・・')
+                self.ext.extension_command(f'title {self.name} actionbar "残り{self._epi_abi_maxtime - self.epi_runtime}秒..."')
 
     def timer_4_cooldown(self):
         # クールダウン時間を計測する。
