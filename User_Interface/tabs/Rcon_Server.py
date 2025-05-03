@@ -1,4 +1,5 @@
 import json
+import sys
 import os
 import re
 import random
@@ -28,10 +29,10 @@ class Rcon_Server(Container):
         self.padding = 40
         self.width = 1280
         self.height = 810
-        self.image_src = BACK_GROUND
+        self.image_src = self.resourcePath(BACK_GROUND)
 
         self.Left_Image = Image(
-            src = IMAGES[random.choice(list(HOME_IMAGE)).name],
+            src = self.resourcePath(IMAGES[random.choice(list(HOME_IMAGE)).name]),
             height = 800,
             #width = 570
         )
@@ -207,3 +208,8 @@ class Rcon_Server(Container):
         with open(json_file) as f:
             df = json.load(f)
         return df
+
+    def resourcePath(self, filename):
+        if hasattr(sys, "_MEIPASS"):
+            return os.path.join(sys._MEIPASS, filename)
+        return os.path.join(filename)

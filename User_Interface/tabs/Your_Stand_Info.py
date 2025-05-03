@@ -37,7 +37,7 @@ class Your_Stand_Info(Container):
         ################################ 画面左側
         self.Left_Image = Image(
             #src_base64 = random.choice(list(IMAGES_BASE64)),
-            src = IMAGES[self.YOUR_STAND].value,
+            src = self.resourcePath(IMAGES[self.YOUR_STAND].value),
             #height = 640,
             width = 350 # ※1 = 1100 - ※2
         )
@@ -109,7 +109,7 @@ class Your_Stand_Info(Container):
 
     def restart(self, e):
         self.get_my_stand()
-        self.Left_Image.src_base64 = IMAGES[self.YOUR_STAND].value
+        self.Left_Image.src = self.resourcePath(IMAGES[self.YOUR_STAND].value)
         self.individual_stand_name.value = STAND_NAME[self.YOUR_STAND].value
         self.individual_stand_overview.value = STAND_OVERVIEW[self.YOUR_STAND].value
         self.individual_stand_detail.value = STAND_DETAIL[self.YOUR_STAND].value
@@ -215,3 +215,8 @@ class Your_Stand_Info(Container):
                 if item is not None:
                     return item
         return None
+
+    def resourcePath(self, filename):
+        if hasattr(sys, "_MEIPASS"):
+            return os.path.join(sys._MEIPASS, filename)
+        return os.path.join(filename)

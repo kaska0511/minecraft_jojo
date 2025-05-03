@@ -2,20 +2,20 @@
 from enum import StrEnum
 from enum import Enum
 
-BACK_GROUND = './images/rcon_tab_blur3.png'
+BACK_GROUND = 'images/rcon_tab_blur3.png'
 
 # スタンドの画像情報
 class IMAGES(StrEnum):
-    STAR_PLATINUM = './images/star_platinum.png'
-    THE_WORLD = './images/trim_The_World.png'
-    KILLER_QUEEN = './images/trim_killer_qeen_2.png'
-    TUSKACT4 = './images/Tusk.png'
-    CATCH_THE_RAINBOW = './images/0400_l.jpg'
-    TWENTIETH_CENTURY_BOY = './images/20thCenturyBoy.jpg'
-    CREAM = './images/trim_cream.png'
-    CRAZY_DIAMOND = './images/trim_crazy_d.png'
-    GOLD_EXPERIENCE = './images/trim_gold_ex.png'
-    KING_CRIMSON = './images/trim_diaboro.png'
+    STAR_PLATINUM = 'images/star_platinum.png'
+    THE_WORLD = 'images/trim_The_World.png'
+    KILLER_QUEEN = 'images/trim_killer_qeen_2.png'
+    TUSKACT4 = 'images/Tusk.png'
+    CATCH_THE_RAINBOW = 'images/0400_l.jpg'
+    TWENTIETH_CENTURY_BOY = 'images/20thCenturyBoy.jpg'
+    CREAM = 'images/trim_cream.png'
+    CRAZY_DIAMOND = 'images/trim_crazy_d.png'
+    GOLD_EXPERIENCE = 'images/trim_gold_ex.png'
+    KING_CRIMSON = 'images/trim_diaboro.png'
 
 # jsonから読み取った情報をEnumで扱うために変換する
 class CONVERT_STAND_NAME(StrEnum):
