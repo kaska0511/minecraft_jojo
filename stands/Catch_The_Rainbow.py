@@ -9,6 +9,8 @@ class Catch_The_Rainbow(Common_func):
         self.kill_check = False
         self.summon_amedas()
 
+    def __del__(self):
+        self.cancel_stand()
 
     def summon_amedas(self):
         """

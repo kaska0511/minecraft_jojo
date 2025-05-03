@@ -9,6 +9,9 @@ class Cream(Common_func):
         self.old_pos = [0, 0, 0]
         self.new_pos = [0, 0, 0]
 
+    def __del__(self):
+        self.cancel_stand()
+
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
             return
@@ -26,7 +29,6 @@ class Cream(Common_func):
             if  self.run_stand == False:
                 # スペクテイターモードに変更
                 self.run_stand = True
-                self.ext.extension_command(f'attribute {self.name} minecraft:base set 0')
                 self.ext.extension_command(f'execute as {self.name} at @s run gamemode spectator')
                 self.effect_stand()
 
@@ -81,7 +83,7 @@ class Cream(Common_func):
         self.clear_effect()
         #self.ext.extension_command(f'effect clear {self.name} minecraft:invisibility')
         self.ext.extension_command(f'execute as {self.name} at @s run gamemode survival')
-        self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set 0.08')
+        self.ext.extension_command(f'attribute {self.name} minecraft:gravity base reset')
         self.ext.extension_command(f'execute as {self.name} at @s run attribute @s minecraft:entity_interaction_range base reset')
 
     def effect_stand(self):

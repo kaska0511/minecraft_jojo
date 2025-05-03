@@ -5,6 +5,11 @@ class Crazy_Diamond(Common_func):
         super().__init__(name, ext, controller)
         self.forceload_cp_chunk()
 
+    def __del__(self):
+        self.cancel_stand()
+        self.ext.extension_command(f'attribute {self.name} minecraft:block_break_speed base reset')
+        self.ext.extension_command(f'effect clear {self.name}')
+
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
             return

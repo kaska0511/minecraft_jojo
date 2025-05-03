@@ -9,6 +9,8 @@ class TuskAct4(Common_func):
         self.ride_uuid = "[I; 0, 0, 0]"
         self.summon_flag = False
 
+    def __del__(self):
+        self.cancel_stand()
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():

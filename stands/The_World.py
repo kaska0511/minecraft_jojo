@@ -9,6 +9,10 @@ class The_World(Common_func):
         self.fix_flag = False
         self.rots = None    # 他のプレイヤーの視線座標を記録する
 
+    def __del__(self):
+        self.cancel_stand()
+        self.ext.extension_command(f'attribute {self.name} minecraft:block_break_speed base reset')
+        self.ext.extension_command(f'effect clear')
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
@@ -117,7 +121,6 @@ class The_World(Common_func):
         self.timer = 5
         self.ext.extension_command(f'tag @a[name=!{self.name}] remove stop_time')  # 時間を止めていることを示すタグを取り除く。
         self.ext.extension_command(f'attribute {self.name} minecraft:entity_interaction_range base reset') # 攻撃射程距離デフォルト（3ブロック）へ戻す。
-        self.ext.extension_command(f'effect clear {self.name} minecraft:strength')
 
     def stop_time(self):
         self.ext.extension_command('title @a times 0 0.8s 0.2s')

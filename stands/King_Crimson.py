@@ -22,6 +22,9 @@ class King_Crimson(Common_func):
         self.main_basetime_cooldown = 0 # クールダウンタイムの計測に使用する変数
         self.epi_basetime_cooldown = 0  # クールダウンタイムの計測に使用する変数
 
+    def __del__(self):
+        self.cancel_stand()
+        self.ext.extension_command(f'attribute {self.name} minecraft:block_break_speed base reset')
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():

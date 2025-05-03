@@ -13,6 +13,8 @@ class Killer_Queen(Common_func):
         self.air_bomb_dis = 0
         self.move_speed_for_air = 0.5
 
+    def __del__(self):
+        self.cancel_stand()
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():

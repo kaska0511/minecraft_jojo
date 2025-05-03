@@ -19,6 +19,10 @@ class Gold_Experience(Common_func):
         self.requiem_limit_time = 0
 
 
+    def __del__(self):
+        self.cancel_stand()
+        self.ext.extension_command(f'attribute {self.name} minecraft:entity_interaction_range base reset')
+
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
             return
