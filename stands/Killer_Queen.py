@@ -28,7 +28,6 @@ class Killer_Queen(Common_func):
         if tag == type(self).__name__:
 
             if self.is_SelectedItemSlot(0) and self.right_click:
-                self.ext.extension_command(f'title {self.name} actionbar "ブロックを爆弾に変えたッ！"')
                 self.ext.extension_command(f'kill @e[tag=air_bomb]')
                 self.summon_flag = False
 
@@ -49,8 +48,8 @@ class Killer_Queen(Common_func):
                 self.ext.extension_command(f'execute as {self.name} at @s run playsound minecraft:item.lodestone_compass.lock master @a[distance=..8] ~ ~ ~ 200 2')
                 self.ext.extension_command(f'particle minecraft:lava {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]} 1.5 1.5 1.5 0 10 normal @a')
                 #self.ext.extension_command(f'execute as {self.name} at @s run setblock {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]} minecraft:tnt destroy') # test用
-                self.ext.extension_command(f'execute as {self.name} at @s run summon minecraft:tnt {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]}')  # 1行分だと威力がほぼない。
-                self.ext.extension_command(f'execute as {self.name} at @s run summon minecraft:tnt {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]}')  # 2行分必要です。
+                self.ext.extension_command(f'execute as {self.name} at @s run summon minecraft:tnt {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]} {{fuse:0s}}')  # 1行分だと威力がほぼない。
+                self.ext.extension_command(f'execute as {self.name} at @s run summon minecraft:tnt {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]} {{fuse:0s}}')  # 2行分必要です。
                 self.cancel_stand()
 
             # 右クリックフラグを下げる。
@@ -181,7 +180,7 @@ class Killer_Queen(Common_func):
         substituent = substituent.replace(f'_NAME_', self.name)
         self.ext.extension_command(substituent)   # アマスタを召喚した直後は足元にいるので、プレイヤーの目線の先(0.1マス)に移動させる。
 
-        self.ext.extension_command(f'execute as @e[tag=searcher] at @s rotated as {self.name} run tp ^ ^ ^')   # 防具立ての視線をプレイヤーとリンクさせる。
+        self.ext.extension_command(f'data modify entity @e[tag=searcher,limit=1] Rotation set from entity {self.name} Rotation')   # 防具立ての視線をプレイヤーとリンクさせる。
         for _ in range(25):     # 5マス分を範囲にしたいので、range(25) * 前進マス(0.2) = 5マス。
             self.ext.extension_command(f'execute as @e[tag=searcher] at @s run tp ^ ^ ^0.2')   # 視線をプレイヤーとリンクした状態で5マス分前進する。
             discovery = self.judge_block("searcher")
@@ -192,18 +191,19 @@ class Killer_Queen(Common_func):
             self.bomb_pos = self.get_armor_stand_pos("searcher")
             self.run_stand = True
         self.ext.extension_command(f'kill @e[tag=searcher]')
+        self.ext.extension_command(f'title {self.name} actionbar "ブロックを爆弾に変えたッ！"')
 
 
     def judge_block(self, tag):
         # 参考：ttps://minecraft.fandom.com/ja/wiki/%E3%82%BF%E3%82%B0#wither_immune
-        exclude_list = ('#minecraft:air','#minecraft:water','#minecraft:fire','#minecraft:lava','#minecraft:wither_immune') # 当てはまりやすいもの順に並べること。
+        exclude_list = ('#minecraft:air','minecraft:water','#minecraft:fire','minecraft:lava','#minecraft:wither_immune','minecraft:barrier') # 当てはまりやすいもの順に並べること。
         collision_flag = False
         for block in exclude_list:
             # run 以降は if block が当てはまった場合に実行される。
             res = self.ext.extension_command(f'execute as @e[name=Killer_Queen,tag={tag},limit=1] at @s if block ~ ~ ~ {block} run data get entity @e[name=Killer_Queen,tag={tag},limit=1] DeathTime')  # アマスタに重なるブロックが除外ブロックか検知
             if res == '0s':  # 除外リストに当てはまったら0sが返ってくるはず。
                 break
-            elif block == 'barrier':    # 最後まで調べてresが空なら爆弾に変えてもよいブロックに重なった判定
+            elif block == 'minecraft:barrier':    # 最後まで調べてresが空なら爆弾に変えてもよいブロックに重なった判定
                 collision_flag = True
                 break
         return collision_flag
@@ -249,7 +249,7 @@ class Killer_Queen(Common_func):
             substituent = substituent.replace(f'_NAME_', self.name)
             self.ext.extension_command(substituent)   # アマスタを召喚した直後は足元にいるので、プレイヤーの目線の先(0.1マス)に移動させる。
 
-            self.ext.extension_command(f'execute as @e[tag=air_bomb] at @s rotated as {self.name} run tp ^ ^ ^')   # 防具立ての視線をプレイヤーとリンクさせる。
+            self.ext.extension_command(f'data modify entity @e[tag=air_bomb,limit=1] Rotation set from entity {self.name} Rotation')   # 防具立ての視線をプレイヤーとリンクさせる。
 
 
     def move_air_bomb(self):
@@ -263,8 +263,8 @@ class Killer_Queen(Common_func):
 
         if collision_flag:  # 空気爆弾が壁にぶつかったので空気爆弾を破壊。この時は爆破させる。
             self.ext.extension_command(f'kill @e[tag=air_bomb]')
-            self.ext.extension_command(f'execute as {self.name} at @s run summon minecraft:tnt {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]}')
-            self.ext.extension_command(f'execute as {self.name} at @s run summon minecraft:tnt {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]}')
+            self.ext.extension_command(f'execute as {self.name} at @s run summon minecraft:tnt {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]} {{fuse:0s}}')
+            self.ext.extension_command(f'execute as {self.name} at @s run summon minecraft:tnt {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]} {{fuse:0s}}')
             self.air_bomb_dis = 0
             self.bomb_pos = []  # 記録された座標をクリア
             self.summon_flag = False
