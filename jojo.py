@@ -242,6 +242,11 @@ def gui_main(page: Page):
 
 #初期セットアップ
 if __name__ == '__main__':
-    # GUIを実行
-    ft.app(target=gui_main)
+    try:
+        # GUIを実行
+        ft.app(target=gui_main)
+    except Exception as e:
+        import traceback
+        with open('error.log', 'a') as f:
+            traceback.print_exc(file=f)
 
