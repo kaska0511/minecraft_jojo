@@ -21,7 +21,6 @@ class Cream(Common_func):
                 return
 
         item, tag = self.get_OffHandItem()
-        print(self.right_click)
         if tag == type(self).__name__ and self.right_click:
             # 能力発動検知と初期設定
             if  self.run_stand == False:

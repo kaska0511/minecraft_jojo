@@ -102,14 +102,15 @@ class Common_func:
         elapsed_time = current_time - self.last_press_time
 
         if DOUBLE_CLICK_THRESHOLD_MIN <= elapsed_time and elapsed_time <= DOUBLE_CLICK_THRESHOLD_MAX:
-            print("スペースキーダブルクリック検出！")
+            #print("スペースキーダブルクリック検出！")
             # マイクラウィンドウactive and カーソルが非表示。両方を満たしているか？
             if self.os_name == 'win32' and self.is_Minecraftwindow()[0] and self.invisible_cursor():
                 self.double_spacekey = not self.double_spacekey # スペースキーの打鍵を反転
             elif self.os_name == 'darwin' and self.is_Minecraftwindow()[0]:
                 self.double_spacekey = not self.double_spacekey # スペースキーの打鍵を反転
         else:
-            print("スペースキークリック検出！")
+            pass
+            #print("スペースキークリック検出！")
 
         # 現在の時刻を最後の押下時刻として記録
         self.last_press_time = current_time
