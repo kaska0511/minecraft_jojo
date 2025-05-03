@@ -104,12 +104,12 @@ class Your_Stand_Info(Container):
             alignment=MainAxisAlignment.SPACE_BETWEEN,
             controls = [self.Left_Column, self.Right_Column]
         )   # 左右結合
-        
+
 
 
     def restart(self, e):
         self.get_my_stand()
-        self.Left_Image.src_base64 = IMAGES_BASE64[self.YOUR_STAND].value
+        self.Left_Image.src_base64 = IMAGES[self.YOUR_STAND].value
         self.individual_stand_name.value = STAND_NAME[self.YOUR_STAND].value
         self.individual_stand_overview.value = STAND_OVERVIEW[self.YOUR_STAND].value
         self.individual_stand_detail.value = STAND_DETAIL[self.YOUR_STAND].value
@@ -153,7 +153,7 @@ class Your_Stand_Info(Container):
             if contns['stand_name'] == '':  # 何も割り当てられていない場合はとりあえずスタプラ
                 contns['stand_name'] = 'Star_Platinum'
             self.YOUR_STAND = CONVERT_STAND_NAME(contns['stand_name']).name
-        
+
 
     def open_json(self, json_file):
         '''
@@ -169,7 +169,7 @@ class Your_Stand_Info(Container):
         with open(json_file) as f:
             df = json.load(f)
         return df
-        
+
     def get_self_playername(self):
         '''
         自身のプレイヤー名を取得します。
@@ -193,7 +193,7 @@ class Your_Stand_Info(Container):
             str_dir = os.getenv('APPDATA') + '\\.minecraft'
             str_file = 'launcher_accounts_microsoft_store.json'
             contents = self.open_json(f'{str_dir}\\{str_file}')
-        
+
         return self.find_value(contents, 'name')
 
     def find_value(self, dictionary, key):
