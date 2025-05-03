@@ -216,9 +216,9 @@ class King_Crimson(Common_func):
     def all_direction(self, time):
         # 他のプレイヤーに対する演出
         self.ext.extension_command(f'tick rate 10000')
-        self.ext.extension_command(f'effect give @a[name!={self.name}] minecraft:speed {time} 15 true')
-        self.ext.extension_command(f'effect give @a[name!={self.name}] minecraft:dolphins_grace {time} 255 true')
-        self.ext.extension_command(f'effect give @a[name!={self.name}] minecraft:haste {time} 255 true')
+        self.ext.extension_command(f'effect give @a[name=!{self.name}] minecraft:speed {time} 15 true')
+        self.ext.extension_command(f'effect give @a[name=!{self.name}] minecraft:dolphins_grace {time} 255 true')
+        self.ext.extension_command(f'effect give @a[name=!{self.name}] minecraft:haste {time} 255 true')
 
     def add_tag_4_blood(self):
         # 血の目潰しを付与するためのタグを付与する。
