@@ -558,6 +558,27 @@ class Common_func:
 
         return id, tag
 
+    def get_equipment(self, parts):
+        '''
+        プレイヤーの装備情報を返します。
+
+        Parameter
+            parts : str
+                装備の部位を指定します。\n
+                ex -> "head", "chest", "legs", "feet"\n
+                それぞれの部位に対して装備情報を取得します。\n
+
+        Return
+            id : str
+                装備アイテム名を文字列で返します。
+            tag : str | list[str]
+                そのアイテムが持つtag
+        '''
+        id = self.ext.extension_command(f'data get entity {self.name} equipment.{parts}.id')
+        tag = self.ext.extension_command(f'data get entity {self.name} equipment.{parts}.components.minecraft:custom_data.tag')
+
+        return id, tag
+
     def get_Health(self):
         '''
         プレイヤーの体力を取得します。
@@ -570,7 +591,8 @@ class Common_func:
                 プレイヤーの体力。
         '''
         health = self.ext.extension_command(f'data get entity {self.name} Health')
-        health = float(health.rstrip('f'))
+        if health is not None:
+            health = float(health.rstrip('f'))
 
         return health
 

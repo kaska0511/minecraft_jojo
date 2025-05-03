@@ -179,7 +179,7 @@ class Catch_The_Rainbow(Common_func):
         #import pdb;pdb.set_trace()
         # 上から順にチェックしていく。
         # 1.スタンドアイテムを付けているか？
-        id, tag = self.get_select_Inventory(self.name, "103")
+        id, tag = self.get_equipment('head')
         if tag == type(self).__name__:
             pass
         else:
