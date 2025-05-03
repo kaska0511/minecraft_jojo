@@ -15,8 +15,7 @@ class The_World(Common_func):
             return
 
         # 攻撃力と射程距離を増加させる。
-        self.ext.extension_command(f'effect give {self.name} minecraft:strength infinite 12 true') # ピグリンブルートを二発で倒せるレベルのパワーを付与。
-        self.ext.extension_command(f'attribute {self.name} minecraft:entity_interaction_range base set 10') # 攻撃射程距離10ブロックへ。
+        self.set_attribute()
 
         # 時を止められる時間が0秒で、スタプラによる時間停止が行われていたら、これ以降の処理は停止する。
         if self.timer == 0 and self.bool_have_tag('stop_time'):
@@ -25,8 +24,7 @@ class The_World(Common_func):
             return
 
         self.watch_time()
-        item, tag = self.get_OffHandItem()
-        if tag == type(self).__name__ and self.run_stand == False:
+        if self.get_OffHandItem()[1] == type(self).__name__ and self.run_stand == False:
             if self.right_click and self.run_stand == False and self.timer != 0:
                 # 右クリックした人が本人なら能力発動
                 self.run_stand = True
@@ -38,10 +36,6 @@ class The_World(Common_func):
         if self.run_stand:
             self.fix_player()
             self.count_down()
-            #self.prepare_arrow_effect()
-        #else:
-            # 矢を追跡する。
-            #self.while_arrow_effect()
 
         """# チケットアイテム獲得によるターゲット該当者処理
         # チケットアイテムを持っていないならFalse。死んだりチェストにしまうとFalseになる。
@@ -101,6 +95,15 @@ class The_World(Common_func):
         #? しかしこのままだと随時更新されてしまう。気がする。。。
         if self.controller.get_someone_get_ticket():
             self.create_ticket_compass()"""
+
+    def set_attribute(self):
+        if self.get_OffHandItem()[1] == type(self).__name__:
+            self.ext.extension_command(f'attribute {self.name} minecraft:attack_damage base set 6')
+            self.ext.extension_command(f'attribute {self.name} minecraft:entity_interaction_range base set 10') # 攻撃射程距離10ブロックへ。
+        else:
+            self.ext.extension_command(f'attribute {self.name} minecraft:attack_damage base reset')
+            self.ext.extension_command(f'attribute {self.name} minecraft:entity_interaction_range base reset') # 攻撃射程距離デフォルト（3ブロック）へ戻す。
+
 
     def create_ticket_compass(self):
         self.controller.create_ticket_compass(self.name, self.pass_point, self.ticket_item, self.point_pos)
