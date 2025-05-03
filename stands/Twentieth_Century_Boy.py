@@ -41,8 +41,8 @@ class Twentieth_Century_Boy(Common_func):
             if self.rot != self.get_my_rot():   # 視線検知。能力発動中で視線が動いていたらスタンドを解除する。
                 self.cancel_stand()
 
-            type, uuid = self.get_rider()
-            if type == 'minecraft:armor_stand':  # 防具立てに乗っているなら能力発動中
+            mctype, uuid = self.get_rider()
+            if mctype == 'minecraft:armor_stand':  # 防具立てに乗っているなら能力発動中
                 pass
             else:                           # 少なくとも能力を解除している。
                 self.cancel_stand()
