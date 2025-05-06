@@ -20,8 +20,7 @@ class Cream(Common_func):
         if self.bool_have_tag('stop_time'):
             self.left_click = False
             self.right_click = False
-            if self.run_stand == False:
-                return
+            return
 
         item, tag = self.get_OffHandItem()
         if tag == type(self).__name__ and self.right_click:
