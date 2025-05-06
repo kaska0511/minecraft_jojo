@@ -48,8 +48,9 @@ def main(ext, is_server):
 
     #checkpoint_prepare()
 
-    #ファイルの最終更新日時を取得
-    lastModificationTime = os.path.getmtime('./json_list/stand_list.json')
+    if is_server:
+        #ファイルの最終更新日時を取得
+        lastModificationTime = os.path.getmtime('./json_list/stand_list.json')
 
     controller = GameController(ext)
     # ゲーム全体の進捗を読み込む。

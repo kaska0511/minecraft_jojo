@@ -182,7 +182,7 @@ class Rcon_Server(Container):
         else:
             str_file = 'rconserver.json'
             if not os.path.isfile(f'./{str_file}'): # クライアント用のrcon情報ファイルが無いなら作成する。
-                content = {"sever_ip": "", "rcon_port": "", "password": "", "stand_name": ""}
+                content = {"sever_ip": "", "rcon_port": "25575", "password": "", "stand_name": ""}
                 with open(f'./{str_file}', 'w', encoding='utf-8') as f:
                     json.dump(content, f, ensure_ascii=False)
 

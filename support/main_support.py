@@ -42,6 +42,13 @@ def get_rcon_info(is_server):
 
     #クライアント側の場合
     else:
+        # ない場合は作る
+        str_file = 'rconserver.json'
+        if not os.path.isfile(f'./{str_file}'): # クライアント用のrcon情報ファイルが無いなら作成する。
+            content = {"sever_ip": "", "rcon_port": "25575", "password": "", "stand_name": ""}
+            with open(f'./{str_file}', 'w', encoding='utf-8') as f:
+                json.dump(content, f, ensure_ascii=False)
+
         str_file = 'rconserver.json'
         contns = open_json(str_file)
         rip = contns['sever_ip']
