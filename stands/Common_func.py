@@ -375,7 +375,7 @@ class Common_func:
         Return
             is_slotnum : bool
         '''
-        slotnum = self.ext.extension_command('execute if entity @a[name=KASKA0511,limit=1,nbt={SelectedItemSlot:'+ str(num) +'}] run data get entity '+ self.name +' DeathTime')
+        slotnum = self.ext.extension_command('execute if entity @a[name='+ self.name +',limit=1,nbt={SelectedItemSlot:'+ str(num) +'}] run data get entity '+ self.name +' DeathTime')
         is_slotnum = True if slotnum == '0s' else False
 
         return is_slotnum
