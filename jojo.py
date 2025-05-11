@@ -32,6 +32,7 @@ def main(ext, is_server):
     if is_server:
         # 実質ザ・ワールド用無敵時間無視データパック配置
         add_cooldown_datapack()
+        ext.extension_command('datapack enable "file/off_cooldown"')
         # ゲームルール設定
         ext.extension_command("gamerule sendCommandFeedback false")
         # titleコマンドの基本表示設定（時間）
