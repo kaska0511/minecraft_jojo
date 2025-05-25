@@ -7,7 +7,7 @@ class King_Crimson(Common_func):
     _epi_abi_cooldown = 5
 
     # 能力の最大発動時間
-    _main_abi_maxtime = 5
+    _main_abi_maxtime = 30
     _epi_abi_maxtime = 5
 
     def __init__(self, name, ext, controller) -> None:
@@ -21,6 +21,9 @@ class King_Crimson(Common_func):
         self.epi_cooldown_time = 0      # クールダウンの実時間
         self.main_basetime_cooldown = 0 # クールダウンタイムの計測に使用する変数
         self.epi_basetime_cooldown = 0  # クールダウンタイムの計測に使用する変数
+
+        self.is_counter_run = False  # カウンターが発動されたかどうかのフラグ
+        self.counter_base_time = 0  # カウンターの発動時間を記録するための変数
 
     def __del__(self):
         self.cancel_stand()
@@ -43,6 +46,9 @@ class King_Crimson(Common_func):
 
         self.cooldown_time_counter()  # クールダウン時間の計測処理
 
+        if self.ability_mode == 'main':
+            self.main_ability()  # カウンター発動の処理
+
         self.blood_eyes()  # 血の目潰しの処理
 
         # 能力発動処理
@@ -57,6 +63,8 @@ class King_Crimson(Common_func):
                         self.run_stand = True
                         self.ability_mode = 'main'
                         self.main_ability()
+                        # 受けるダメージを100%カットする。
+                        self.ext.extension_command(f'execute as {self.name} at @s run effect give @s minecraft:registance 30 5 true')
                     else:
                         # クールダウンタイム中は能力を発動できない。
                         self.ext.extension_command(f'title {self.name} actionbar "メイン能力のクールダウン中:残り{self._main_abi_cooldown - self.main_cooldown_time}秒..."')
@@ -153,25 +161,52 @@ class King_Crimson(Common_func):
 
         self.ability_mode = None
 
-
     def main_ability(self):
-        # 繰り返し呼び出される関数
-        # メイン能力の発動処理
         self.basetime = int(time.time())
+        if self.is_counter_run == False:
+            # メイン能力発動中は基本的に攻撃は当たらないようにする。
+            # 能力で回避、カウンターを行った後は1秒間だけ隙が生まれるようにする。
+            self.is_counter_run = self._counter_defense()
+            self.counter_base_time = int(time.time())  # カウンターの発動時間を記録する。
+        else:
+            # 一秒計測し、一秒経過していたらFalseにする。
+            if self.counter_base_time + 1 <= int(time.time()):
+                self.is_counter_run = False
+                self.counter_base_time = 0  # カウンターの発動時間をリセットする。
 
-        # メイン能力の発動時間を計測する。
-        runtime = self._main_abi_maxtime - self.main_runtime
+    def _counter_defense(self):
+        # キンクリを攻撃したエンティティが半径10ブロック以内にいるとき、攻撃者の真後ろに移動する。
+        # 矢などの飛翔体は体を通過させるイメージ
 
-        # ゲームモード変更
-        self.ext.extension_command(f'gamemode spectator {self.name}')    # スペクテイターモードにする。
+        # 攻撃者検知
+        self.ext.extension_command(f'execute as {self.name} at @s on attacker at @s if entity @a[name={self.name},distance=..10] run tag {self.name} add KC_attacker')
+        is_attacker = self.ext.extension_command(f'execute as @e[tag=KC_attacker,limit=1] at @s if entity @a[name={self.name},distance=..10] run data get entity {self.name} DeathTime')
+        # 攻撃者が居たらその処理
+        if is_attacker == '0s':
+            self.all_direction()
+            is_background_save = self.ext.extension_command(f'execute as @e[tag=KC_attacker,limit=1] at @s unless block ^ ^ ^-1 #minecraft:air run data get entity {self.name} DeathTime')
+            if is_background_save == '0s':  # もし背後が何らかのブロックで埋まっていたら攻撃者と同じ座標に移動。※足下は検知しない。
+                self.ext.extension_command(f'execute as @e[tag=KC_attacker,limit=1] at @s if entity @a[name={self.name},distance=..10] run tp {self.name} ^ ^ ^ facing entity @s eyes')
+            else:                           # 何も埋まっていなければ窒息しない。背後に回る。
+                self.ext.extension_command(f'execute as @e[tag=KC_attacker,limit=1] at @s if entity @a[name={self.name},distance=..10] run tp {self.name} ^ ^ ^-1.5 facing entity @s eyes')
+            self.ext.extension_command(f'execute as @e[tag=KC_attacker,limit=1] at @s run damage @s 6 player_attack by {self.name}')  # 攻撃者にダメージを与える。
+            self.ext.extension_command(f'execute as @e[tag=KC_attacker] at @s run tag @s remove KC_attacker')  # 攻撃者のタグを削除する。
 
-        # 能力発動中は他者に攻撃できない。
-        # また他エンティティへ憑依できないようにする。
-        self.ext.extension_command(f'execute as {self.name} at @s run attribute @s minecraft:entity_interaction_range base set 0')  # 近接攻撃の範囲を0にする。
+        # 飛来物検知
+        is_flying_object = self.ext.extension_command(f'execute as {self.name} at @s if entity @n[type=#minecraft:impact_projectiles,distance=..2] run data get entity {self.name} DeathTime')
+        # 飛来物が居たらその処理
+        if is_flying_object == '0s':
+            # 一瞬空を飛べるが、問題が出たら同じ座標にテレポートさせ続ける処理を追加。
+            self.ext.extension_command(f'execute as {self.name} at @s run gamemode spectator')  # 貫通させるため影響を受けない体にする。
+            self.all_direction()
+            self.ext.extension_command(f'execute as {self.name} at @s run gamemode survival')   # 通り過ぎたら元に戻す。
 
-        if runtime == 1:
-            # メイン能力の発動時間が1秒になったら他のプレイヤーにも演出を行う。
-            self.all_direction(runtime)  # 他のプレイヤーに対する演出
+        #self.ext.extension_command(f'execute as {self.name} at @s on origin at @s if entity @a[name={self.name},distance=..10] run tp {self.name} ^ ^ ^-1.5 facing entity @s eyes')
+
+        if is_attacker == '0s' or is_flying_object == '0s':
+            return True
+        else:
+            return False
 
     def epitaph(self):
         # 繰り返し呼び出される関数
@@ -216,9 +251,9 @@ class King_Crimson(Common_func):
                 self.epi_cooldown_time += 1
                 print(f'エピタフクールダウン：{self.epi_cooldown_time}秒経過')
 
-    def all_direction(self, time):
+    def all_direction(self, time=1):
         # 他のプレイヤーに対する演出
-        self.ext.extension_command(f'tick rate 10000')
+        self.ext.extension_command(f'tick sprint {time}s')
         self.ext.extension_command(f'effect give @a[name=!{self.name}] minecraft:speed {time} 15 true')
         self.ext.extension_command(f'effect give @a[name=!{self.name}] minecraft:dolphins_grace {time} 255 true')
         self.ext.extension_command(f'effect give @a[name=!{self.name}] minecraft:haste {time} 255 true')
