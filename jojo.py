@@ -214,9 +214,14 @@ def gui_main(page: Page):
             #print("The window was closed.")
             os.kill(os.getpid(), signal.SIGTERM)    # signal.SIGTERMによってデストラクタを用いて終了させられるはず。ctl + Cを押したことになるはず
 
+    def resourcePath(filename):
+        if hasattr(sys, "_MEIPASS"):
+            return os.path.join(sys._MEIPASS, filename)
+        return os.path.join(filename)
+
     # pageの初期設定
     page.title = "マイクラでジョジョを再現してみた"
-    #page.window_icon = "icon.png"
+    page.window.icon = resourcePath("images/jojo_minecraft.ico")
     page.window.width = 1280
     page.window.height = 810
     page.window.prevent_close = True
