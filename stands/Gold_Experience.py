@@ -478,7 +478,7 @@ class Gold_Experience(Common_func):
         '''
         攻撃時のエフェクトを記述します。\n
         '''
-        self.ext.extension_command(f'execute as @e at @s on attacker if entity {self.name} run effect give @e[distance=..1,limit=1] minecraft:slowness 3 5 true')
+        self.ext.extension_command(f'execute as @e[nbt=!{{HurtTime:0s}}] at @s on attacker if entity @s[name={self.name}] run effect give @e[distance=..1,limit=1] minecraft:slowness 3 5 true')
 
     def add_tag_GEtarget(self, tag):
         deathtime = '{DeathTime:0s}'
