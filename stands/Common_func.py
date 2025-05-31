@@ -609,7 +609,7 @@ class Common_func:
             have : bool
                 真偽値
         '''
-        deathtime = self.ext.extension_command(f'execute as {self.name} if entity @a[name={self.name},tag={tag},limit=1] run data get entity @s DeathTime')
+        deathtime = self.ext.extension_command(f'execute as {self.name} if entity @a[name={self.name},tag={tag},limit=1] run data get entity {self.name} DeathTime')
         have = True if deathtime == '0s' else False
 
         return have
