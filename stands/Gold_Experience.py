@@ -507,7 +507,7 @@ class Gold_Experience(Common_func):
             self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s run effect give @s minecraft:absorption 600 2 true')
             if self.right_click:    # 攻撃を伴わないなら、回復も行う。
                 # アンデッド用 -> instant_damage
-                self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s if entity @e[type=#minecraft:undead] run effect give @s minecraft:instant_damage 1 0')
+                self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s[type=#minecraft:undead] run effect give @s minecraft:instant_damage 1 0')
                 # アンデッド以外 -> instant_health
                 self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s[type=!#minecraft:undead] run effect give @s minecraft:instant_health 1 0')
 
