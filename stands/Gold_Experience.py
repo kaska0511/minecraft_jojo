@@ -675,12 +675,12 @@ class Gold_Experience(Common_func):
         self._clear_minus_effect()
         # プレイヤーが攻撃した場合はその対象を殺す。
         # 参考：ttps://www.reddit.com/r/MinecraftCommands/comments/1epqz4b/execute_on_target_doesnt_work/
-        self.ext.extension_command(f'execute as @e at @s on attacker if entity {self.name} run damage @e[distance=..1,limit=1] 999999999999999999999 minecraft:explosion by {self.name}')
-        self.ext.extension_command(f'execute as @e at @s on attacker if entity {self.name} run kill @e[distance=..1,limit=1]')
+        self.ext.extension_command(f'execute as @e[nbt=!{{HurtTime:0s}}] at @s on attacker if entity @s[name={self.name}] run damage @e[distance=..1,limit=1] 999999999999999999999 minecraft:explosion by {self.name}')
+        self.ext.extension_command(f'execute as @e[nbt=!{{HurtTime:0s}}] at @s on attacker if entity @s[name={self.name}] run kill @e[type=!ender_dragon,distance=..1,limit=1]')
 
         # 攻撃を受けたら跳ね返りで殺す。先にダメージを与える。それで死亡しなければkillコマンド。
-        self.ext.extension_command(f'execute as @e[name={self.name},limit=1] on attacker run damage @s 999999999999999999999 minecraft:explosion by {self.name}')
-        self.ext.extension_command(f'execute as @e[name={self.name},limit=1] on attacker run kill @s')
+        self.ext.extension_command(f'execute as {self.name} on attacker at @s run damage @s 999999999999999999999 minecraft:explosion by {self.name}')
+        self.ext.extension_command(f'execute as {self.name} on attacker at @s run kill @s[type=!ender_dragon]')
 
     def _clear_minus_effect(self):
         self.ext.extension_command(f'effect clear {self.name} slowness')             # 移動速度低下
@@ -708,6 +708,7 @@ class Gold_Experience(Common_func):
         self.requiem = False
         self.requiem_limit_time = 0
         self.ext.extension_command(f'tag {self.name} remove requiem')
+        self.ext.extension_command(f'effect clear {self.name} minecraft:resistance')          # 耐性解除
 
     def recovery_particle(self, tag):
         '''
