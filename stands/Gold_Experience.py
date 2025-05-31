@@ -6,7 +6,7 @@ from stands.Common_func import Common_func
 # 生成可能な生物の最大数
 MAXIMUM_NUM_OF_CREATURE = 16
 EX_4_CONS_ARROW = 10
-EX_4_CONS_REQUIEM = 40
+EX_4_CONS_REQUIEM = 30
 
 class Gold_Experience(Common_func):
     def __init__(self, name, ext, controller) -> None:
@@ -56,9 +56,15 @@ class Gold_Experience(Common_func):
 
             # 攻撃モード（鈍足付与）
             self.attack_effect()
-            
+
             if self.right_click and not self.left_click:
-                if 'shift' in self.press_keys:
+                _, stag = self.get_SelectedItem()
+                if stag == 'stand_arrow':
+                    # レクイエム化できるか？
+                    # スタンドの矢を持ち、右クリックし経験値を40消費する。
+                    if self.within_range_XpLevel(EX_4_CONS_REQUIEM):
+                        self.activate_requiem()
+                elif 'shift' in self.press_keys:
                     # shiftを押していたら生物化 <-> 解除
                     # print('生物化 <-> 解除')
                     self.right_running_stand()
@@ -80,13 +86,6 @@ class Gold_Experience(Common_func):
             if not self.bool_have_a_stand(tag='stand_arrow'):
                 if self.within_range_XpLevel(EX_4_CONS_ARROW):
                     self.gift_stand_arrow()
-
-        # レクイエム化できるか？
-        # スタンドの矢を持ち、右クリックし経験値を40消費する。
-        item, tag = self.get_SelectedItem()
-        if tag == 'stand_arrow' and self.right_click:
-            if self.within_range_XpLevel(EX_4_CONS_REQUIEM):
-                self.activate_requiem()
 
         # 立ち上がったクリックフラグを下げる。
         self.right_click = False
@@ -653,20 +652,22 @@ class Gold_Experience(Common_func):
         self.ext.extension_command(f'xp add {self.name} -{EX_4_CONS_ARROW} levels')
         item_name = 'スタンドの矢'
         tag = 'stand_arrow'
-        self.ext.extension_command('give ' + self.name + ' spectral_arrow[minecraft:custom_name="' + item_name + '",minecraft:custom_data={tag:"' + tag + '"},minecraft:consumable={animation:spear,has_consume_particles:false,sound:entity.wither.spawn,consume_seconds:0.1},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
+        self.ext.extension_command('give ' + self.name + ' spectral_arrow[minecraft:custom_name="' + item_name + '",minecraft:custom_data={tag:"' + tag + '"},minecraft:consumable={animation:spear,has_consume_particles:false,sound:entity.wither.spawn,consume_seconds:0.5},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
 
     def activate_requiem(self):
         '''
-        経験値が40になったら？（レベルは要件等）。経験値は消費する。
+        経験値を EX_4_CONS_REQUIEM だけ消費する。
         10分間効果を維持する。（効果時間は要件等）
         ・レジスタンス 2 5 5レベル付与
         ・レクイエム化前の能力は引き継ぐ。（生命を生み出す能力）
         '''
+        effect_time = 600  # 効果時間 10分間
+
         self.requiem = True
-        self.requiem_limit_time = time.time() + 600 # 10分間の効果時間
+        self.requiem_limit_time = time.time() + effect_time
         self.ext.extension_command(f'tag {self.name} add requiem')
         self.ext.extension_command(f'xp add {self.name} -{EX_4_CONS_REQUIEM} levels')
-        self.ext.extension_command(f'effect give {self.name} minecraft:resistance 600 255 true')          # 耐性
+        self.ext.extension_command(f'effect give {self.name} minecraft:resistance {effect_time} 255 true')          # 耐性
 
     def cron_for_requiem(self):
         '''
