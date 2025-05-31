@@ -183,9 +183,9 @@ class King_Crimson(Common_func):
             self._counter_defense_flying_object()
         #self.ext.extension_command(f'execute as {self.name} at @s on origin at @s if entity @a[name={self.name},distance=..10] run tp {self.name} ^ ^ ^-1.5 facing entity @s eyes')
 
-        # 攻撃者検知
-        self.ext.extension_command(f'execute as {self.name} at @s[nbt=!{{HurtTime:0s}}] on attacker at @s if entity @a[name={self.name},distance=..5] run tag @s add KC_attacker')
-        is_attacker = self.ext.extension_command(f'execute as @e[tag=KC_attacker,limit=1] at @s if entity @a[name={self.name},distance=..5] run data get entity {self.name} DeathTime')
+        # 攻撃者検知。ただしレクイエムに対しては攻撃者として判定されない。
+        self.ext.extension_command(f'execute as {self.name} at @s[nbt=!{{HurtTime:0s}}] on attacker at @s[tag=!requiem] if entity @a[name={self.name},distance=..5] run tag @s add KC_attacker')
+        is_attacker = self.ext.extension_command(f'execute as @e[tag=KC_attacker,limit=1] at @s[tag=!requiem] if entity @a[name={self.name},distance=..5] run data get entity {self.name} DeathTime')
         # 攻撃者が居たらその処理
         if is_attacker == '0s':
             self._counter_defense_attack()
