@@ -236,6 +236,7 @@ def gui_main(page: Page):
 
         try:
             s = socket.socket()
+            rip = socket.gethostbyname(rip)  # DNS名もIPに変換
             s.connect((rip, int(rport)))
             s.close()
             connection = True
