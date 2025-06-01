@@ -47,7 +47,7 @@ class Killer_Queen(Common_func):
 
             if self.is_SelectedItemSlot(2) and self.right_click and self.run_stand == True:
                 self.ext.extension_command(f'title {self.name} actionbar "点火！"')
-                self.ext.extension_command(f'execute as {self.name} at @s run playsound minecraft:item.lodestone_compass.lock master @a[distance=..8] ~ ~ ~ 200 2')
+                self.ext.extension_command(f'execute as {self.name} at @s run playsound minecraft:killer_queen.click master @a[distance=..8] ~ ~ ~ 200 1')
                 self.ext.extension_command(f'particle minecraft:lava {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]} 1.5 1.5 1.5 0 10 normal @a')
                 #self.ext.extension_command(f'execute as {self.name} at @s run setblock {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]} minecraft:tnt destroy') # test用
                 self.ext.extension_command(f'execute as {self.name} at @s run summon minecraft:tnt {self.bomb_pos[0]} {self.bomb_pos[1]} {self.bomb_pos[2]} {{fuse:0s}}')  # 1行分だと威力がほぼない。

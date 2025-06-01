@@ -59,6 +59,7 @@ class King_Crimson(Common_func):
                         # スロットが0の時、メイン能力を発動する。
                         # タイトルを表示する。
                         self.ext.extension_command(f'title {self.name} actionbar "{self._main_abi_maxtime}秒間のカウンター発動..."')
+                        self.ext.extension_command(f'playsound minecraft:king_crimson.clip master {self.name}')
                         self.run_stand = True
                         self.ability_mode = 'main'
                     else:
@@ -69,6 +70,7 @@ class King_Crimson(Common_func):
                         # スロットが0以外の時、エピタフを発動する。
                         self.ext.extension_command(f'title {self.name} subtitle "これは「試練」だ..."')
                         self.ext.extension_command(f'title {self.name} title "エピタフ..."')
+                        self.ext.extension_command(f'playsound minecraft:epitagh.short master {self.name}')
                         self.run_stand = True
                         self.ability_mode = 'epi'
                     else:
