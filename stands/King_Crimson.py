@@ -59,7 +59,6 @@ class King_Crimson(Common_func):
                         # スロットが0の時、メイン能力を発動する。
                         # タイトルを表示する。
                         self.ext.extension_command(f'title {self.name} actionbar "{self._main_abi_maxtime}秒間のカウンター発動..."')
-                        self.ext.extension_command(f'playsound minecraft:king_crimson.clip master {self.name}')
                         self.run_stand = True
                         self.ability_mode = 'main'
                     else:
@@ -199,7 +198,7 @@ class King_Crimson(Common_func):
 
     def _counter_defense_attack(self):
         self.ext.extension_command(f'title {self.name} actionbar "我以外の全ての時間は消し飛ぶッ！"')
-
+        self.ext.extension_command(f'execute as {self.name} at @s run playsound minecraft:king_crimson.clip master {self.name}')
         self.all_direction()
 
         # 攻撃者の背後が何らかのブロックで埋まっているかどうかを検知する。
@@ -215,6 +214,7 @@ class King_Crimson(Common_func):
 
     def _counter_defense_flying_object(self):
         self.ext.extension_command(f'title {self.name} actionbar "我以外の全ての時間は消し飛ぶッ！"')
+        self.ext.extension_command(f'execute as {self.name} at @s run playsound minecraft:king_crimson.clip master {self.name}')
 
         # 一瞬空を飛べるが、問題が出たら同じ座標にテレポートさせ続ける処理を追加。
         self.ext.extension_command(f'execute as {self.name} at @s run gamemode spectator')  # 貫通させるため影響を受けない体にする。

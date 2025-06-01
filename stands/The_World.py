@@ -128,7 +128,7 @@ class The_World(Common_func):
         self.ext.extension_command('title @a title "世界！！"')
         self.ext.extension_command(f'execute as {self.name} at @s run tick freeze')
         self.ext.extension_command(f'execute as {self.name} at @s run particle minecraft:flash ^ ^ ^ 0 0 0 0 0 force @a')  # 能力演出
-        self.ext.extension_command('playsound minecraft:the_world.stop master @a')
+        self.ext.extension_command('execute as @a at @s run playsound minecraft:the_world.stop master @a')
         self.ext.extension_command(f'effect give @a minecraft:blindness 1 1 true')  # 能力演出
 
         self.stop_player_effect_list()
@@ -157,7 +157,7 @@ class The_World(Common_func):
         self.ext.extension_command(f'title @a title "時は動き出す..."')
         self.ext.extension_command(f'title @a reset')
         self.ext.extension_command(f'tag @a[name=!{self.name}] remove stop_time')  # 時間を止めていることを示すタグを取り除く。
-        self.ext.extension_command(f'playsound minecraft:the_world.start master @a')
+        self.ext.extension_command(f'execute as @a at @s run playsound minecraft:the_world.start master @a')
         self.ext.extension_command(f'effect give @a minecraft:blindness 1 1 true')
 
         self.ext.extension_command(f'tick unfreeze')
