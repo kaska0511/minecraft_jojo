@@ -69,7 +69,7 @@ class King_Crimson(Common_func):
                         # スロットが0以外の時、エピタフを発動する。
                         self.ext.extension_command(f'title {self.name} subtitle "これは「試練」だ..."')
                         self.ext.extension_command(f'title {self.name} title "エピタフ..."')
-                        self.ext.extension_command(f'playsound minecraft:epitagh.short master {self.name}')
+                        self.ext.extension_command(f'execute as {self.name} at @s run playsound minecraft:epitagh.short master {self.name}')
                         self.run_stand = True
                         self.ability_mode = 'epi'
                     else:
