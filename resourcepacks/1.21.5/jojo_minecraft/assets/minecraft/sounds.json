@@ -1,0 +1,86 @@
+{
+  "the_world.start": {
+    "replace": false,
+    "sounds": [
+      {
+        "name": "jojo/the_world_start",
+        "weight": 6,
+        "stream": true,
+        "attenuation_distance":16,
+        "preload":true,
+        "volume":1.0,
+        "pitch":1.0
+      }
+    ]
+  },
+  "the_world.stop": {
+    "replace": false,
+    "sounds": [
+      {
+        "name": "jojo/the_world_stop",
+        "weight": 6,
+        "stream": true,
+        "attenuation_distance":16,
+        "preload":true,
+        "volume":1.0,
+        "pitch":1.0
+      }
+    ]
+  },
+  "killer_queen.click": {
+    "replace": false,
+    "sounds": [
+      {
+        "name": "jojo/killer_queen_click",
+        "weight": 6,
+        "stream": true,
+        "attenuation_distance":16,
+        "preload":true,
+        "volume":1.0,
+        "pitch":1.0
+      }
+    ]
+  },
+  "king_crimson.clip": {
+    "replace": false,
+    "sounds": [
+      {
+        "name": "jojo/king_crimson_clip",
+        "weight": 6,
+        "stream": true,
+        "attenuation_distance":16,
+        "preload":true,
+        "volume":1.0,
+        "pitch":1.0
+      }
+    ]
+  },
+  "epitagh.long": {
+    "replace": false,
+    "sounds": [
+      {
+        "name": "jojo/epitagh_long",
+        "weight": 6,
+        "stream": true,
+        "attenuation_distance":16,
+        "preload":true,
+        "volume":1.0,
+        "pitch":1.0
+      }
+    ]
+  },
+  "epitagh.short": {
+    "replace": false,
+    "sounds": [
+      {
+        "name": "jojo/epitagh_short",
+        "weight": 6,
+        "stream": true,
+        "attenuation_distance":16,
+        "preload":true,
+        "volume":1.0,
+        "pitch":1.0
+      }
+    ]
+  }
+}
