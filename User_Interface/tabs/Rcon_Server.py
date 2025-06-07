@@ -119,11 +119,15 @@ class Rcon_Server(Container):
         self.Right_Port.update()
         self.Right_Pass.error_text = "空欄を埋めてください" if not self.Right_Pass.value else ""
         self.Right_Pass.update()
-        # jsonファイルからstand_name情報を取得する。
-        stand_name = self.open_json('rconserver.json')['stand_name']
-        content = {"sever_ip": f"{self.Right_IPaddress.value}", "rcon_port": f"{self.Right_Port.value}", "password": f"{self.Right_Pass.value}", "stand_name": f"{stand_name}"}
-        with open(f'./rconserver.json', 'w', encoding='utf-8') as f:
-            json.dump(content, f, ensure_ascii=False)
+        # サーバー側か検知
+        str_server_file = 'server.properties'
+        is_server = True if os.path.isfile(f"./{str_server_file}") else False
+        if not is_server:
+            # jsonファイルからstand_name情報を取得する。
+            stand_name = self.open_json('rconserver.json')['stand_name']
+            content = {"sever_ip": f"{self.Right_IPaddress.value}", "rcon_port": f"{self.Right_Port.value}", "password": f"{self.Right_Pass.value}", "stand_name": f"{stand_name}"}
+            with open(f'./rconserver.json', 'w', encoding='utf-8') as f:
+                json.dump(content, f, ensure_ascii=False)
 
     def connection_test(self, e):
         import socket
