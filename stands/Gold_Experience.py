@@ -138,6 +138,10 @@ class Gold_Experience(Common_func):
         command = f'execute in the_nether as @e[type=item,x=0,y=128,z=0,dx=16,dy=16,dz=16] at @s run data modify entity @s Age set value -32768'
         self.ext.extension_command(f'execute in the_nether run setblock 0 127 1 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
 
+        # 生成物がダメージを負っているかを検知。ダメージを負っていたら反撃させる。
+        command = f'execute as @e[tag=GEcreature,type=!armor_stand,nbt=!{{HurtTime:0s}}] on attacker run damage @s 6 minecraft:magic by {self.name}'
+        self.ext.extension_command(f'execute in the_nether run setblock 0 127 2 minecraft:repeating_command_block{{auto:1b, Command:"{command}"}} destroy')
+
     def summon_armorstand_GECbirthdayList(self):
         """
         生成した生物の誕生日を記録する防具立てを召喚します。\n
