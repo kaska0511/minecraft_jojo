@@ -179,6 +179,7 @@ class Your_Stand_Info(Container):
         Return
             自身のプレイヤー名
         '''
+        str_file = ('launcher_accounts_microsoft_store.json', 'launcher_accounts.json')
         os_name = sys.platform
 
         if os_name == 'darwin':
@@ -186,13 +187,17 @@ class Your_Stand_Info(Container):
             row_result = subprocess.run(['whoami'], capture_output=True, text=True)
             active_user = row_result.stdout.strip()
             str_dir = f'/Users/{active_user}/Library/Application Support/minecraft'
-            str_file = 'launcher_accounts.json'
-            contents = self.open_json(f'{str_dir}/{str_file}')
+            try:
+                contents = self.open_json(f'{str_dir}/{str_file[1]}')
+            except Exception:
+                contents = self.open_json(f'{str_dir}/{str_file[0]}')
 
         elif os_name == 'win32':
             str_dir = os.getenv('APPDATA') + '\\.minecraft'
-            str_file = 'launcher_accounts_microsoft_store.json'
-            contents = self.open_json(f'{str_dir}\\{str_file}')
+            try:
+                contents = self.open_json(f'{str_dir}\\{str_file[0]}')
+            except Exception:
+                contents = self.open_json(f'{str_dir}\\{str_file[1]}')
 
         return self.find_value(contents, 'name')
 
