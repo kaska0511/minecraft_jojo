@@ -7,7 +7,6 @@ class The_World(Common_func):
         self.standard_time = time.time()    # 止める時間を設定するための基準時間
         self.timer = 5  # 止められる時間（秒）初回5秒
         self.fix_flag = False
-        self.rots = None    # 他のプレイヤーの視線座標を記録する
 
     def __del__(self):
         self.cancel_stand()
@@ -38,6 +37,7 @@ class The_World(Common_func):
         self.right_click = False
 
         if self.run_stand:
+            self.summon_fixer()  # プレイヤーの視線と位置を固定するアマスタを召喚。
             self.fix_player()
             self.count_down()
 
@@ -133,14 +133,18 @@ class The_World(Common_func):
         self.ext.extension_command(f'effect give @a minecraft:blindness 1 1 true')  # 能力演出
 
         self.stop_player_effect_list()
-
-        for player in self.ext.get_joinner_list():
-            if player == self.name: # ザ・ワールド能力者の自分を除外
-                #pass
-                continue
-            self.ext.extension_command(f'execute as {player} at @s run summon minecraft:armor_stand ~ ~ ~ {{Invisible:1,Invulnerable:1,NoGravity:1,Tags:["The_World","{player}"]}}')
+        self.summon_fixer()  # プレイヤーの視線と位置を固定するアマスタを召喚。
         self.standard_time = time.time()    # count_down()のための処理。最初の一回はこれを基に1秒経過しているかを検知。
 
+    def summon_fixer(self):
+        for player in self.ext.get_joinner_list():
+            result = self.ext.extension_command(f'execute as {player} at @s unless entity @n[tag=The_World_fix,tag={player}] run data get entity {self.name} DeathTime')  # アマスタが存在するか確認。
+            # fixerがない場合、DeathTimeが0で返ってくる。
+            if result == '0s':  # アマスタが存在しない場合
+                if player != self.name: # ザ・ワールド能力者の自分を除外
+                    self.ext.extension_command(f'execute as {player} at @s run summon minecraft:armor_stand ~ ~ ~ {{Invisible:1,Invulnerable:1,NoGravity:1,Tags:["The_World","The_World_fix","{player}"]}}')
+                    # アマスタをプレイヤーと同じ視線にする。
+                    self.ext.extension_command(f'data modify entity @n[type=minecraft:armor_stand,tag="The_World_fix",tag={player}] Rotation set from entity {player} Rotation')
 
     def stop_player_effect_list(self):
         self.ext.extension_command(f'tag @a[name=!{self.name}] add stop_time')  # 時間を止めていることを示すタグを自分以外のプレイヤーに付与。
@@ -150,7 +154,6 @@ class The_World(Common_func):
         self.ext.extension_command(f'effect give @a[name=!{self.name}] minecraft:water_breathing {self.timer} 1 true')
         self.ext.extension_command(f'effect give @a[name=!{self.name}] minecraft:fire_resistance {self.timer} 1 true')
         self.ext.extension_command(f'effect give @a[name=!{self.name}] minecraft:slow_falling {self.timer} 5 true')
-        # https://x.com/sayanosasa/status/1806276291655778731   # 棘のダメージは無効化できなかったが、これがヒントになるかも
 
 
     def start_time(self):
@@ -220,25 +223,8 @@ class The_World(Common_func):
             if joinner_list is not None:
                 break
 
-        #! 時が止まっているときに新規参加者は視線を固定することができない。
-        if not self.fix_flag:
-            rots = []
-            for player in joinner_list:
-                get_rot = self.get_rot(player)
-                if get_rot is None:
-                    get_rot = "None"    # プレイヤーが居ない場合はNoneが返るはず。なので文字列にして納める。
-                rots.append(get_rot)
-            if rots == []:
-                return
-            else:
-                self.rots = rots
-            self.fix_flag = True
-
         # アマスタを重なるように配置し行動を制限。
-        for player, rot in zip(joinner_list, self.rots):
-            if player == self.name: # 自分の時は固定しない。
-                #pass
-                continue
-
-            if rot != "None":
-                self.ext.extension_command(f'execute as @e[tag={player},tag=The_World_fix,limit=1] at @s run tp {player} ~ ~ ~ {rot[0]} {rot[1]}')
+        for player in joinner_list:
+            if player != self.name: # 自分の時は固定しない。
+                # 単純なテレポートだけで視線も合わせてくれる。
+                self.ext.extension_command(f'execute as {player} at @s run tp {player} @n[tag={player},tag=The_World_fix,limit=1]')
