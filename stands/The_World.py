@@ -10,8 +10,6 @@ class The_World(Common_func):
 
     def __del__(self):
         self.cancel_stand()
-        self.ext.extension_command(f'attribute {self.name} minecraft:block_break_speed base reset')
-        self.ext.extension_command(f'effect clear')
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
@@ -116,11 +114,25 @@ class The_World(Common_func):
         self.controller.create_target_compass()
 
     def cancel_stand(self):
-        # スタンド解除は実質下の関数。
-        self.start_time()
+        # start_time()とは異なる処理。
+        self.ext.extension_command(f'tag @a[name=!{self.name}] remove stop_time')  # 時間を止めていることを示すタグを取り除く。
+        self.ext.extension_command(f'tick unfreeze')
+
+        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:gravity base reset')
+        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:jump_strength base reset')
+        self.ext.extension_command(f'execute as @a[name=!{self.name}] at @s run attribute @s minecraft:movement_speed base reset')
+        self.ext.extension_command(f'effect clear @a[name=!{self.name}] minecraft:water_breathing')
+        self.ext.extension_command(f'effect clear @a[name=!{self.name}] minecraft:fire_resistance')
+        self.ext.extension_command(f'effect clear @a[name=!{self.name}] minecraft:slow_falling')
+
+        # 各プレイヤーに重なるアマスタを切る。
+        self.ext.extension_command(f'kill @e[tag=The_World_fix]')
+
+        self.run_stand = False
         self.timer = 5
         self.ext.extension_command(f'tag @a[name=!{self.name}] remove stop_time')  # 時間を止めていることを示すタグを取り除く。
         self.ext.extension_command(f'attribute {self.name} minecraft:entity_interaction_range base reset') # 攻撃射程距離デフォルト（3ブロック）へ戻す。
+        self.ext.extension_command(f'attribute {self.name} minecraft:block_break_speed base reset')
 
     def stop_time(self):
         self.ext.extension_command('title @a times 0 0.8s 0.2s')
