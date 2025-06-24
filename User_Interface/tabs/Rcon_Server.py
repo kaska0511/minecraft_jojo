@@ -1,8 +1,11 @@
 import json
-import sys
 import os
-import re
 import random
+import re
+import socket
+import sys
+import threading
+import time
 from flet import (
     Page,
     alignment,
@@ -49,6 +52,7 @@ class Rcon_Server(Container):
             width = 40,
             height = 40,
             stroke_width = 5,
+            value = None,
             color = "#06c755",
             tooltip = "Connection Testing...\n接続できない場合は以下を確認してください\n ・サーバーが立てられているか\n ・Rconポートが解放されているか\n ・二重ルータになっていないか\n ・外部と通信できるか\n ・通信速度が遅くないか(50Mbps以上推奨)"
         )
@@ -111,6 +115,7 @@ class Rcon_Server(Container):
             alignment=MainAxisAlignment.SPACE_BETWEEN,
             controls = [self.Left_Column, self.Right_Column]    #controls = [self.Left_Column, self.Right_Column]
         )
+        threading.Thread(target=self.periodic_check, daemon=True).start()
 
     def on_submit(self, e):
         self.Right_IPaddress.error_text = "空欄を埋めてください" if not self.Right_IPaddress.value else ""
@@ -130,7 +135,6 @@ class Rcon_Server(Container):
                 json.dump(content, f, ensure_ascii=False)
 
     def connection_test(self, e):
-        import socket
         try:
             read_ip = self.get_rcon_info(0)
             read_port = self.get_rcon_info(1)
@@ -142,7 +146,13 @@ class Rcon_Server(Container):
             self.Right_Connect_Ring.update()
         except:
             self.Right_Connect_Ring.value = None
+            self.Right_Connect_Ring.tooltip = "Connection Testing...\n接続できない場合は以下を確認してください\n ・サーバーが立てられているか\n ・Rconポートが解放されているか\n ・二重ルータになっていないか\n ・外部と通信できるか\n ・通信速度が遅くないか(50Mbps以上推奨)"
             self.Right_Connect_Ring.update()
+
+    def periodic_check(self):
+        while True:
+            self.connection_test(None)
+            time.sleep(5)
 
     def get_rcon_info(self, mode):
         '''
