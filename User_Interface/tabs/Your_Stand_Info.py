@@ -150,7 +150,7 @@ class Your_Stand_Info(Container):
             #クライアント情報rconserver.jsonからスタンド名を取得
             str_file = 'rconserver.json'
             contns = self.open_json(str_file)
-            if contns['stand_name'] == '':  # 何も割り当てられていない場合はとりあえずスタプラ
+            if contns['stand_name'] == 'empty':  # 何も割り当てられていない場合はとりあえずスタプラ
                 contns['stand_name'] = 'Star_Platinum'
             self.YOUR_STAND = CONVERT_STAND_NAME(contns['stand_name']).name
 

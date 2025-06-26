@@ -1,9 +1,11 @@
-import sys
-import subprocess
+
 import json
-import re
-import random
 import os
+import random
+import re
+import subprocess
+import sys
+import time
 
 STR_DIR = 'json_list'
 STR_STAND_FILE = 'stand_list.json'
@@ -45,12 +47,14 @@ def get_rcon_info(is_server):
         # ない場合は作る
         str_file = 'rconserver.json'
         if not os.path.isfile(f'./{str_file}'): # クライアント用のrcon情報ファイルが無いなら作成する。
-            content = {"sever_ip": "", "rcon_port": "25575", "password": "", "stand_name": ""}
+            content = {"sever_ip": "", "rcon_port": "25575", "password": "", "stand_name": "empty"}
             with open(f'./{str_file}', 'w', encoding='utf-8') as f:
                 json.dump(content, f, ensure_ascii=False)
 
+        # 1秒ほど待たないと開けないことがある。
+        time.sleep(1)
         str_file = 'rconserver.json'
-        contns = open_json(str_file)
+        contns = open_json(f'./{str_file}')
         rip = contns['sever_ip']
         rport = int(contns['rcon_port'])
         rpassword = contns['password']

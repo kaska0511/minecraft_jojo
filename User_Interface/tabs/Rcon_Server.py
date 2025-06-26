@@ -95,7 +95,7 @@ class Rcon_Server(Container):
         )
 
         self.Right_Button = ElevatedButton(
-            text = "保存",
+            text = "接続確認",
             on_click = self.on_submit
         )
 
@@ -133,6 +133,7 @@ class Rcon_Server(Container):
             content = {"sever_ip": f"{self.Right_IPaddress.value}", "rcon_port": f"{self.Right_Port.value}", "password": f"{self.Right_Pass.value}", "stand_name": f"{stand_name}"}
             with open(f'./rconserver.json', 'w', encoding='utf-8') as f:
                 json.dump(content, f, ensure_ascii=False)
+        self.connection_test(None)
 
     def connection_test(self, e):
         try:
@@ -198,7 +199,7 @@ class Rcon_Server(Container):
         else:
             str_file = 'rconserver.json'
             if not os.path.isfile(f'./{str_file}'): # クライアント用のrcon情報ファイルが無いなら作成する。
-                content = {"sever_ip": "", "rcon_port": "25575", "password": "", "stand_name": ""}
+                content = {"sever_ip": "", "rcon_port": "25575", "password": "", "stand_name": "empty"}
                 with open(f'./{str_file}', 'w', encoding='utf-8') as f:
                     json.dump(content, f, ensure_ascii=False)
 
