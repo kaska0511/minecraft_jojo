@@ -51,10 +51,11 @@ class Cream(Common_func):
                 return
 
             # 削り取る処理
-            if 'shift' in self.press_keys and self.is_Minecraftwindow():    # 3*3*3に加えて足下3*3も削る
-                self.ext.extension_command(f'execute as {self.name} at @s rotated 90 0 run fill ^-1 ^-1 ^-1 ^1 ^2 ^1 air destroy')
+            if 'shift' in self.press_keys and self.is_Minecraftwindow():    # 足下が岩盤でないなら、3*3*3に加えて足下3*3も削る
+                self.ext.extension_command(f'execute as {self.name} at @s rotated 90 0 unless block ^ ^-1 ^ minecraft:bedrock run fill ^-1 ^-1 ^-1 ^1 ^2 ^1 air destroy')
             else:   # 基本は3*3*3で削る
-                self.ext.extension_command(f'execute as {self.name} at @s rotated 90 0 run fill ^-1 ^0 ^-1 ^1 ^2 ^1 air destroy')
+                self.ext.extension_command(f'execute as {self.name} at @s rotated 90 0 if block ^ ^2 ^ minecraft:bedrock run fill ^-1 ^0 ^-1 ^1 ^1 ^1 air destroy')     # 頭上に岩盤があるなら、3*3*2を削る
+                self.ext.extension_command(f'execute as {self.name} at @s rotated 90 0 unless block ^ ^2 ^ minecraft:bedrock run fill ^-1 ^0 ^-1 ^1 ^2 ^1 air destroy') # 頭上に岩盤がないなら、3*3*3を削る
 
             if not self.is_Minecraftwindow():   # 上記のダメージ処理はそのままに、マイクラ以外を操作していたらこれ以下の処理は行わない。
                 self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set 0')   # サバイバル状態だけど浮いたままにする。
