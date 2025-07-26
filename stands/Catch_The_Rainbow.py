@@ -31,9 +31,7 @@ class Catch_The_Rainbow(Common_func):
 
         # 時間が停止したらこれ以降の処理は行わない。
         if self.bool_have_tag('stop_time'):
-            self.left_click = False
-            self.right_click = False
-            self.ext.extension_command(f'execute as {self.name} at @s run tp {self.name} @n[tag={self.name},tag=The_World_fix,limit=1]')
+            self.time_stop_process()
             return
 
         # standを走らせてもよいか？

@@ -258,6 +258,20 @@ class Common_func:
         return have_a_stand
 
 
+    def time_stop_process(self):
+        '''
+        時間停止中の処理を行います。
+        '''
+        self.left_click = False
+        self.right_click = False
+
+        # 死亡しているなら一度fixerを削除する。fixerはThe_Worldが再配置するので問題なし。
+        if self.ext.extension_command(f'data get entity {self.name} DeathTime') != '0s':
+            self.ext.extension_command(f'execute as {self.name} at @s run kill @n[tag={self.name},tag=The_World_fix,limit=1]')
+        else:
+            self.ext.extension_command(f'execute as {self.name} at @s run tp {self.name} @n[tag={self.name},tag=The_World_fix,limit=1]')
+
+
     def get_player_Death(self):
         '''
         自分が死んでいるかを調べます。

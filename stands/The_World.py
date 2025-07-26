@@ -20,9 +20,7 @@ class The_World(Common_func):
 
         # 時を止められる時間が0秒で、スタプラによる時間停止が行われていたら、これ以降の処理は停止する。
         if self.timer == 0 and self.bool_have_tag('stop_time'):
-            self.left_click = False
-            self.right_click = False
-            self.ext.extension_command(f'execute as {self.name} at @s run tp {self.name} @n[tag={self.name},tag=The_World_fix,limit=1]')
+            self.time_stop_process()
             return
 
         self.watch_time()
@@ -150,14 +148,16 @@ class The_World(Common_func):
         self.standard_time = time.time()    # count_down()のための処理。最初の一回はこれを基に1秒経過しているかを検知。
 
     def summon_fixer(self):
-        for player in self.ext.get_joinner_list():
-            result = self.ext.extension_command(f'execute as {player} at @s unless entity @n[tag=The_World_fix,tag={player}] run data get entity {self.name} DeathTime')  # アマスタが存在するか確認。
-            # fixerがない場合、DeathTimeが0で返ってくる。
-            if result == '0s':  # アマスタが存在しない場合
-                if player != self.name: # ザ・ワールド能力者の自分を除外
-                    self.ext.extension_command(f'execute as {player} at @s run summon minecraft:armor_stand ~ ~ ~ {{Invisible:1,Invulnerable:1,NoGravity:1,Tags:["The_World","The_World_fix","{player}"]}}')
-                    # アマスタをプレイヤーと同じ視線にする。
-                    self.ext.extension_command(f'data modify entity @n[type=minecraft:armor_stand,tag="The_World_fix",tag={player}] Rotation set from entity {player} Rotation')
+        players = self.ext.get_joinner_list()
+        try:
+            players.remove(self.name)  # ザ・ワールド能力者の自分を除外
+        except ValueError:
+            pass
+
+        for player in players:
+            self.ext.extension_command(f'execute as {player} at @s unless entity @n[tag=The_World_fix,tag={player}] run summon minecraft:armor_stand ~ ~ ~ {{Invisible:1,Invulnerable:1,NoGravity:1,Tags:["The_World","The_World_fix","{player}"]}}')
+            # アマスタをプレイヤーと同じ視線にする。
+            self.ext.extension_command(f'data modify entity @n[type=minecraft:armor_stand,tag="The_World_fix",tag={player}] Rotation set from entity {player} Rotation')
 
     def stop_player_effect_list(self):
         self.ext.extension_command(f'tag @a[name=!{self.name}] add stop_time')  # 時間を止めていることを示すタグを自分以外のプレイヤーに付与。
