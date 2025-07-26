@@ -275,6 +275,10 @@ class Gold_Experience(Common_func):
         result = self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s unless block ~ ~ ~ #air run data get entity {self.name} DeathTime')
         boolv = True if result == '0s' else False
 
+        if not boolv:
+            result = self.ext.extension_command(f'execute as @e[tag={tag},limit=1] at @s unless block ~ ~ ~ #water run data get entity {self.name} DeathTime')
+            boolv = True if result == '0s' else False
+
         return boolv
 
     def specific_block(self, tag):
