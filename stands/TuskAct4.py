@@ -9,6 +9,8 @@ class TuskAct4(Common_func):
         self.ride_uuid = "[I; 0, 0, 0]"
         self.summon_flag = False
 
+    def __del__(self):
+        self.cancel_stand()
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
@@ -16,15 +18,14 @@ class TuskAct4(Common_func):
 
         # 時間停止中はこれ以降の処理は行わない。能力発動していないなら。
         if self.bool_have_tag('stop_time'):
-            self.left_click = False
-            self.right_click = False
+            self.time_stop_process()
             if self.run_stand == False:
                 return
 
         tag = None
         ride_motion = False
         if not self.run_stand:
-            item, tag = self.get_SelectedItem()
+            item, tag = self.get_OffHandItem()
             ride_name, ride_uuid = self.get_rider()
             #ride_motion_b, vec = self.get_rider_motion()
             if ride_uuid is not None:
@@ -35,7 +36,7 @@ class TuskAct4(Common_func):
                 # 馬に騎乗していて動いていれば。できれば走っているのを判定したいが・・・→ ride_motion_bがその役割だったが上手く行かない。。。
                 ride_motion = True
 
-        if tag == "TuskAct4" and ride_motion:
+        if tag == type(self).__name__ and ride_motion:
             if self.right_click and self.run_stand == False:
                 # 右クリックした人が本人なら能力発動
                 self.target = self.search_entity()
@@ -53,7 +54,7 @@ class TuskAct4(Common_func):
         self.ticket_target = True if self.controller.check_ticket_item(self.name, self.ticket_item[0], self.ticket_item[1]) else False
         # チケットアイテムを持ち、既にチェックポイント開放がされているならボーナス処理
         if self.ticket_target and self.controller.elapsed_time >= 300:
-            self.ext.extention_command(f'bossbar set minecraft:ticket visible false')   # ゲージが多すぎると目障りなので画面から不可視
+            self.ext.extension_command(f'bossbar set minecraft:ticket visible false')   # ゲージが多すぎると目障りなので画面から不可視
             self.controller.set_bonus_bossbar(self.name)
             self.controller.set_bonus_bossbar_visible(self.name, True)
             self.controller.set_bonus_bossbar_value(self.name, self.bonus_time)
@@ -77,7 +78,7 @@ class TuskAct4(Common_func):
         # チェックポイント攻撃時処理
         if self.uuid == self.controller.passcheck_checkpoint(f'No{self.pass_point+1}'):
             # 同じUUIDであれば持ち物の内容にかかわらずデータを削除。
-            self.ext.extention_command(f'data remove entity @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] attack')
+            self.ext.extension_command(f'data remove entity @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] attack')
 
             if not self.controller.check_active(f'No{self.pass_point+1}') and self.controller.prepare:
                 # そのチェックポイントは誰も通過していないため、一位として扱っていいかチェックする。
@@ -116,22 +117,22 @@ class TuskAct4(Common_func):
 
     def search_entity(self):
         found_target = False
-        for i in range(1, 60, 3):
-            y = round(9/60*i + 1)
-            found_player = self.ext.extention_command(f'execute as {self.name} at @s positioned ^ ^ ^{i} if entity @e[name=!{self.name},type=player,nbt=!{{UUID:{self.ride_uuid}}},distance=..{y},sort=nearest,limit=1] run data get entity @e[name={self.name},type=player,limit=1] DeathTime')
-            found_mob = self.ext.extention_command(f'execute as {self.name} at @s positioned ^ ^ ^{i} if entity @e[name=!{self.name},type=!item,type=!armor_stand,nbt=!{{UUID:{self.ride_uuid}}},distance=..{y},sort=nearest,limit=1] run data get entity @e[name={self.name},type=player,limit=1] DeathTime')
+        for i in range(1, 20, 3):
+            y = round(9/20*i + 1)
+            found_player = self.ext.extension_command(f'execute as {self.name} at @s positioned ^ ^ ^{i} if entity @e[name=!{self.name},type=player,nbt=!{{UUID:{self.ride_uuid}}},distance=..{y},sort=nearest,limit=1] run data get entity @e[name={self.name},type=player,limit=1] DeathTime')
+            found_mob = self.ext.extension_command(f'execute as {self.name} at @s positioned ^ ^ ^{i} if entity @e[name=!{self.name},type=!item,type=!armor_stand,nbt=!{{UUID:{self.ride_uuid}}},distance=..{y},sort=nearest,limit=1] run data get entity @e[name={self.name},type=player,limit=1] DeathTime')
 
             if found_player is None and found_mob is None:
                 continue
 
             if found_player == "0s":   # プレイヤー優先。見つけたプレイヤーにtarget_としてtagを付ける。
-                self.ext.extention_command(f'tag @e[] remove Tusk_Target')  # 既についているtagを削除しリセット。ターゲットが複数になることを避けるため。
-                self.ext.extention_command(f'execute as {self.name} at @s positioned ^ ^ ^{i} if entity @e[name=!{self.name},type=player,nbt=!{{UUID:{self.ride_uuid}}},distance=..{y},sort=nearest,limit=1] run tag @e[type=player,name=!{self.name},nbt=!{{UUID:{self.ride_uuid}}},distance=..{y},sort=nearest,limit=1] add Tusk_Target')
+                self.ext.extension_command(f'tag @e[] remove Tusk_Target')  # 既についているtagを削除しリセット。ターゲットが複数になることを避けるため。
+                self.ext.extension_command(f'execute as {self.name} at @s positioned ^ ^ ^{i} if entity @e[name=!{self.name},type=player,nbt=!{{UUID:{self.ride_uuid}}},distance=..{y},sort=nearest,limit=1] run tag @e[type=player,name=!{self.name},nbt=!{{UUID:{self.ride_uuid}}},distance=..{y},sort=nearest,limit=1] add Tusk_Target')
                 found_target = True
                 break   # ターゲットを見つけたらそれ以上探索する必要はない。
             elif found_mob == "0s": # elifにすることで両方ヒットしていてもプレイヤーを優先する。見つけたmobにtarget_としてtagを付ける。
-                self.ext.extention_command(f'tag @e[] remove Tusk_Target')  # 既についているtagを削除。ターゲットが複数になることを避けるため。
-                self.ext.extention_command(f'execute as {self.name} at @s positioned ^ ^ ^{i} if entity @e[name=!{self.name},type=!item,type=!armor_stand,nbt=!{{UUID:{self.ride_uuid}}},distance=..{y},sort=nearest,limit=1] run tag @e[name=!{self.name},type=!item,type=!armor_stand,nbt=!{{UUID:{self.ride_uuid}}},distance=..{y},sort=nearest,limit=1] add Tusk_Target')
+                self.ext.extension_command(f'tag @e[] remove Tusk_Target')  # 既についているtagを削除。ターゲットが複数になることを避けるため。
+                self.ext.extension_command(f'execute as {self.name} at @s positioned ^ ^ ^{i} if entity @e[name=!{self.name},type=!item,type=!armor_stand,nbt=!{{UUID:{self.ride_uuid}}},distance=..{y},sort=nearest,limit=1] run tag @e[name=!{self.name},type=!item,type=!armor_stand,nbt=!{{UUID:{self.ride_uuid}}},distance=..{y},sort=nearest,limit=1] add Tusk_Target')
                 found_target = True
                 break   # ターゲットを見つけたらそれ以上探索する必要はない。
 
@@ -139,42 +140,43 @@ class TuskAct4(Common_func):
 
     def follow_entity(self):
         if self.summon_flag == False and self.target:
-            self.ext.extention_command(f'execute as {self.name} at @s run playsound minecraft:block.beacon.activate master @a ~ ~ ~ 4 2')
+            self.ext.extension_command(f'execute as {self.name} at @s run playsound minecraft:block.beacon.activate master @a ~ ~ ~ 4 2')
             # アマスタを召喚。見えない、無敵、ちょっと小さい。
-            self.ext.extention_command(f'execute as {self.name} at @s anchored eyes run summon minecraft:armor_stand ^ ^ ^1 {{attributes:[{{id:"minecraft:generic.scale",base:0.4}}],CustomName:TuskAct4,Invisible:1,Invulnerable:1,Small:1,NoGravity:1}}')
-            # execute as KASKA0511 at @s anchored feet run summon minecraft:armor_stand ^ ^ ^1 {Attributes:[{Name:"generic.scale",Base:0.4}],CustomName:TuskAct4,Invisible:1,Invulnerable:1,Small:1,NoGravity:1,Tags:["TuskAct4"]}
+            self.ext.extension_command(f'execute as {self.name} at @s anchored eyes run summon minecraft:armor_stand ^ ^ ^1 {{attributes:[{{id:"minecraft:scale",base:0.4}}],CustomName:TuskAct4,Invisible:1,Invulnerable:1,Small:1,NoGravity:1}}')
+            # execute as KASKA0511 at @s anchored feet run summon minecraft:armor_stand ^ ^ ^1 {attributes:[{id:"minecraft:scale",base:0.4}],CustomName:TuskAct4,Invisible:1,Invulnerable:1,Small:1,NoGravity:1,Tags:["TuskAct4"]}
             self.summon_flag = True
 
         # 追いかけるタスクact4
-        self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s run particle minecraft:sculk_charge_pop ^ ^ ^ 0 0 0 0 0 force @a')
-        self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s run particle minecraft:sonic_boom ^ ^ ^ 0 0 0 0 0 force @a')
-        self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s run playsound minecraft:item.trident.riptide_2 master @a ~ ~ ~ 1 1.8')
+        self.ext.extension_command(f'execute as @e[name=TuskAct4,limit=1] at @s run particle minecraft:sculk_charge_pop ^ ^ ^ 0 0 0 0 0 force @a')
+        self.ext.extension_command(f'execute as @e[name=TuskAct4,limit=1] at @s run particle minecraft:sonic_boom ^ ^ ^ 0 0 0 0 0 force @a')
+        self.ext.extension_command(f'execute as @e[name=TuskAct4,limit=1] at @s run playsound minecraft:item.trident.riptide_2 master @a ~ ~ ~ 1 1.8')
         #print(f'execute as @e[name=TuskAct4,limit=1] at @s run tp @e[name=TuskAct4,limit=1] ~ ~ ~ facing entity @e[nbt={{UUID:{self.target}}},limit=1]')
-        self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s run tp @e[name=TuskAct4,limit=1] ~ ~ ~ facing entity @e[tag=Tusk_Target,limit=1]')   # ターゲットに対して顔を向ける
-        self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s run tp @e[name=TuskAct4,limit=1] ^ ^ ^2')  # 顔が向いている方向に前進。2は速度。0に近づくほど遅くなる。
+        self.ext.extension_command(f'execute as @e[name=TuskAct4,limit=1] at @s run tp @e[name=TuskAct4,limit=1] ~ ~ ~ facing entity @e[tag=Tusk_Target,limit=1]')   # ターゲットに対して顔を向ける
+        self.ext.extension_command(f'execute as @e[name=TuskAct4,limit=1] at @s run tp @e[name=TuskAct4,limit=1] ^ ^ ^2')  # 顔が向いている方向に前進。2は速度。0に近づくほど遅くなる。
 
         # ターゲットのディメンション確認。DimentionのNBTは現状プレイヤーしか持たず、ターゲットのディメンションに合わせて移動させる。
         target_dimention = self.get_dimension("Tusk_Target")
         if target_dimention is not None:
-            self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s in {target_dimention.strip('"')} run tp ~ ~ ~')
+            self.ext.extension_command(f'execute as @e[name=TuskAct4,limit=1] at @s in {target_dimention.strip('"')} run tp ~ ~ ~')
 
         # ターゲットに当たった時の処理。UUIDで指定したらDioみたいなことできないのでエンティティに接触したら爆発。
-        self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run particle minecraft:sculk_charge_pop ^ ^1 ^ 0.5 0.5 0.5 0 20 force @a') # 当たったら回転演出
-        self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run particle minecraft:explosion_emitter ~ ~ ~') # 当たったら爆発演出
-        self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run playsound minecraft:entity.generic.explode master @a ~ ~ ~ 4')
-        self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run damage @e[distance=..1,type=!item,tag=!checkpoint] 999999999999999999999 minecraft:explosion by {self.name}')
-        self.ext.extention_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run kill @e[distance=..1,type=!item,tag=!checkpoint]')   # ターゲットキル。接触しているものもキル。スタンド自身もキル。
+        self.ext.extension_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run particle minecraft:sculk_charge_pop ^ ^1 ^ 0.5 0.5 0.5 0 20 force @a') # 当たったら回転演出
+        self.ext.extension_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run particle minecraft:explosion_emitter ~ ~ ~') # 当たったら爆発演出
+        self.ext.extension_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run playsound minecraft:entity.generic.explode master @a ~ ~ ~ 4')
+        self.ext.extension_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,tag=!checkpoint,name=!TuskAct4] run damage @e[distance=..1,type=!item,tag=!checkpoint] 999999999999999999999 minecraft:explosion by {self.name}')
+        # ゴールド・エクスペリエンス・レクイエムはkillしない特別措置。レクエイム化したプレイヤーにはrequiemのタグが付与されている。
+        self.ext.extension_command(f'execute as @e[name=TuskAct4,limit=1] at @s if entity @e[distance=..1,type=!item,type=!ender_dragon,tag=!checkpoint,,tag=!requiem,name=!TuskAct4] run kill @e[distance=..1,type=!item,type=!ender_dragon,tag=!checkpoint,tag=!requiem]')   # ターゲットキル。接触しているものもキル。スタンド自身もキル。
 
         # もしターゲットがいないなら処理。デスポーンやログアウト用
-        result = self.ext.extention_command(f'execute unless entity @e[name=TuskAct4,limit=1] run data get entity {self.name} DeathTime') # tag=Tusk_Targetが居ないなら、スタンド使いのDeathTimeを取得する。
+        result = self.ext.extension_command(f'execute unless entity @e[name=TuskAct4,limit=1] run data get entity {self.name} DeathTime') # tag=Tusk_Targetが居ないなら、スタンド使いのDeathTimeを取得する。
         if result == '0s':  # ターゲットがいないなら
             self.cancel_stand()
             return
-        
+
     def cancel_stand(self):
-        self.ext.extention_command(f'tag @e[] remove Tusk_Target')  # 既についているtagを削除。
-        self.ext.extention_command(f'kill @e[name=TuskAct4]')
+        self.ext.extension_command(f'tag @e[] remove Tusk_Target')  # 既についているtagを削除。
+        self.ext.extension_command(f'kill @e[name=TuskAct4]')
         self.target = False
         self.run_stand = False
         self.summon_flag = False
-    
+

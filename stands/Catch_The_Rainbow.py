@@ -1,5 +1,3 @@
-import re
-import time
 from stands.Common_func import Common_func
 
 class Catch_The_Rainbow(Common_func):
@@ -9,65 +7,23 @@ class Catch_The_Rainbow(Common_func):
         self.ability_limit = 0
         self.mask = None
         self.kill_check = False
-        self.mask_air()
         self.summon_amedas()
 
-    def mask_air(self):
-        biome = ('deep_cold_ocean','cold_ocean','deep_ocean')
-
-        loop = True
-        while loop:
-            for ocean in biome:
-                #import pdb; pdb.set_trace()
-                res = self.ext.extention_command(f'locate biome minecraft:{ocean}')
-
-                # 調査座標をロードしておく。遠すぎると読み込むことができないため。
-                self.ext.extention_command(f'forceload add {res[0]} {res[2]} {res[0]} {res[2]}')
-                while not self.ext.extention_command(f'forceload query {res[0]} {res[2]}'): # ロードするまで待つ。
-                    pass
-
-                result = self.ext.extention_command(f'execute if block {res[0]} 62 {res[2]} minecraft:water run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')   # 見つかった座標の場所が水か？
-                air_flag = False
-                if result == '0s':    # 起点が水なら。（起点が水だと海の場合が多く、上空までブロックが無いことが多い。）
-                    air_flag = True
-                else:
-                    self.ext.extention_command(f'forceload remove {res[0]} {res[2]} {res[0]} {res[2]}')
-                    continue    # バイオームを変える。
-
-                if air_flag:
-                    if self.check_mask(res):    # マスク座標が決定したらforを終了。
-                        loop = False
-                        self.mask = res
-                        return
-                    else:
-                        loop = True
-
-    def check_mask(self, res):
-        max = 73
-        for i in range(63, max):
-            result = self.ext.extention_command(f'execute if block {res[0]} {i} {res[2]} minecraft:air run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')   # 水源から上方5マスが空気か調べる。本当は最高高度320マスまで調べるべき。
-            if result == '0s':
-                if i == max-1:     # チェックが最後まで出来たらマスク用の場所として登録する。
-                    #! 修正は不要！ 初めmask用の座標はforceloadしないようにしていたが、チャンクを超えると読み込まなくなった。
-                    # このためmask用座標は常に読み込ませる必要がある。
-                    #self.ext.extention_command(f'forceload remove {res[0]} {res[2]}')
-                    return True
-            else:   # 何らかのブロックに引っかかった。
-                self.ext.extention_command(f'forceload remove {res[0]} {res[2]} {res[0]} {res[2]}')
-                return False
+    def __del__(self):
+        self.cancel_stand()
 
     def summon_amedas(self):
         """
         雨が降るバイオーム検索用スノーゴーレムを作成する。
         召喚するバイオームは生成率が高く、雨が降る森林。
         """
-        res = self.ext.extention_command(f'locate biome minecraft:forest')
-        self.ext.extention_command(f'forceload add {res[0]} {res[2]} {res[0]} {res[2]}')
-        self.ext.extention_command(f'execute as {self.name} at @s positioned {res[0]} 317 {res[2]} rotated 0 0 run fill ^1 ^ ^-1 ^-1 ^2 ^1 minecraft:barrier destroy')
-        self.ext.extention_command(f'execute as {self.name} at @s positioned {res[0]} 317 {res[2]} rotated 0 0 run fill ^ ^1 ^ ^ ^2 ^ minecraft:air destroy')
-        self.ext.extention_command(f'execute unless entity @e[name=Catch_The_Rainbow,tag=Amedas,limit=1] run summon minecraft:snow_golem {res[0]} 318 {res[2]} {{CustomName:Catch_The_Rainbow,NoAI:1,Silent:1,NoGravity:1,Tags:["Amedas"]}}')
-        self.ext.extention_command(f'effect give @e[tag=Amedas,limit=1] minecraft:health_boost infinite 120 false')  # 体力最大値をウォーデン並みにする。
-        self.ext.extention_command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 120 true')     # 最大値を変更したら上限まで回復させる必要がある。（即時回復）
+        res = self.ext.extension_command(f'locate biome minecraft:forest')
+        self.ext.extension_command(f'forceload add {res[0]} {res[2]} {res[0]} {res[2]}')
+        self.ext.extension_command(f'execute as {self.name} at @s positioned {res[0]} 317 {res[2]} rotated 0 0 run fill ^1 ^ ^-1 ^-1 ^2 ^1 minecraft:barrier destroy')
+        self.ext.extension_command(f'execute as {self.name} at @s positioned {res[0]} 317 {res[2]} rotated 0 0 run fill ^ ^1 ^ ^ ^2 ^ minecraft:air destroy')
+        self.ext.extension_command(f'execute unless entity @e[name=Catch_The_Rainbow,tag=Amedas,limit=1] run summon minecraft:snow_golem {res[0]} 318 {res[2]} {{CustomName:Catch_The_Rainbow,NoAI:1,Silent:1,NoGravity:1,Tags:["Amedas"]}}')
+        self.ext.extension_command(f'effect give @e[tag=Amedas,limit=1] minecraft:health_boost infinite 120 false')  # 体力最大値をウォーデン並みにする。
+        self.ext.extension_command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 124 false')     # 最大値を変更したら上限まで回復させる必要がある。（即時回復）
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
@@ -75,8 +31,7 @@ class Catch_The_Rainbow(Common_func):
 
         # 時間が停止したらこれ以降の処理は行わない。
         if self.bool_have_tag('stop_time'):
-            self.left_click = False
-            self.right_click = False
+            self.time_stop_process()
             return
 
         # standを走らせてもよいか？
@@ -84,12 +39,12 @@ class Catch_The_Rainbow(Common_func):
 
         if self.run_stand and self.left_click: #攻撃
             nbt = '{Invisible:1,Invulnerable:1,NoGravity:0,Small:1,Silent:1,Tags:[rain_knife]}'
-            self.ext.extention_command(f'execute as {self.name} at @s rotated 90 0 run summon minecraft:armor_stand ^ ^-2 ^ {nbt}')
-            self.ext.extention_command(f'execute as {self.name} at @s run playsound minecraft:block.bubble_column.bubble_pop master @a[distance=..8] ~ ~ ~ 200 1')
+            self.ext.extension_command(f'execute as {self.name} at @s rotated 90 0 run summon minecraft:armor_stand ^ ^-2 ^ {nbt}')
+            self.ext.extension_command(f'execute as {self.name} at @s run playsound minecraft:block.bubble_column.bubble_pop master @a[distance=..8] ~ ~ ~ 200 1')
         self.left_click = False
-        self.ext.extention_command(f'execute as @e[tag=rain_knife] at @s run particle minecraft:splash ^ ^ ^ 0 0 0 0 0 force @a')
-        self.ext.extention_command(f'execute as @e[tag=rain_knife] at @s run damage @e[distance=..1,name=!{self.name},type=!item,type=!minecraft:armor_stand,limit=1] 5 minecraft:indirect_magic by {self.name}')
-        self.ext.extention_command(f'execute as @e[tag=rain_knife] at @s if entity @e[distance=..1,name=!{self.name},type=!item,type=!minecraft:armor_stand,tag=!rain_knife,limit=1] run kill @s')
+        self.ext.extension_command(f'execute as @e[tag=rain_knife] at @s run particle minecraft:splash ^ ^ ^ 0 0 0 0 0 force @a')
+        self.ext.extension_command(f'execute as @e[tag=rain_knife] at @s run damage @e[distance=..1,name=!{self.name},type=!item,type=!minecraft:armor_stand,limit=1] 5 minecraft:indirect_magic by {self.name}')
+        self.ext.extension_command(f'execute as @e[tag=rain_knife] at @s if entity @e[distance=..1,name=!{self.name},type=!item,type=!minecraft:armor_stand,tag=!rain_knife,limit=1] run kill @s')
 
         if self.run_stand and self.double_spacekey:
             # マイクラウィンドウactive and カーソルが非表示。両方を満たしているか？
@@ -103,38 +58,38 @@ class Catch_The_Rainbow(Common_func):
             # 体力値に応じてダメージ軽減を付与。
             self.effect_Resistance()
             # 落下ダメージの倍率0にする = 落下ダメージを受けない。
-            self.ext.extention_command(f'attribute {self.name} minecraft:generic.fall_damage_multiplier base set 0')
+            self.ext.extension_command(f'attribute {self.name} minecraft:fall_damage_multiplier base set 0')
 
             # 上昇と下降両方押している場合→その場で停止
-            if self.press_key == 'space' and self.press_key == 'shift':
+            if 'space' in self.press_keys and 'shift' in self.press_keys:
                 if active_minecraft:
-                    self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0')
+                    self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set 0')
             else:   # 少なくとも両方を押していない。
-                if self.press_key == 'space' and active_minecraft:   # 空中でspaceを押した and マイクラウィンドウactive and カーソルが非表示
+                if 'space' in self.press_keys and active_minecraft:   # 空中でspaceを押した and マイクラウィンドウactive and カーソルが非表示
                     #print(f'space押した!{keyboard.is_pressed('space')}')
                     if self.ability_limit == 0: # どの高度でも雨が降る
-                        self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set -0.01')
+                        self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set -0.01')
                     if self.ability_limit == 1: # 高度次第で変化するバイオームで上昇を128ブロックまでに制限
-                        pos = self.ext.extention_command(f'data get entity {self.name} Pos')
+                        pos = self.ext.extension_command(f'data get entity {self.name} Pos')
                         if pos is None: # スタンド使いが居ない。処理終了。
                             return False
                         if round(float(pos[1].rstrip('d'))) <= 128:  # pos[1] = '70.40762608459386d' →　70
-                            self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set -0.01')
+                            self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set -0.01')
 
-                elif self.press_key == 'shift' and active_minecraft:   # shiftを押した and マイクラウィンドウactive and カーソルが非表示
+                elif 'shift' in self.press_keys and active_minecraft:   # shiftを押した and マイクラウィンドウactive and カーソルが非表示
                     #print(f'shift押した!{keyboard.is_pressed('shift')}')
-                    self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0.01')
+                    self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set 0.01')
 
                 else:   # 上昇も下降もしようとしてない→その場で留まる。
-                    self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0')
+                    self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set 0')
                     if self.get_Onground(self.name):
-                        self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0.08')
+                        self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set 0.08')
 
         if not self.double_spacekey:    # 飛行状態解除。落下ダメージは受けない。
-            self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0.08')
+            self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set 0.08')
 
         if self.run_stand:
-            self.ext.extention_command(f'attribute {self.name} minecraft:generic.movement_speed base set 0.3')
+            self.ext.extension_command(f'attribute {self.name} minecraft:movement_speed base set 0.3')
 
         else:   # 仮面を外したらetc...
             self.cancel_stand()
@@ -145,7 +100,7 @@ class Catch_The_Rainbow(Common_func):
         self.ticket_target = True if self.controller.check_ticket_item(self.name, self.ticket_item[0], self.ticket_item[1]) else False
         # チケットアイテムを持ち、既にチェックポイント開放がされているならボーナス処理
         if self.ticket_target and self.controller.elapsed_time >= 300:
-            self.ext.extention_command(f'bossbar set minecraft:ticket visible false')   # ゲージが多すぎると目障りなので画面から不可視
+            self.ext.extension_command(f'bossbar set minecraft:ticket visible false')   # ゲージが多すぎると目障りなので画面から不可視
             self.controller.set_bonus_bossbar(self.name)
             self.controller.set_bonus_bossbar_visible(self.name, True)
             self.controller.set_bonus_bossbar_value(self.name, self.bonus_time)
@@ -169,7 +124,7 @@ class Catch_The_Rainbow(Common_func):
         # チェックポイント攻撃時処理
         if self.uuid == self.controller.passcheck_checkpoint(f'No{self.pass_point+1}'):
             # 同じUUIDであれば持ち物の内容にかかわらずデータを削除。
-            self.ext.extention_command(f'data remove entity @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] attack')
+            self.ext.extension_command(f'data remove entity @e[tag=No{self.pass_point+1},tag=attackinter,limit=1] attack')
 
             if not self.controller.check_active(f'No{self.pass_point+1}') and self.controller.prepare:
                 # そのチェックポイントは誰も通過していないため、一位として扱っていいかチェックする。
@@ -209,24 +164,24 @@ class Catch_The_Rainbow(Common_func):
     def cancel_stand(self):
         self.run_stand = False
         self.double_spacekey = False
-        self.ext.extention_command(f'attribute {self.name} minecraft:generic.fall_damage_multiplier base set 1')    # 落下ダメージを受けるようにする。
-        self.ext.extention_command(f'attribute {self.name} minecraft:generic.gravity base set 0.08')    # デフォルトで落下するようにする。
-        self.ext.extention_command(f'attribute {self.name} minecraft:generic.movement_speed base set 0.1')  # 移動速度上昇を元に戻す。
-        self.ext.extention_command(f'kill @e[tag=rain_knife]')
-        self.ext.extention_command(f'effect clear {self.name} minecraft:resistance')
-        
+        self.ext.extension_command(f'attribute {self.name} minecraft:fall_damage_multiplier base set 1')    # 落下ダメージを受けるようにする。
+        self.ext.extension_command(f'attribute {self.name} minecraft:gravity base set 0.08')    # デフォルトで落下するようにする。
+        self.ext.extension_command(f'attribute {self.name} minecraft:movement_speed base set 0.1')  # 移動速度上昇を元に戻す。
+        self.ext.extension_command(f'kill @e[tag=rain_knife]')
+        self.ext.extension_command(f'effect clear {self.name} minecraft:resistance')
+
         if self.kill_check:  # 能力解除時、体力が2以下なら死ぬ。
             self.kill_check = False
             health = self.get_Health()
             if health is not None and health <= 2.0:
-                self.ext.extention_command(f'kill {self.name}')
+                self.ext.extension_command(f'kill {self.name}')
 
     def can_I_run_stand(self):
         #import pdb;pdb.set_trace()
         # 上から順にチェックしていく。
         # 1.スタンドアイテムを付けているか？
-        id, tag = self.get_select_Inventory(self.name, "103")
-        if tag == "Catch_The_Rainbow" :
+        id, tag = self.get_equipment('head')
+        if tag == type(self).__name__:
             pass
         else:
             #print('!!stand')
@@ -268,30 +223,30 @@ class Catch_The_Rainbow(Common_func):
         2 : 降雪または雨が降らない
         """
         # self.ability_limitは能力の制限についての変数。{0:無制限, 1:高度128までの制限, 2:能力が発動できない}
-        self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 positioned ~ 308 ~ run summon minecraft:villager ~ ~ ~')
-        self.ext.extention_command(f'execute as {self.name} at @s rotated 0 0 positioned ~ 308 ~ run data modify entity @e[type=minecraft:villager,sort=nearest,limit=1] Tags set value ["biomechecker"]')
-        self.ext.extention_command(f'effect give @e[tag=biomechecker,limit=1] minecraft:invisibility infinite 1 true')
-        biome = self.ext.extention_command(f'data get entity @e[tag=biomechecker,limit=1] VillagerData.type', 'Villager')
+        self.ext.extension_command(f'execute as {self.name} at @s rotated 0 0 positioned ~ 308 ~ run summon minecraft:villager ~ ~ ~')
+        self.ext.extension_command(f'execute as {self.name} at @s rotated 0 0 positioned ~ 308 ~ run data modify entity @e[type=minecraft:villager,sort=nearest,limit=1] Tags set value ["biomechecker"]')
+        self.ext.extension_command(f'effect give @e[tag=biomechecker,limit=1] minecraft:invisibility infinite 1 true')
+        biome = self.ext.extension_command(f'data get entity @e[tag=biomechecker,limit=1] VillagerData.type', 'Villager')
 
         #検索に使用する村人は情報取得後殺す。
-        #self.ext.extention_command(f'execute as @e[tag=biomechecker] at @s run tp ~ -64 ~')    # 死亡時煙のようなエフェクトが出るので奈落に移動させて殺す。
-        self.ext.extention_command(f'kill @e[tag=biomechecker]')
+        #self.ext.extension_command(f'execute as @e[tag=biomechecker] at @s run tp ~ -64 ~')    # 死亡時煙のようなエフェクトが出るので奈落に移動させて殺す。
+        self.ext.extension_command(f'kill @e[tag=biomechecker]')
 
         # サバンナと砂漠バイオーム検索
         if biome == 'minecraft:savanna' or biome == 'minecraft:desert':    # savannna 又は desertなら能力発動できない。
             self.ability_limit = 2
             return
-        
+
         # 降雪バイオーム検索
         if biome == 'minecraft:snow':
-            res = self.ext.extention_command(f'execute as {self.name} at @s if biome ~ ~ ~ minecraft:deep_frozen_ocean run run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')
+            res = self.ext.extension_command(f'execute as {self.name} at @s if biome ~ ~ ~ minecraft:deep_frozen_ocean run run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')
             if res == '0s':    # deep_frozen_oceanだけは高度制限で能力発動。
                 self.ability_limit = 1
                 return
             else:
                 self.ability_limit = 2
                 return
-            
+
         # 縛りバイオーム検索
         if biome == 'minecraft:taiga':    # 引っかかったら高度制限で能力発動。
             self.ability_limit = 1
@@ -306,10 +261,10 @@ class Catch_The_Rainbow(Common_func):
         雨が降っているならTrue、そうでないならFalse\n
         Noneが返ってくる場合はAmedasが壊れている。
         """
-        res = self.ext.extention_command(f'data get entity @e[tag=Amedas,limit=1] HurtTime')
+        res = self.ext.extension_command(f'data get entity @e[tag=Amedas,limit=1] HurtTime')
 
         # 体力を最大値まで回復させる。（即時回復）
-        self.ext.extention_command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 120 true')
+        self.ext.extension_command(f'effect give @e[tag=Amedas,limit=1] minecraft:instant_health 1 124 false')
 
         # エンティティが見つからない場合はNoneつまり再召喚が必要
         if res is None:
@@ -326,41 +281,37 @@ class Catch_The_Rainbow(Common_func):
         何かあればTrue、何もなければFalse
         """
         shield_flag = True
-        
-        pos = self.ext.extention_command(f'data get entity {self.name} Pos')
-        if pos is None: # スタンド使いが居ない。処理終了。
-            return False
 
-        now_y = round(float(pos[1].rstrip('d')))    # pos[1] = '70.40762608459386d' →　70
+        # 新たな実行位置のy座標：葉以外で衝突判定のあるブロックのみに絞り、アマスタを召喚。
+        self.ext.extension_command('execute as '+ self.name +' positioned over motion_blocking_no_leaves run summon armor_stand ~ ~ ~ {attributes:[{id:"minecraft:scale",base:0.0625d}],Tags:["Shield"],Silent:1,Invulnerable:1,Invisible:0,NoGravity:1}')
+        # 召喚したアマスタの視線をプレイヤー自身に向ける。
+        self.ext.extension_command(f'execute as @e[tag=Shield,limit=1] at @s run tp @s ~ ~ ~ facing entity {self.name}')
 
-        if now_y >= 63: # 海抜（＝高度63ブロック以上）より高い場所にいるなら
-            #import pdb; pdb.set_trace()
-            res0 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ {now_y+1} ~ ~ 319 ~ {self.mask[0]} ~ {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')
-            if res0 == '0s':
-                shield_flag = False
+        # アマスタが重なっているか？
+        result = self.ext.extension_command(f'execute as {self.name} at @s if entity @n[tag=Shield,limit=1,distance=..1] run data get entity {self.name} DeathTime')
+        shield_flag = False if result == '0s' else True
+        if shield_flag == False:
+            return shield_flag
+        # アマスタが上を向いているか？＝プレイヤーの足元より下にいるならアマスタは上を向く。＝遮蔽物無し。
+        # x_rotation : 値の範囲は-90（直上）～0（水平方向）～90（直下）
+        result = self.ext.extension_command(f'execute as {self.name} at @s if entity @n[tag=Shield,limit=1,x_rotation=-90..0] run data get entity {self.name} DeathTime')
+        shield_flag = False if result == '0s' else True
 
-        else:           # 海抜以下にいるなら
-            now_y_add = now_y + 257
-            res0 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ {now_y+1} ~ ~ 62 ~ {self.mask[0]} {now_y_add} {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')    # 海抜以下を検索
-            res1 = self.ext.extention_command(f'execute as {self.name} at @s if blocks ~ 63 ~ ~ 319 ~ {self.mask[0]} 63 {self.mask[2]} all run data get entity @e[name={self.name},type=armor_stand,limit=1] DeathTime')       # 海抜超過の場所を検索
-
-            if res0 == '0s' and res1 == '0s':
-                shield_flag = False
-
+        # この時点までTrueであれば、プレイヤーと重なってもいないし、上にいることが確定。＝遮蔽物あり。
         return shield_flag
 
     def effect_Resistance(self):
         health = self.get_Health()
         if health != self.health:
             self.health = health
-            self.ext.extention_command(f'effect clear {self.name}')
+            self.ext.extension_command(f'effect clear {self.name}')
             if health <= 2:
-                self.ext.extention_command(f'effect give {self.name} minecraft:resistance infinite 5 true')
+                self.ext.extension_command(f'effect give {self.name} minecraft:resistance infinite 5 true')
             elif health <= 4:
-                self.ext.extention_command(f'effect give {self.name} minecraft:resistance infinite 4 true')
+                self.ext.extension_command(f'effect give {self.name} minecraft:resistance infinite 4 true')
             elif health <= 10:
-                self.ext.extention_command(f'effect give {self.name} minecraft:resistance infinite 3 true')
+                self.ext.extension_command(f'effect give {self.name} minecraft:resistance infinite 3 true')
             elif health <= 16:
-                self.ext.extention_command(f'effect give {self.name} minecraft:resistance infinite 2 true')
+                self.ext.extension_command(f'effect give {self.name} minecraft:resistance infinite 2 true')
             else:
-                self.ext.extention_command(f'effect give {self.name} minecraft:resistance infinite 1 true')
+                self.ext.extension_command(f'effect give {self.name} minecraft:resistance infinite 1 true')

@@ -1,7 +1,11 @@
 import json
 import os
-import re
 import random
+import re
+import socket
+import sys
+import threading
+import time
 from flet import (
     Page,
     alignment,
@@ -28,10 +32,10 @@ class Rcon_Server(Container):
         self.padding = 40
         self.width = 1280
         self.height = 810
-        self.image_src_base64 = BACK_GROUND
+        self.image_src = self.resourcePath(BACK_GROUND)
 
         self.Left_Image = Image(
-            src_base64 = IMAGES_BASE64[random.choice(list(HOME_IMAGE)).name],
+            src = self.resourcePath(IMAGES[random.choice(list(HOME_IMAGE)).name]),
             height = 800,
             #width = 570
         )
@@ -48,6 +52,7 @@ class Rcon_Server(Container):
             width = 40,
             height = 40,
             stroke_width = 5,
+            value = None,
             color = "#06c755",
             tooltip = "Connection Testing...\n接続できない場合は以下を確認してください\n ・サーバーが立てられているか\n ・Rconポートが解放されているか\n ・二重ルータになっていないか\n ・外部と通信できるか\n ・通信速度が遅くないか(50Mbps以上推奨)"
         )
@@ -90,7 +95,7 @@ class Rcon_Server(Container):
         )
 
         self.Right_Button = ElevatedButton(
-            text = "保存",
+            text = "接続確認",
             on_click = self.on_submit
         )
 
@@ -110,6 +115,7 @@ class Rcon_Server(Container):
             alignment=MainAxisAlignment.SPACE_BETWEEN,
             controls = [self.Left_Column, self.Right_Column]    #controls = [self.Left_Column, self.Right_Column]
         )
+        threading.Thread(target=self.periodic_check, daemon=True).start()
 
     def on_submit(self, e):
         self.Right_IPaddress.error_text = "空欄を埋めてください" if not self.Right_IPaddress.value else ""
@@ -118,12 +124,18 @@ class Rcon_Server(Container):
         self.Right_Port.update()
         self.Right_Pass.error_text = "空欄を埋めてください" if not self.Right_Pass.value else ""
         self.Right_Pass.update()
-        content = {"sever_ip": f"{self.Right_IPaddress.value}", "rcon_port": f"{self.Right_Port.value}", "password": f"{self.Right_Pass.value}"}
-        with open(f'./rconserver.json', 'w', encoding='utf-8') as f:
-            json.dump(content, f, ensure_ascii=False)
+        # サーバー側か検知
+        str_server_file = 'server.properties'
+        is_server = True if os.path.isfile(f"./{str_server_file}") else False
+        if not is_server:
+            # jsonファイルからstand_name情報を取得する。
+            stand_name = self.open_json('rconserver.json')['stand_name']
+            content = {"sever_ip": f"{self.Right_IPaddress.value}", "rcon_port": f"{self.Right_Port.value}", "password": f"{self.Right_Pass.value}", "stand_name": f"{stand_name}"}
+            with open(f'./rconserver.json', 'w', encoding='utf-8') as f:
+                json.dump(content, f, ensure_ascii=False)
+        self.connection_test(None)
 
     def connection_test(self, e):
-        import socket
         try:
             read_ip = self.get_rcon_info(0)
             read_port = self.get_rcon_info(1)
@@ -135,7 +147,13 @@ class Rcon_Server(Container):
             self.Right_Connect_Ring.update()
         except:
             self.Right_Connect_Ring.value = None
+            self.Right_Connect_Ring.tooltip = "Connection Testing...\n接続できない場合は以下を確認してください\n ・サーバーが立てられているか\n ・Rconポートが解放されているか\n ・二重ルータになっていないか\n ・外部と通信できるか\n ・通信速度が遅くないか(50Mbps以上推奨)"
             self.Right_Connect_Ring.update()
+
+    def periodic_check(self):
+        while True:
+            self.connection_test(None)
+            time.sleep(5)
 
     def get_rcon_info(self, mode):
         '''
@@ -181,7 +199,7 @@ class Rcon_Server(Container):
         else:
             str_file = 'rconserver.json'
             if not os.path.isfile(f'./{str_file}'): # クライアント用のrcon情報ファイルが無いなら作成する。
-                content = {"sever_ip": "", "rcon_port": "", "password": "", "stand_name": ""}
+                content = {"sever_ip": "", "rcon_port": "25575", "password": "", "stand_name": "empty"}
                 with open(f'./{str_file}', 'w', encoding='utf-8') as f:
                     json.dump(content, f, ensure_ascii=False)
 
@@ -207,3 +225,8 @@ class Rcon_Server(Container):
         with open(json_file) as f:
             df = json.load(f)
         return df
+
+    def resourcePath(self, filename):
+        if hasattr(sys, "_MEIPASS"):
+            return os.path.join(sys._MEIPASS, filename)
+        return os.path.join(filename)

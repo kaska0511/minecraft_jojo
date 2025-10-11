@@ -37,13 +37,14 @@ class Your_Stand_Info(Container):
         ################################ 画面左側
         self.Left_Image = Image(
             #src_base64 = random.choice(list(IMAGES_BASE64)),
-            src_base64 = IMAGES_BASE64[self.YOUR_STAND].value,
+            src = self.resourcePath(IMAGES[self.YOUR_STAND].value),
             #height = 640,
             width = 350 # ※1 = 1100 - ※2
         )
 
         self.Left_Text = Text(
-            value = f"引用元:https://jojoasbr.bn-ent.net/character/"
+            value = f"引用元:https://jojoasbr.bn-ent.net/character/",
+            selectable=True
         )
         self.Left_Column = Column(
             alignment = MainAxisAlignment.CENTER,
@@ -58,30 +59,36 @@ class Your_Stand_Info(Container):
             size = 40,
             weight = FontWeight.BOLD,
             bgcolor = colors.BLUE_600,
+            selectable=True,
         )
         self.individual_stand_name = Text(
             value = STAND_NAME[self.YOUR_STAND].value,
             size = 20,
+            selectable=True,
         )
         self.stand_overview = Text(
             value = "スタンド概要",
             size = 40,
             weight = FontWeight.BOLD,
             bgcolor = colors.ORANGE_800,
+            selectable=True,
         )
         self.individual_stand_overview = Text(
             value = STAND_OVERVIEW[self.YOUR_STAND].value,
             size = 20,
+            selectable=True,
         )
         self.stand_detail = Text(
             value = "スタンド詳細",
             size = 40,
             weight=FontWeight.BOLD,
             bgcolor = colors.GREEN_700,
+            selectable=True,
         )
         self.individual_stand_detail = Text(
             value = STAND_DETAIL[self.YOUR_STAND].value,
             size = 20,
+            selectable=True,
         )
         self.Right_Column = Column(
             alignment = MainAxisAlignment.START,              # 垂直方向トップに移動。
@@ -97,12 +104,12 @@ class Your_Stand_Info(Container):
             alignment=MainAxisAlignment.SPACE_BETWEEN,
             controls = [self.Left_Column, self.Right_Column]
         )   # 左右結合
-        
+
 
 
     def restart(self, e):
         self.get_my_stand()
-        self.Left_Image.src_base64 = IMAGES_BASE64[self.YOUR_STAND].value
+        self.Left_Image.src = self.resourcePath(IMAGES[self.YOUR_STAND].value)
         self.individual_stand_name.value = STAND_NAME[self.YOUR_STAND].value
         self.individual_stand_overview.value = STAND_OVERVIEW[self.YOUR_STAND].value
         self.individual_stand_detail.value = STAND_DETAIL[self.YOUR_STAND].value
@@ -143,10 +150,10 @@ class Your_Stand_Info(Container):
             #クライアント情報rconserver.jsonからスタンド名を取得
             str_file = 'rconserver.json'
             contns = self.open_json(str_file)
-            if contns['stand_name'] == '':  # 何も割り当てられていない場合はとりあえずスタプラ
+            if contns['stand_name'] == 'empty':  # 何も割り当てられていない場合はとりあえずスタプラ
                 contns['stand_name'] = 'Star_Platinum'
             self.YOUR_STAND = CONVERT_STAND_NAME(contns['stand_name']).name
-        
+
 
     def open_json(self, json_file):
         '''
@@ -162,7 +169,7 @@ class Your_Stand_Info(Container):
         with open(json_file) as f:
             df = json.load(f)
         return df
-        
+
     def get_self_playername(self):
         '''
         自身のプレイヤー名を取得します。
@@ -172,6 +179,7 @@ class Your_Stand_Info(Container):
         Return
             自身のプレイヤー名
         '''
+        str_file = ('launcher_accounts_microsoft_store.json', 'launcher_accounts.json')
         os_name = sys.platform
 
         if os_name == 'darwin':
@@ -179,14 +187,18 @@ class Your_Stand_Info(Container):
             row_result = subprocess.run(['whoami'], capture_output=True, text=True)
             active_user = row_result.stdout.strip()
             str_dir = f'/Users/{active_user}/Library/Application Support/minecraft'
-            str_file = 'launcher_accounts.json'
-            contents = self.open_json(f'{str_dir}/{str_file}')
+            try:
+                contents = self.open_json(f'{str_dir}/{str_file[1]}')
+            except Exception:
+                contents = self.open_json(f'{str_dir}/{str_file[0]}')
 
         elif os_name == 'win32':
             str_dir = os.getenv('APPDATA') + '\\.minecraft'
-            str_file = 'launcher_accounts_microsoft_store.json'
-            contents = self.open_json(f'{str_dir}\\{str_file}')
-        
+            try:
+                contents = self.open_json(f'{str_dir}\\{str_file[0]}')
+            except Exception:
+                contents = self.open_json(f'{str_dir}\\{str_file[1]}')
+
         return self.find_value(contents, 'name')
 
     def find_value(self, dictionary, key):
@@ -208,3 +220,8 @@ class Your_Stand_Info(Container):
                 if item is not None:
                     return item
         return None
+
+    def resourcePath(self, filename):
+        if hasattr(sys, "_MEIPASS"):
+            return os.path.join(sys._MEIPASS, filename)
+        return os.path.join(filename)

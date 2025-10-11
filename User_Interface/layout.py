@@ -34,11 +34,11 @@ class Your_Stand_Info_Tab(Tab):
         super().__init__()
         self.page = page
         self.text = "Your Stand Info"
-        self.icon = icons.SETTINGS_ACCESSIBILITY
+        self.icon = icons.GROUP_SHARP
         self.content = Your_Stand_Info(self.page)
 
 
-class Stand_Assign_Tab(Tab):     
+class Stand_Assign_Tab(Tab):
     def __init__(self):
         super().__init__()
         self.text = "Stand Assign"
