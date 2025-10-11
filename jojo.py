@@ -24,6 +24,7 @@ from stands.Cream import Cream
 from stands.Crazy_Diamond import Crazy_Diamond
 from stands.Gold_Experience import Gold_Experience
 from stands.King_Crimson import King_Crimson
+from stands.Dirty_Deeds_Done_Dirt_Cheap import Dirty_Deeds_Done_Dirt_Cheap
 
 def main(ext, is_server):
 
@@ -112,6 +113,7 @@ def main(ext, is_server):
             stand = None
 
         if stand is None:   #インスタンスが入ると再度インスタンス化されることは無くなる。
+            ### スタンド追加時必須修正コード
             match my_standname:
                 case 'The_World':
                     stand = The_World(name=ext.name, ext=ext, controller=controller)
@@ -142,6 +144,9 @@ def main(ext, is_server):
 
                 case 'King_Crimson':
                     stand = King_Crimson(name=ext.name, ext=ext, controller=controller)
+
+                case 'Dirty_Deeds_Done_Dirt_Cheap':
+                    stand = Dirty_Deeds_Done_Dirt_Cheap(name=ext.name, ext=ext, controller=controller)
 
                 case _:
                         print('全てにマッチ')

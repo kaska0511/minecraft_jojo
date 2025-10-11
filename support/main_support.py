@@ -87,7 +87,10 @@ def make_stand_list():
     Return
         なし
     '''
-    first = {"The_World": "1dummy", "TuskAct4": "1dummy", "Killer_Queen": "1dummy", "Catch_The_Rainbow": "1dummy", "Twentieth_Century_Boy": "1dummy", "Little_Feat": "1dummy", "Cream": "1dummy", "Crazy_Diamond": "1dummy", "Gold_Experience": "1dummy", "King_Crimson": "1dummy"}
+    ### スタンド追加時必須修正コード
+    first = {"The_World": "1dummy", "TuskAct4": "1dummy", "Killer_Queen": "1dummy", "Catch_The_Rainbow": "1dummy", \
+             "Twentieth_Century_Boy": "1dummy", "Little_Feat": "1dummy", "Cream": "1dummy", "Crazy_Diamond": "1dummy", \
+             "Gold_Experience": "1dummy", "King_Crimson": "1dummy", "Dirty_Deeds_Done_Dirt_Cheap": "1dummy"}
     with open('./json_list/stand_list.json', 'w', encoding='utf-8') as f:
         json.dump(first, f, ensure_ascii=False)
 
@@ -433,7 +436,10 @@ def death_or_logout_check(stand):
         stand.cancel_stand()
 
 def stand_lost_check(ext, stand, my_standname):
-    item_name_list = ("ザ・ワールド", "タスクAct4", "キラークイーン", "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", "リトル・フィート", "クリーム", "クレイジー・ダイヤモンド", "ゴールド・エクスペリエンス", "キング・クリムゾン")
+    ### スタンド追加時必須修正コード
+    item_name_list = ("ザ・ワールド", "タスクAct4", "キラークイーン", "キャッチ・ザ・レインボー", "20thセンチュリーボーイ", \
+                        "リトル・フィート", "クリーム", "クレイジー・ダイヤモンド", "ゴールド・エクスペリエンス", "キング・クリムゾン", \
+                        "Dirty deeds done dirt cheap")
 
     match my_standname:
         case 'The_World':
@@ -479,6 +485,11 @@ def stand_lost_check(ext, stand, my_standname):
         case 'King_Crimson':
             if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
                 ext.extension_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[9] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
+
+        case 'Dirty_Deeds_Done_Dirt_Cheap':
+            if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
+                ext.extension_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[10] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
+
         case _:
                 pass
 
