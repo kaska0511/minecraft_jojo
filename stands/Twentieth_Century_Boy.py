@@ -140,14 +140,14 @@ class Twentieth_Century_Boy(Common_func):
     def effect_stand(self):
         self.ext.extension_command(f'effect give {self.name} minecraft:resistance infinite 255 true')          # 耐性
         self.ext.extension_command(f'effect give {self.name} minecraft:fire_resistance infinite 255 true')     # 火炎耐性
-        self.ext.extension_command(f'effect give {self.name} minecraft:water_breathing infinite 255 true')     # 水中呼吸
-        #self.ext.extension_command(f'effect give {self.name} minecraft:saturation infinite 1 true')          # 満腹度回復（本当は止めたかった）
+        self.ext.extension_command(f'effect give {self.name} minecraft:breath_of_the_nautilus infinite 255 true')     # オウムガイの息吹（酸素ゲージは減らず増えない）
+        # 満腹度を減らないようにすることも検討したが、そもそもマイクラの仕様として満腹度は特定の動作（走る、ジャンプ他）以外は減少しない。
+        # 満腹度を減少させない動作のうちの一つに歩行があり、能力発動中は座っているだけなので満腹度は減らない。
 
     def clear_effect(self):
         self.ext.extension_command(f'effect clear {self.name} minecraft:resistance')          # 耐性
         self.ext.extension_command(f'effect clear {self.name} minecraft:fire_resistance')     # 火炎耐性
-        self.ext.extension_command(f'effect clear {self.name} minecraft:water_breathing')     # 水中呼吸
-        #self.ext.extension_command(f'effect clear {self.name} minecraft:saturation')          # 満腹度回復
+        self.ext.extension_command(f'effect clear {self.name} minecraft:breath_of_the_nautilus')     # オウムガイの息吹
 
     def kill_stand(self):
         ride_name, self.ride_uuid = self.get_rider()
