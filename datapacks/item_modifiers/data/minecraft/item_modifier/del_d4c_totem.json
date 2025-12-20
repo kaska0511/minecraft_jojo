@@ -1,0 +1,27 @@
+[
+	{
+		"function": "minecraft:set_components",
+		"components": {
+			"!minecraft:death_protection": {
+				"death_effects": [
+					{
+						"type":"clear_all_effects"
+					},
+					{
+						"type":"apply_effects",
+						"effects": [
+							{
+								"id":"resistance",
+								"amplifier":23,
+								"duration":-1,
+								"show_particles":false,
+								"show_icon":false
+							}
+						]
+					}
+				]
+			}
+		}
+	}
+]
+
