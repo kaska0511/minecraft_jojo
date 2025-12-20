@@ -1,7 +1,7 @@
 .VSCodeCounter/
 images/
-test/
 build/
 dist/
+sound/
 rconserver.json
 *.pyc
