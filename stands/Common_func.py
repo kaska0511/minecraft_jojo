@@ -498,7 +498,22 @@ class Common_func:
 
         return ride_motion_bool, result
 
-    def get_dimension(self, tag):
+    def get_dimension(self):
+        '''
+        自分のディメンションを調べます。
+
+        Parameter
+            None
+
+        Return
+            dimention : str
+                自分が居るディメンションが次の中から値が返されます。\n
+                "minecraft:overworld", "minecraft:the_nether", "minecraft:the_end"
+        '''
+        return self.ext.extension_command(f'data get entity {self.name} Dimension')
+
+
+    def get_dimension_by_tag(self, tag):
         '''
         UUIDを持つエンティティのディメンションを調べます。
 
