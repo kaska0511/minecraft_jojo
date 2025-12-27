@@ -34,7 +34,7 @@ def main(ext, is_server):
         add_cooldown_datapack()
         ext.extension_command('datapack enable "file/off_cooldown"')
         # ゲームルール設定
-        ext.extension_command("gamerule sendCommandFeedback false")
+        ext.extension_command("gamerule send_command_feedback false")   # 1.21.11?よりgameruleコマンドシンタックス変更
         # titleコマンドの基本表示設定（時間）
         ext.extension_command('title @a times 0 0.8s 0.2s')
         # 情報取得用チャンクを強制ロード設定
