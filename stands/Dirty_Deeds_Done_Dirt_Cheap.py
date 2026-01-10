@@ -6,11 +6,14 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
     _keep_alter_ego_time = 120  # 召喚した分身を保つ時間(sec)
     _charge_time = 180  # 召喚可能分身数を増やすために必要なチャージ時間(1体/N sec)
     _max_alter_ego = 5  # 召喚可能な最大分身数
+    _hold_teleport_time = 30  # テレポート状態を維持する時間(sec)
 
     def __init__(self, name, ext, controller) -> None:
         super().__init__(name, ext, controller)
         self.number_of_summons_possible = 0  # 召喚可能な分身数
         self.charge_base_time = 0
+        self.hold_base_time = 0  # テレポート状態の経過時間を計測するための基準時間
+        self.teleport_mode = False  # テレポート状態かどうかのフラグ
 
 
     def __del__(self):
@@ -36,13 +39,20 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         # 召喚可能分身数を増やす時間計測
         self.ability_time_counter()
 
-        if self.get_OffHandItem()[1] == type(self).__name__:
+        if self.get_OffHandItem()[1] == type(self).__name__ and not self.teleport_mode:
             # スタンドアイテムを握っているだけで発動する能力をここに記述する
             # 主に挟み込み確認と、挟み込みによる回復処理
             # この場合、self.run_standはTrueにはならない。
-            is_stuck = self.check_get_stuck()
-            if is_stuck:
-                self.teleport_and_recovery()
+            if self.check_get_stuck():
+                # この時点では並行世界へのテレポートだけ行う。
+                self.teleport_paralel_world()
+                self.teleport_mode = True
+                self.run_stand = True
+
+        if self.teleport_mode:
+            # テレポートしている時間を設定すべき。時間の長さによっては予期せぬ行動により思いもよらない挙動を見せる可能性があり十分な検討が必要。
+            self.recovery_and_teleport_base_world()
+            return
 
 
         # 分身能力未発動　かつ　右クリックしたとき、ドア(トラップドア、フェンスゲート含む)を使用していたら（右クリックした後open=false）挟み込み発動
@@ -146,7 +156,10 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
 
     def cancel_stand(self):
         # ここにスタンドのキャンセル処理を記述する
-        pass
+        self.enable_waypoint()
+        # 分身を削除して元に戻る処理
+        self.ext.extension_command(f'kill @e[tag=D4C_alter_ego,tag=D4C_effect_alter_ego,tag=D4C_pin]')
+        self.teleport_mode = False
 
 
     def prepare_datapack(self):
@@ -154,25 +167,70 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         pass
 
 
-    def teleport_and_recovery(self):
-        # 1. 現在地にピンを刺す
+    def teleport_paralel_world(self):
+        # テレポートしたら位置情報を悟られないようにする。
+        self.disable_waypoint()
+        # テレポート前の現在地にピンを刺す
         self.prick_pin()
-        # 2. 本体を遠方にテレポートさせる
+        # 本体を遠方にテレポートさせる
         self.forward_teleport()
-        # 3. 分身を召喚する
+        # 分身を召喚する
         self.summon_alter_ego()
-        # 4. 分身と入れ替わり回復（テレポート含む）→タスクact4の攻撃はテレポートしても追ってくる
-        self.replace_with_alter_ego()
-        # 5. 本体を元の位置(ピン)にテレポートさせ戻る
-        self.backward_teleport()
-        # 6. 刺したピンを抜く
-        self.pull_pin()
+        # 分身と本体の距離を少し離す
+        self.spread_alter_ego(distance=5)
+
+
+    def recovery_and_teleport_base_world(self):
+        def teleport_base_world():
+            # 本体を元の位置(ピン)にテレポートさせ戻る
+            self.backward_teleport()
+            # 刺したピンを抜く
+            self.pull_pin()
+            # ロケーターバーの送受信設定をリセット
+            self.enable_waypoint()
+            # テレポートモード解除を忘れずに。
+            self.teleport_mode = False
+            self.run_stand = False
+            self.hold_base_time = 0
+
+        self.hold_base_time = time.time() if self.hold_base_time == 0 else self.hold_base_time
+        if self._hold_teleport_time < time.time() - self.hold_base_time:
+            # リスポーン地点をピンの位置に再設定（ベッドなどでリスポーン地点が更新されている可能性がありそれを解除するため）
+            self.set_spawnpoint_pin()
+            # 分身に触れていれば、分身と入れ替わり回復（テレポート含む）→タスクact4の攻撃はテレポートしても追ってくる
+            is_recovered =self.replace_with_alter_ego()
+            # 回復済みなら元の地点へ戻る処理
+            if is_recovered: # このif文に挟み込み判定も入れようと思ったが、テレポート先で雨が降っていると速攻で戻ることになるので取りやめ。テレポート先では挟み込み判定は行わない。
+                teleport_base_world()
+        else:
+            teleport_base_world()
+
+
+    def disable_waypoint(self):
+        # ロケーターバーの送受信を無効化する。
+        # これにより経験値バーに本体の場所が分からなくなり、逆に他プレイヤーの場所もわからなくなる。
+        self.ext.extension_command(f'attribute {self.name} minecraft:waypoint_receive_range base set 0')
+        self.ext.extension_command(f'attribute {self.name} minecraft:waypoint_transmit_range base set 0')
+
+
+    def enable_waypoint(self):
+        # ロケーターバーの送受信を有効化する。
+        self.ext.extension_command(f'attribute {self.name} minecraft:waypoint_receive_range base reset')
+        self.ext.extension_command(f'attribute {self.name} minecraft:waypoint_transmit_range base reset')
 
 
     def prick_pin(self):
         # 現在地を記録
         self.ext.extension_command(f'execute as {self.name} at @s run summon minecraft:marker ~ ~ ~ {{Tags:["D4C_pin"],Invulnerable:1b,NoGravity:1b}}')
+        # リスポーン地点も設定する
+        self.set_spawnpoint_pin()
 
+
+    def set_spawnpoint_pin(self):
+        # リスポーン地点をピンの位置に設定
+        # ベッドやリスポーンアンカーで上書き可能だが、コマンドで更に上書きすることも可能
+        # つまり後勝ちの処理
+        self.ext.extension_command(f'execute as @n[tag=D4C_pin] at @s run spawnpoint {self.name} ~ ~ ~')
 
     def pull_pin(self):
         # 現在地記録のために刺したピンを抜く処理
@@ -197,25 +255,31 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         self.ext.extension_command(f'execute as {self.name} at @s run tp @s @n[tag=D4C_pin,limit=1]')
 
 
-    def replace_with_alter_ego(self):
+    def replace_with_alter_ego(self, tag="D4C_alter_ego"):
         # 本体を分身と入れ替える処理
-        # イメージとしては以下
-        # 分身の方を向く。
-        # スペクテイターモードになる？
-        # 分身の位置に自動で移動する。（テレポート？）→プレイヤーによる予期せぬ操作ミスが起きかねないので、アマスタかマーカーに乗せる。
-        # 分身を削除。
-        # 分身に攻撃するまでこの処理を続ける。
-        while (self.get_touch_alter_ego()):
-            # 分身を動かす
-            # 触れたら終わる→elseへ
-            # もし、分身若しくは本体が死亡していたらelseへ
-            if not self.get_player_Death():
-                break
+        # 但し分身を攻撃するまでは回復しない。
+
+        if self.get_touch_alter_ego():
+            # 触れたら回復＆分身削除処理
+            # 行動トレース元のオオカミを削除
+            self.ext.extension_command(f'kill @n[tag={tag},type=wolf]')
+            # 本体の位置に演出用の分身を召喚。
+            self.summon_alter_ego(tags='D4C_effect_alter_ego')
+            # 演出用分身の目線を本体の目線に合わせる
+            self.ext.extension_command(f'data modify entity @e[tag=D4C_effect_alter_ego,limit=1] Rotation set from entity {self.name} Rotation')
+            # 本体を分身の位置にテレポート
+            self.ext.extension_command(f'tp {self.name} @n[tag={tag},type=mannequin]')
+            # 全ての効果を解除し、即時回復
             self.clear_all_effects_and_instant_health()
-        else:
             # 分身を削除
-            self.ext.extension_command(f'kill @n[tag=D4C_alter_ego]')
-            ...
+            self.ext.extension_command(f'kill @n[tag={tag},tag=D4C_effect_alter_ego]')
+            return True
+        else:
+            # まだ分身に触れていない。
+            # 分身を移動させるだけ
+            self.manipulate_alter_ego_all()
+            self.manipulate_alter_ego_single()
+            return False
 
 
     def get_touch_alter_ego(self):
@@ -230,20 +294,72 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         self.ext.extension_command(f'effect give {self.name} minecraft:instant_health 1 124 false')
 
 
-    def summon_alter_ego(self, tag="D4C_alter_ego"):
+    def summon_alter_ego(self, tags="D4C_alter_ego"):
+        tag = ''
+        for_owner = ''
+
+        if type(tags) == list or type(tags) == tuple:
+            # 複数タグが渡された場合、","で連結して一つの文字列にする
+            if len(tags) == 0:
+                # 何もタグがない場合は処理しない
+                return False
+            elif len(tags) > 1:
+                # tagに入れられるように一つの文字列にする
+                # 例：tag1","tag2","tag3 ※両端にダブルクォートが付かないことに注意
+                tag = '","'.join(tags)
+                # Owner設定のため、tag=a,tag=bのように整形する
+                for_owner = ','.join(f'tag={tag}' for tag in tags)
+            else:
+                tag = tags[0]
+                # Owner設定のため、tag=aのように整形する
+                for_owner = f'tag={tags[0]}'
+
+        else:
+            if tags == '' or tags is None:
+                # 何もタグがない場合は処理しない
+                return False
+            tag = tags
+            for_owner = f'tag={tags}'
+
         # 極小の透明なオオカミを召喚、ほぼ同時にマネキンを召喚
         # オオカミの大きさが0.7d：マネキンよりも当たり判定が小さく（マネキンが攻撃されたときオオカミがダメージを吸収しずらい）、
         # か0.7d以下だとオオカミが壁にぶつかった時、マネキンがめり込み窒息することがある。その防止のため
-        self.ext.extension_command('execute as '+ self.name +' at @s run summon minecraft:wolf ~ ~ ~ {attributes:[{id:"minecraft:scale",base:0.7d},{id:"minecraft:attack_damage",base:0d}],active_effects:[{duration:-1,show_particles:0b,id:"minecraft:invisibility"}],Tags:["'+ tag +'"],Silent:1b}')
-        self.ext.extension_command(f'data modify entity @n[type=wolf,tag={tag},limit=1] Invulnerable set value 1b')    # 上記だと文字数が多すぎるため、別コマンドで設定
-        self.ext.extension_command('execute as '+ self.name +' at @s run summon minecraft:mannequin ~ ~ ~ {Tags:["'+ tag +'"],profile:'+ self.name +'}')
-        self.ext.extension_command(f'execute as {self.name} at @s run data modify entity @n[type=wolf,tag={tag},limit=1] Owner set from entity {self.name} UUID')    # オオカミの飼い主を本体へ
+        self.ext.extension_command('execute as '+ self.name +' at @s run summon minecraft:mannequin ~ ~ ~ {Tags:["'+ tag +'"],profile:'+ self.name +',CustomName:'+ self.name +',hide_description:true}')
+        # 大きさ0.7、攻撃力0、透明化、SEナシ、無敵のオオカミを召喚
+        self.ext.extension_command('execute as '+ self.name +' at @s run summon minecraft:wolf ~ ~ ~ {attributes:[{id:"minecraft:scale",base:0.7d},{id:"minecraft:attack_damage",base:0d}],active_effects:[{duration:-1,show_particles:0b,id:"minecraft:invisibility"}],Tags:["'+ tag +'"],Silent:1b,Invulnerable:1b}')
+        # オオカミの飼い主を本体へ設定
+        self.ext.extension_command(f'execute as {self.name} at @s run data modify entity @n[type=wolf,{for_owner},limit=1] Owner set from entity {self.name} UUID')
 
-    def manipulate_alter_ego(self):
-        # 定期実行
-        # 分身の移動と攻撃処理を記述する
-        pass
 
+    def spread_alter_ego(self, distance=5, tag="D4C_alter_ego"):
+        # 召喚した分身と本体の距離を少し離す処理
+        # distance:本体から分身までの距離
+
+        # ネザー以外なら高さ指定は不要
+        self.ext.extension_command(f'execute as {self.name} at @s unless dimension minecraft:the_nether run spreadplayers ~ ~ 1 {distance} false @e[tag={tag}]')
+        # ネザーなら高さ指定を行う（y座標100以下）
+        self.ext.extension_command(f'execute as {self.name} at @s if dimension minecraft:the_nether run spreadplayers ~ ~ 1 {distance} under 100 false @e[tag={tag}]')
+
+
+    def manipulate_alter_ego_all(self, tag="D4C_alter_ego"):
+        # 全ての分身を操作する処理
+        # 主に攻撃対象者を分身に伝える処理
+        # 分身はオオカミの動きをトレースするが、オオカミが攻撃対象とするエンティティは全てではない
+        # そこで、分身に攻撃対象を伝えるためにオオカミのangry_atを操作する。
+        # パターン1. 能動的に本体が攻撃したエンティティを伝播させる
+        self.ext.extension_command(f'execute as @e[nbt=!{{HurtTime:0s}}] at @s on attacker if entity @s[name={self.name}] run execute as @e[distance=..1,limit=1] at @s run data modify entity @n[type=wolf,tag={tag}] angry_at set from entity @s UUID')
+        # パターン2. 受動的に本体に対して攻撃したエンティティを伝播させる
+        self.ext.extension_command(f'execute as {self.name} at @s on attacker run data modify entity @n[type=wolf,tag={tag}] angry_at set from entity @s UUID')
+
+
+    def manipulate_alter_ego_single(self, tag="D4C_alter_ego"):
+        # 単一の分身を操作する処理
+        # 主に分身の移動、攻撃する処理
+        self.ext.extension_command(f'tp @n[type=mannequin,tag={tag}] @n[type=wolf,tag={tag}]')
+        # オオカミが攻撃対象としているエンティティをマネキンが攻撃する。条件は攻撃射程距離（distance）に入る必要がある。on targetによってコマンド実行者が変わるため注意。
+        self.ext.extension_command(f'execute as @n[type=wolf,tag={tag}] at @s on target if entity @s[distance=..5,tag={tag}] run damage @s 5 minecraft:player_attack by @n[type=mannequin,tag={tag}]')
+        # 上記と同条件にすることで攻撃とほぼ同時に攻撃モーションを行う。
+        self.ext.extension_command(f'execute as @n[type=wolf,tag={tag}] at @s on target if entity @s[distance=..5,tag={tag}] run swing @n[type=mannequin,tag={tag}] mainhand')
 
 
 
