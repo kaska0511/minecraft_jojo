@@ -155,7 +155,7 @@ class TuskAct4(Common_func):
         self.ext.extension_command(f'execute as @e[name=TuskAct4,limit=1] at @s run tp @e[name=TuskAct4,limit=1] ^ ^ ^2')  # 顔が向いている方向に前進。2は速度。0に近づくほど遅くなる。
 
         # ターゲットのディメンション確認。DimentionのNBTは現状プレイヤーしか持たず、ターゲットのディメンションに合わせて移動させる。
-        target_dimention = self.get_dimension("Tusk_Target")
+        target_dimention = self.get_dimension_by_tag("Tusk_Target")
         if target_dimention is not None:
             self.ext.extension_command(f'execute as @e[name=TuskAct4,limit=1] at @s in {target_dimention.strip('"')} run tp ~ ~ ~')
 
