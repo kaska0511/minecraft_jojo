@@ -31,9 +31,10 @@ def main(ext, is_server):
     ext.name = get_self_playername()
 
     if is_server:
-        # 実質ザ・ワールド用無敵時間無視データパック配置
-        add_cooldown_datapack()
-        ext.extension_command('datapack enable "file/off_cooldown"')
+        # スタンド能力補助データパック配置
+        #add_cooldown_datapack()
+        add_datapack()
+        enable_datapack(ext)
         # ゲームルール設定
         ext.extension_command("gamerule send_command_feedback false")   # 1.21.11?よりgameruleコマンドシンタックス変更
         # titleコマンドの基本表示設定（時間）

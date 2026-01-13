@@ -16,6 +16,7 @@ class IMAGES(StrEnum):
     CRAZY_DIAMOND = 'images/trim_crazy_d.png'
     GOLD_EXPERIENCE = 'images/trim_gold_ex.png'
     KING_CRIMSON = 'images/trim_diaboro.png'
+    DIRTY_DEEDS_DONE_DIRT_CHEAP = 'images/trim_d4c.png'
 
 # jsonから読み取った情報をEnumで扱うために変換する
 class CONVERT_STAND_NAME(StrEnum):
@@ -29,6 +30,7 @@ class CONVERT_STAND_NAME(StrEnum):
     CRAZY_DIAMOND = 'Crazy_Diamond'
     GOLD_EXPERIENCE = 'Gold_Experience'
     KING_CRIMSON = 'King_Crimson'
+    DIRTY_DEEDS_DONE_DIRT_CHEAP = 'Dirty_Deeds_Done_Dirt_Cheap'
 
 # Rcon_Server画面に表示させるスタンド一覧。現在は各部主人公とラスボスのみ記載。
 class HOME_IMAGE(Enum):
@@ -39,6 +41,7 @@ class HOME_IMAGE(Enum):
     TUSKACT4 = 5
     GOLD_EXPERIENCE = 6
     KING_CRIMSON = 7
+    DIRTY_DEEDS_DONE_DIRT_CHEAP = 8
 
 # 日本語のスタンド名
 class STAND_NAME(StrEnum):
@@ -52,6 +55,7 @@ class STAND_NAME(StrEnum):
     CRAZY_DIAMOND = 'クレイジー・ダイヤモンド'
     GOLD_EXPERIENCE = 'ゴールド・エクスペリエンス'
     KING_CRIMSON = 'キング・クリムゾン'
+    DIRTY_DEEDS_DONE_DIRT_CHEAP = 'Dirty deeds done dirt cheap'
 
 # スタンド情報概要
 class STAND_OVERVIEW(StrEnum):
@@ -65,6 +69,7 @@ class STAND_OVERVIEW(StrEnum):
     CRAZY_DIAMOND = 'mobやアイテムを瞬時に治癒することができます。（ただし自分自身を治癒することのみ不可能。）'
     GOLD_EXPERIENCE = '生命エネルギーをブロックに流し生物を生み出します。また生命エネルギーは自分を含めたあらゆる生物を回復させます。'
     KING_CRIMSON = '30秒間受けるダメージを0にし、カウンター攻撃を行います。カウンターが発動すると数秒時間が消し飛びます。'
+    DIRTY_DEEDS_DONE_DIRT_CHEAP = '並行世界へ移動し回復したり、並行世界から残機となる分身を呼び出します。'
 
 # スタンド情報詳細
 class STAND_DETAIL(StrEnum):
@@ -140,3 +145,5 @@ class STAND_DETAIL(StrEnum):
                     'もう一度能力を発動させるためには30秒待つ必要があります。\n\n'\
                     '能力2（エピタフ）：メインスロット2～9：5秒間受けるダメージを軽減させることができます。\n'\
                     'クールタイムは5秒です。\n\n'
+
+    DIRTY_DEEDS_DONE_DIRT_CHEAP = '能力1：並行世界へ移動します。移動中は無敵状態になります。\n'

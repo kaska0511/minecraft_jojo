@@ -3,6 +3,7 @@ import json
 import os
 import random
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -561,6 +562,7 @@ def new_joinner_func(ext, myname):
     ext.extension_command(f'execute unless entity @e[name=List,type=minecraft:armor_stand,tag={myname}] run tag @e[name=List,type=minecraft:armor_stand,limit=1] add {myname}')
 
 def add_cooldown_datapack():
+    # この関数はadd_datapack()関数で賄うため、いずれ削除予定
     world_name = 'world'
 
     str_file = 'server.properties'
@@ -586,3 +588,31 @@ def add_cooldown_datapack():
 
     save_json(pack_mcmeta, datapack_dir + 'off_cooldown/pack.mcmeta')
     save_json(bypasses_cooldown_json, full_path + '/bypasses_cooldown.json')
+
+def add_datapack():
+    world_name = 'world'
+
+    str_file = 'server.properties'
+    with open(f'./{str_file}') as file:
+        content = [contsnts.strip() for contsnts in file.readlines()]
+        for i in content:
+            if None != re.search(r'^level-name=', i):
+                world_name = re.sub(r'^level-name=', '', i)
+
+
+    source_dir = 'datapacks/'
+    datapack_dir = f'./{world_name}/datapacks/'
+
+    try:
+        shutil.copytree(source_dir, datapack_dir, dirs_exist_ok=True)
+        print(f"Datapack copied successfully from '{source_dir}' to '{datapack_dir}'.")
+    except Exception as e:
+        print(f"An error occurred while copying datapack: {e}")
+
+def enable_datapack(ext):
+        # ザ・ワールドのクールダウン無効化データパックを有効化
+        ext.extension_command('datapack enable "file/off_cooldown"')
+        # D4Cの挟み込みブロックタグ一覧データパックを有効化
+        ext.extension_command('datapack enable "file/block_tags"')
+        # D4Cのトーテム化アイテム修正データパックを有効化
+        ext.extension_command('datapack enable "file/item_modifiers"')

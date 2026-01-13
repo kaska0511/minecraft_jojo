@@ -1,19 +1,24 @@
+import random
 import time
 from stands.Common_func import Common_func
 
 class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
     # 能力の定数
     _keep_alter_ego_time = 120  # 召喚した分身を保つ時間(sec)
-    _charge_time = 180  # 召喚可能分身数を増やすために必要なチャージ時間(1体/N sec)
-    _max_alter_ego = 5  # 召喚可能な最大分身数
-    _hold_teleport_time = 30  # テレポート状態を維持する時間(sec)
+    _charge_time = 180          # 召喚可能分身数を増やすために必要なチャージ時間(1体/N sec)
+    _max_alter_ego = 5          # 召喚可能な最大分身数
+    _hold_teleport_time = 30    # テレポート状態を維持する時間(sec)
+    _hold_stay_time = 30        # 並行世界から基本世界へテレポートして帰ってきてからの最低在留時間(sec)
 
     def __init__(self, name, ext, controller) -> None:
         super().__init__(name, ext, controller)
-        self.number_of_summons_possible = 0  # 召喚可能な分身数
-        self.charge_base_time = 0
-        self.hold_base_time = 0  # テレポート状態の経過時間を計測するための基準時間
-        self.teleport_mode = False  # テレポート状態かどうかのフラグ
+        self.number_of_summons_possible = 0 # 召喚可能な分身数
+        self.charge_time_base = 0           # 召喚可能分身数を増やすためのチャージ時間を計測するための基準時間
+        self.hold_teleport_time_base = 0    # テレポート状態の経過時間を計測するための基準時間
+        self.hold_stay_time_base = 0        # 並行世界から基本世界へテレポートして帰ってきてからの最低在留時間を計測するための基準時間
+        self.teleport_prepare = True        # テレポート準備完了フラグ
+        self.teleport_mode = False          # テレポート状態かどうかのフラグ
+        self.loaded_pos = [0, 0]            # テレポート先の位置情報(x,z)
 
 
     def __del__(self):
@@ -23,6 +28,10 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
             return
+
+        # 初回テレポート先座標読み込み
+        if self.loaded_pos == [0, 0]:
+            self.forceload_add_teleport_pos()
 
         # 誰かがD4Cのスタンドアイテムを所持していたら、そのプレイヤーのインベントリから削除する。
         self.del_totem_other_players()
@@ -38,16 +47,27 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
 
         # 召喚可能分身数を増やす時間計測
         self.ability_time_counter()
+        # 並行世界から基本世界へテレポートして帰ってきてからの最低在留時間計測
+        if not self.teleport_prepare:
+            self.teleport_prepare = self.hold_time_for_base_world()
 
-        if self.get_OffHandItem()[1] == type(self).__name__ and not self.teleport_mode:
-            # スタンドアイテムを握っているだけで発動する能力をここに記述する
-            # 主に挟み込み確認と、挟み込みによる回復処理
-            # この場合、self.run_standはTrueにはならない。
-            if self.check_get_stuck():
-                # この時点では並行世界へのテレポートだけ行う。
-                self.teleport_paralel_world()
-                self.teleport_mode = True
-                self.run_stand = True
+        # 並行世界へテレポートし、分身と入れ替わり回復
+        if self.get_OffHandItem()[1] == type(self).__name__:
+            if self.teleport_prepare and (not self.teleport_mode):
+                # スタンドアイテムを握っているだけで発動する能力をここに記述する
+                # 主に挟み込み確認と、挟み込みによる回復処理
+                # この場合、self.run_standはTrueにはならない。
+                if self.check_get_stuck():
+                    # この時点では並行世界へのテレポートだけ行う。
+                    self.teleport_paralel_world()
+                    self.teleport_mode = True
+                    self.run_stand = True
+            elif not self.teleport_prepare and (not self.teleport_mode):
+                if self.check_get_stuck():
+                    # 並行世界から基本世界へテレポートして帰ってきてからの最低在留時間が経過していない場合は何もしない。
+                    wait_time = int(self._hold_stay_time - (time.time() - self.hold_stay_time_base))
+                    self.ext.extension_command(f'title {self.name} clear')
+                    self.ext.extension_command(f'title {self.name} actionbar "残り{wait_time}秒で再度テレポート可能"')
 
         if self.teleport_mode:
             # テレポートしている時間を設定すべき。時間の長さによっては予期せぬ行動により思いもよらない挙動を見せる可能性があり十分な検討が必要。
@@ -61,6 +81,7 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
             ...
 
         # 分身能力発動処理
+        """
         if self.run_stand == False and self.right_click:
             if self.get_OffHandItem()[1] == type(self).__name__:
                 # 分身召喚能力発動
@@ -69,6 +90,7 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
                         self.summon_alter_ego()
                     self.number_of_summons_possible = 0
                     self.run_stand = True
+        """
 
 
     def del_totem_other_players(self):
@@ -92,17 +114,17 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
             if self.number_of_summons_possible >= self._max_alter_ego:
                 return
 
-            if self.charge_base_time == 0:
+            if self.charge_time_base == 0:
                 # チャージに使う基準時間をセット
-                self.charge_base_time = time.time()
+                self.charge_time_base = time.time()
 
             now_time = time.time()
-            if now_time - self.charge_base_time >= self._charge_time:
-                self.charge_base_time = 0   # チャージに使う基準時間をリセット
+            if now_time - self.charge_time_base >= self._charge_time:
+                self.charge_time_base = 0   # チャージに使う基準時間をリセット
                 self.number_of_summons_possible += 1    # 召喚可能な分身の数を増やす
         else:
             # 能力発動中はチャージ時間と召喚可能分身数をリセット
-            self.charge_base_time = 0   # チャージに使う基準時間をリセット
+            self.charge_time_base = 0   # チャージに使う基準時間をリセット
             self.number_of_summons_possible = 0  # 召喚可能な分身数をリセット
 
 
@@ -160,6 +182,8 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         # 分身を削除して元に戻る処理
         self.ext.extension_command(f'kill @e[tag=D4C_alter_ego,tag=D4C_effect_alter_ego,tag=D4C_pin]')
         self.teleport_mode = False
+        self.run_stand = False
+        self.forceload_del_teleport_pos()
 
 
     def prepare_datapack(self):
@@ -182,6 +206,10 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
 
     def recovery_and_teleport_base_world(self):
         def teleport_base_world():
+            # 強制ロード解除
+            self.forceload_del_teleport_pos()
+            # 次のテレポート先を決定し、強制ロードしておく
+            self.forceload_add_teleport_pos()
             # 本体を元の位置(ピン)にテレポートさせ戻る
             self.backward_teleport()
             # 刺したピンを抜く
@@ -190,20 +218,32 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
             self.enable_waypoint()
             # テレポートモード解除を忘れずに。
             self.teleport_mode = False
+            self.teleport_prepare = False
             self.run_stand = False
-            self.hold_base_time = 0
+            self.hold_teleport_time_base = 0
 
-        self.hold_base_time = time.time() if self.hold_base_time == 0 else self.hold_base_time
-        if self._hold_teleport_time < time.time() - self.hold_base_time:
+        self.hold_teleport_time_base = time.time() if self.hold_teleport_time_base == 0 else self.hold_teleport_time_base
+        # 経過時間
+        leave_time = int(time.time() - self.hold_teleport_time_base)
+        if self._hold_teleport_time > leave_time:
+            self.ext.extension_command(f'title {self.name} clear')
+            self.ext.extension_command(f'title {self.name} actionbar "並行世界滞在時間残り：{self._hold_teleport_time - leave_time}秒…"')
             # リスポーン地点をピンの位置に再設定（ベッドなどでリスポーン地点が更新されている可能性がありそれを解除するため）
             self.set_spawnpoint_pin()
             # 分身に触れていれば、分身と入れ替わり回復（テレポート含む）→タスクact4の攻撃はテレポートしても追ってくる
-            is_recovered =self.replace_with_alter_ego()
             # 回復済みなら元の地点へ戻る処理
-            if is_recovered: # このif文に挟み込み判定も入れようと思ったが、テレポート先で雨が降っていると速攻で戻ることになるので取りやめ。テレポート先では挟み込み判定は行わない。
+            if self.replace_with_alter_ego(): # このif文に挟み込み判定も入れようと思ったが、テレポート先で雨が降っていると速攻で戻ることになるので取りやめ。テレポート先では挟み込み判定は行わない。
                 teleport_base_world()
         else:
             teleport_base_world()
+
+    def hold_time_for_base_world(self):
+        # 並行世界から基本世界へテレポートして帰ってきてからの最低在留時間を計測する
+        self.hold_stay_time_base = time.time() if self.hold_stay_time_base == 0 else self.hold_stay_time_base
+        if self._hold_stay_time > time.time() - self.hold_stay_time_base:
+            return False
+        self.hold_stay_time_base = 0
+        return True
 
 
     def disable_waypoint(self):
@@ -231,22 +271,60 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         # ベッドやリスポーンアンカーで上書き可能だが、コマンドで更に上書きすることも可能
         # つまり後勝ちの処理
         self.ext.extension_command(f'execute as @n[tag=D4C_pin] at @s run spawnpoint {self.name} ~ ~ ~')
+        self.ext.extension_command(f'execute as @n[tag=D4C_pin] at @s run forceload add ~ ~')  # リスポーン地点を強制読み込みしておく
 
     def pull_pin(self):
         # 現在地記録のために刺したピンを抜く処理
-        self.ext.extension_command(f'execute as {self.name} at @s run kill @n[tag=D4C_pin,limit=1]')
+        self.ext.extension_command(f'execute as {self.name} at @s run forceload remove ~ ~')  # リスポーン地点の強制読み込みを解除
+        self.ext.extension_command(f'execute as {self.name} at @s run kill @e[tag=D4C_pin]')
+
+
+    def _determine_teleport_pos(self):
+        # テレポート先の位置情報を決定する処理
+        # y座標は決定しない
+        number = (3000, 5000, 8000)
+        sign = (1, -1)
+
+        x_distance = random.choice(number) * random.choice(sign)
+        z_distance = random.choice(number) * random.choice(sign)
+        return x_distance, z_distance
+
+
+    def forceload_add_teleport_pos(self):
+        # テレポート先を強制読み込みする処理
+        # これによりspreadplayersコマンドでテレポートするときのラグを減らすことができる。
+        base_pos = self.get_pos()   # ['1.000d', '64.000d', '1.000d']
+        teleport_pos = self._determine_teleport_pos()
+        x = int(float(base_pos[0].replace('d', ''))) + teleport_pos[0]
+        z = int(float(base_pos[2].replace('d', ''))) + teleport_pos[1]
+
+        print(f'D4C teleport forceload position: x={x}, z={z}')  # デバッグ用
+        self.ext.extension_command(f'execute in minecraft:overworld run forceload add {x} {z}')
+        self.ext.extension_command(f'execute in minecraft:the_nether run forceload add {x} {z}')
+        self.ext.extension_command(f'execute in minecraft:the_end run forceload add {x} {z}')   #! エンドのボイドをロードする可能性あり
+        self.loaded_pos = [x, z]
+
+
+    def forceload_del_teleport_pos(self):
+        # テレポート先の強制読み込みを解除する処理
+        if self.loaded_pos == [0, 0]:
+            return
+        self.ext.extension_command(f'execute in minecraft:overworld run forceload remove {self.loaded_pos[0]} {self.loaded_pos[1]}')
+        self.ext.extension_command(f'execute in minecraft:the_nether run forceload remove {self.loaded_pos[0]} {self.loaded_pos[1]}')
+        self.ext.extension_command(f'execute in minecraft:the_end run forceload remove {self.loaded_pos[0]} {self.loaded_pos[1]}')
 
 
     def forward_teleport(self):
         # 本体をテレポートさせる処理
         # ディメンションは変更しない
-        # 現在地(~ ~)から2500*2500(5000)の範囲で、高さ100以下(under 100)の安全な地点に、チームメンバーが5ブロック以上(5)離れてテレポートする。同じ位置NG(false)
+        # 事前に強制ロードしておいた座標から1*1(1)の範囲で、高さ100以下(under 100)の安全な地点に、チームメンバーが5ブロック以上(5)離れてテレポートする。同じ位置NG(false)
         # /execute in minecraft:the_nether run spreadplayers ~ ~ 5 5000 under 100 false @a[team=KASKA0511]
 
         # ネザー以外なら高さ指定は不要
-        self.ext.extension_command(f'execute as {self.name} at @s unless dimension minecraft:the_nether run spreadplayers ~ ~ 5 5000 false @s')
+        self.ext.extension_command(f'execute as {self.name} at @s unless dimension minecraft:the_nether run spreadplayers {self.loaded_pos[0]} {self.loaded_pos[1]} 5 1 false @s')
         # ネザーなら高さ指定を行う（y座標100以下）
-        self.ext.extension_command(f'execute as {self.name} at @s if dimension minecraft:the_nether run spreadplayers ~ ~ 5 5000 under 100 false @s')
+        self.ext.extension_command(f'execute as {self.name} at @s if dimension minecraft:the_nether run spreadplayers {self.loaded_pos[0]} {self.loaded_pos[1]} 5 1 under 100 false @s')
+        time.sleep(0.5)  # 少し待機しないとテレポートが終わっていないことがある
 
 
     def backward_teleport(self):
@@ -260,19 +338,21 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         # 但し分身を攻撃するまでは回復しない。
 
         if self.get_touch_alter_ego():
+            self.ext.extension_command(f'title {self.name} clear')
+            self.ext.extension_command(f'title {self.name} actionbar "隣の世界の『能力』は このわたしに移った…"')
             # 触れたら回復＆分身削除処理
             # 行動トレース元のオオカミを削除
-            self.ext.extension_command(f'kill @n[tag={tag},type=wolf]')
+            #self.ext.extension_command(f'kill @e[tag={tag},type=wolf]')
             # 本体の位置に演出用の分身を召喚。
-            self.summon_alter_ego(tags='D4C_effect_alter_ego')
+            #self.summon_alter_ego(tags='D4C_effect_alter_ego')
             # 演出用分身の目線を本体の目線に合わせる
-            self.ext.extension_command(f'data modify entity @e[tag=D4C_effect_alter_ego,limit=1] Rotation set from entity {self.name} Rotation')
+            #self.ext.extension_command(f'data modify entity @e[tag=D4C_effect_alter_ego,limit=1] Rotation set from entity {self.name} Rotation')
             # 本体を分身の位置にテレポート
-            self.ext.extension_command(f'tp {self.name} @n[tag={tag},type=mannequin]')
+            #self.ext.extension_command(f'tp {self.name} @e[tag={tag},type=mannequin]')
             # 全ての効果を解除し、即時回復
             self.clear_all_effects_and_instant_health()
             # 分身を削除
-            self.ext.extension_command(f'kill @n[tag={tag},tag=D4C_effect_alter_ego]')
+            self.ext.extension_command(f'kill @e[tag={tag},tag=D4C_effect_alter_ego]')
             return True
         else:
             # まだ分身に触れていない。
@@ -284,14 +364,14 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
 
     def get_touch_alter_ego(self):
         # 本体が分身と入れ替わるために攻撃によって触れたかどうかを検知
-        is_touch = True if self.ext.extension_command(f'execute as @n[tag=D4C_alter_ego,type=minecraft:mannequin,nbt=!{{HurtTime:0s}}] at @s on attacker if entity @s[name={self.name}] run data get entity @s DeathTime') == '0s' else False
+        is_touch = True if self.ext.extension_command(f'execute as @n[tag=D4C_alter_ego,type=minecraft:mannequin,nbt=!{{HurtTime:0s}}] at @s on attacker if entity @s[name={self.name}] run data get entity {self.name} DeathTime') == '0s' else False
         return is_touch
 
     def clear_all_effects_and_instant_health(self):
         # 善悪関係なく、全ての効果を解除
         self.ext.extension_command(f'effect clear {self.name}')
         # 即時回復
-        self.ext.extension_command(f'effect give {self.name} minecraft:instant_health 1 124 false')
+        self.ext.extension_command(f'effect give {self.name} minecraft:instant_health 1 124 true')
 
 
     def summon_alter_ego(self, tags="D4C_alter_ego"):
@@ -322,11 +402,11 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
             for_owner = f'tag={tags}'
 
         # 極小の透明なオオカミを召喚、ほぼ同時にマネキンを召喚
-        # オオカミの大きさが0.7d：マネキンよりも当たり判定が小さく（マネキンが攻撃されたときオオカミがダメージを吸収しずらい）、
-        # か0.7d以下だとオオカミが壁にぶつかった時、マネキンがめり込み窒息することがある。その防止のため
+        # オオカミの大きさが0.8d：マネキンよりも当たり判定が小さく（マネキンが攻撃されたときオオカミがダメージを吸収しずらい）、
+        # か0.8d以下だとオオカミが壁にぶつかった時、マネキンがめり込み窒息することがある。その防止のため
         self.ext.extension_command('execute as '+ self.name +' at @s run summon minecraft:mannequin ~ ~ ~ {Tags:["'+ tag +'"],profile:'+ self.name +',CustomName:'+ self.name +',hide_description:true}')
-        # 大きさ0.7、攻撃力0、透明化、SEナシ、無敵のオオカミを召喚
-        self.ext.extension_command('execute as '+ self.name +' at @s run summon minecraft:wolf ~ ~ ~ {attributes:[{id:"minecraft:scale",base:0.7d},{id:"minecraft:attack_damage",base:0d}],active_effects:[{duration:-1,show_particles:0b,id:"minecraft:invisibility"}],Tags:["'+ tag +'"],Silent:1b,Invulnerable:1b}')
+        # 大きさ0.8、攻撃力0、透明化、SEナシ、無敵のオオカミを召喚
+        self.ext.extension_command('execute as '+ self.name +' at @s run summon minecraft:wolf ~ ~ ~ {attributes:[{id:"minecraft:scale",base:0.8d},{id:"minecraft:attack_damage",base:0d}],active_effects:[{duration:-1,show_particles:0b,id:"minecraft:invisibility"}],Tags:["'+ tag +'"],Silent:1b,Invulnerable:1b}')
         # オオカミの飼い主を本体へ設定
         self.ext.extension_command(f'execute as {self.name} at @s run data modify entity @n[type=wolf,{for_owner},limit=1] Owner set from entity {self.name} UUID')
 
