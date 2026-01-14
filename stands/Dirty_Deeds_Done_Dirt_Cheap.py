@@ -62,7 +62,7 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
                     self.teleport_paralel_world()
                     self.teleport_mode = True
                     self.run_stand = True
-            elif not self.teleport_prepare and (not self.teleport_mode):
+            elif (not self.teleport_prepare) and (not self.teleport_mode):
                 if self.check_get_stuck():
                     # 並行世界から基本世界へテレポートして帰ってきてからの最低在留時間が経過していない場合は何もしない。
                     wait_time = int(self._hold_stay_time - (time.time() - self.hold_stay_time_base))
@@ -140,8 +140,10 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
 
         ## Check.2 ブロックに埋まっているかチェック
         # 足下から^ ^0.5 ^の地点を検出すること。0だと足下に触れているものを調べることになり、実質-1を調べている。
-        is_in_block_lower_body = self.ext.extension_command(f'execute as {self.name} at @s rotated 90 0 unless block ^ ^0.5 ^ #test:d4c_group run data get entity @s DeathTime')
-        is_in_block_upper_body = self.ext.extension_command(f'execute as {self.name} at @s rotated 90 0 unless block ^ ^1.5 ^ #minecraft:air run data get entity @s DeathTime')
+        is_in_block_lower_body = self.ext.extension_command(f'execute as {self.name} at @s rotated 90 0 unless block ^ ^0.5 ^ #minecraft:air run data get entity @s DeathTime')   # 最初に下半身が空気ブロックで埋まっていないことを確認
+        if is_in_block_lower_body == '0s':
+            is_in_block_lower_body = self.ext.extension_command(f'execute as {self.name} at @s rotated 90 0 unless block ^ ^0.5 ^ #test:d4c_group run data get entity @s DeathTime')    # 具体的に「体が埋まっている」と言えるブロックかを確認
+        is_in_block_upper_body = self.ext.extension_command(f'execute as {self.name} at @s rotated 90 0 unless block ^ ^1.5 ^ #minecraft:air run data get entity @s DeathTime') # 上半身が空気出ないなら
         if any([is_in_block_lower_body == '0s', is_in_block_upper_body == '0s']):
             return True
 
@@ -150,8 +152,8 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         # check_list[2]と[3]:視線の先にエンティティがあるかをチェック。ただし分身（D4C_alter_ego）は挟み込み処理から除外
         check_list = (f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name}] at @s facing entity {self.name} eyes positioned ^ ^ ^2 unless block ~ ~ ~ #test:d4c_group run say data get entity {self.name} DeathTime', \
                       f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name}] at @s facing entity {self.name} feet positioned ^ ^ ^2 unless block ~ ~ ~ #test:d4c_group run say data get entity {self.name} DeathTime', \
-                      f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name},tag=!D4C_alter_ego] at @s facing entity {self.name} eyes positioned ^ ^ ^2 if entity @n[distance=..1,name=!{self.name}] run data get entity {self.name} DeathTime', \
-                      f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name},tag=!D4C_alter_ego] at @s facing entity {self.name} feet positioned ^ ^ ^2 if entity @n[distance=..1,name=!{self.name}] run data get entity {self.name} DeathTime')
+                      f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name},tag=!D4C_alter_ego,tag=!D4C_effect_alter_ego,tag=!D4C_pin] at @s facing entity {self.name} eyes positioned ^ ^ ^2 if entity @n[distance=..1,name=!{self.name}] run data get entity {self.name} DeathTime', \
+                      f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name},tag=!D4C_alter_ego,tag=!D4C_effect_alter_ego,tag=!D4C_pin] at @s facing entity {self.name} feet positioned ^ ^ ^2 if entity @n[distance=..1,name=!{self.name}] run data get entity {self.name} DeathTime')
 
         # check_listから一つでもヒットすればそれ以降のチェックは行わない。このためfor文を使用
         return any(self.ext.extension_command(command) == '0s' for command in check_list)
