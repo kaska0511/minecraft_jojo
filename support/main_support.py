@@ -609,10 +609,13 @@ def add_datapack():
     except Exception as e:
         print(f"An error occurred while copying datapack: {e}")
 
-def enable_datapack(ext):
+def restart_datapack(ext):
         # ザ・ワールドのクールダウン無効化データパックを有効化
+        ext.extension_command('datapack disable "file/off_cooldown"')
         ext.extension_command('datapack enable "file/off_cooldown"')
         # D4Cの挟み込みブロックタグ一覧データパックを有効化
+        ext.extension_command('datapack disable "file/block_tags"')
         ext.extension_command('datapack enable "file/block_tags"')
         # D4Cのトーテム化アイテム修正データパックを有効化
+        ext.extension_command('datapack disable "file/item_modifiers"')
         ext.extension_command('datapack enable "file/item_modifiers"')

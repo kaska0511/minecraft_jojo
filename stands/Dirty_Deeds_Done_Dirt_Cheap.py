@@ -140,24 +140,38 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
 
         ## Check.2 ブロックに埋まっているかチェック
         # 足下から^ ^0.5 ^の地点を検出すること。0だと足下に触れているものを調べることになり、実質-1を調べている。
-        is_in_block_lower_body = self.ext.extension_command(f'execute as {self.name} at @s rotated 90 0 unless block ^ ^0.5 ^ #minecraft:air run data get entity @s DeathTime')   # 最初に下半身が空気ブロックで埋まっていないことを確認
-        if is_in_block_lower_body == '0s':
-            is_in_block_lower_body = self.ext.extension_command(f'execute as {self.name} at @s rotated 90 0 unless block ^ ^0.5 ^ #test:d4c_group run data get entity @s DeathTime')    # 具体的に「体が埋まっている」と言えるブロックかを確認
+        is_in_block_lower_body = self.ext.extension_command(f'execute as {self.name} at @s rotated 90 0 unless block ^ ^0.5 ^ #minecraft:air unless block ^ ^0.5 ^ #test:d4c_group run data get entity @s DeathTime')    # 空気ではない、かつ、「体が埋まっている」と言えるブロックかを確認
         is_in_block_upper_body = self.ext.extension_command(f'execute as {self.name} at @s rotated 90 0 unless block ^ ^1.5 ^ #minecraft:air run data get entity @s DeathTime') # 上半身が空気出ないなら
         if any([is_in_block_lower_body == '0s', is_in_block_upper_body == '0s']):
             return True
-
+        """# コマンドが長すぎる可能性あり。。。
         ## Check.3 本体の近くに居るエンティティを基準に、エンティティかブロックに挟まれているかチェック
         # check_list[0]と[1]:視線の先にブロックがあるかをチェック
         # check_list[2]と[3]:視線の先にエンティティがあるかをチェック。ただし分身（D4C_alter_ego）は挟み込み処理から除外
-        check_list = (f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name}] at @s facing entity {self.name} eyes positioned ^ ^ ^2 unless block ~ ~ ~ #test:d4c_group run say data get entity {self.name} DeathTime', \
-                      f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name}] at @s facing entity {self.name} feet positioned ^ ^ ^2 unless block ~ ~ ~ #test:d4c_group run say data get entity {self.name} DeathTime', \
-                      f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name},tag=!D4C_alter_ego,tag=!D4C_effect_alter_ego,tag=!D4C_pin] at @s facing entity {self.name} eyes positioned ^ ^ ^2 if entity @n[distance=..1,name=!{self.name}] run data get entity {self.name} DeathTime', \
-                      f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name},tag=!D4C_alter_ego,tag=!D4C_effect_alter_ego,tag=!D4C_pin] at @s facing entity {self.name} feet positioned ^ ^ ^2 if entity @n[distance=..1,name=!{self.name}] run data get entity {self.name} DeathTime')
+        tags = 'tag=!D4C_alter_ego,tag=!D4C_effect_alter_ego,tag=!D4C_pin'
+        check_list = (f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name},{tags}] at @s facing entity {self.name} eyes positioned ^ ^ ^2 unless block ~ ~ ~ #test:d4c_group run data get entity {self.name} DeathTime', \
+                      f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name},{tags}] at @s facing entity {self.name} feet positioned ^ ^ ^2 unless block ~ ~ ~ #test:d4c_group run data get entity {self.name} DeathTime', \
+                      f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name},{tags}] at @s facing entity {self.name} eyes positioned ^ ^ ^2 if entity @n[distance=..1,name=!{self.name},{tags}] run data get entity {self.name} DeathTime', \
+                      f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name},{tags}] at @s facing entity {self.name} feet positioned ^ ^ ^2 if entity @n[distance=..1,name=!{self.name},{tags}] run data get entity {self.name} DeathTime')
 
         # check_listから一つでもヒットすればそれ以降のチェックは行わない。このためfor文を使用
-        return any(self.ext.extension_command(command) == '0s' for command in check_list)
+        return any(self.ext.extension_command(command) == '0s' for command in check_list)"""
 
+
+    def is_loaded_chunk(self, x=None, y=None):
+        if x == None:
+            x = self.loaded_pos[0]
+        if y == None:
+            y = self.loaded_pos[1]
+
+        dimensions = ('minecraft:overworld', 'minecraft:the_nether', 'minecraft:the_end')
+
+        for dimension in dimensions:
+            is_loaded = self.ext.extension_command(f'execute as {self.name} at @s in {dimension} if loaded {x} ~ {y} run data get entity {self.name} DeathTime')
+            if is_loaded != '0s':
+                return False
+            if dimension == 'minecraft:the_end' and is_loaded == '0s':
+                return True
 
     def is_rain_biome(self):
         # 村人召喚。透明化と検知用のタグ付与を行う。
@@ -237,6 +251,8 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
             if self.replace_with_alter_ego(): # このif文に挟み込み判定も入れようと思ったが、テレポート先で雨が降っていると速攻で戻ることになるので取りやめ。テレポート先では挟み込み判定は行わない。
                 teleport_base_world()
         else:
+            # 分身を削除
+            self.ext.extension_command(f'kill @e[tag=D4C_alter_ego,tag=D4C_effect_alter_ego]')
             teleport_base_world()
 
     def hold_time_for_base_world(self):
@@ -277,8 +293,8 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
 
     def pull_pin(self):
         # 現在地記録のために刺したピンを抜く処理
-        self.ext.extension_command(f'execute as {self.name} at @s run forceload remove ~ ~')  # リスポーン地点の強制読み込みを解除
-        self.ext.extension_command(f'execute as {self.name} at @s run kill @e[tag=D4C_pin]')
+        self.ext.extension_command(f'execute as @e[tag=D4C_pin] at @s run forceload remove ~ ~')  # リスポーン地点の強制読み込みを解除
+        self.ext.extension_command(f'kill @e[tag=D4C_pin]')
 
 
     def _determine_teleport_pos(self):
@@ -301,9 +317,12 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         z = int(float(base_pos[2].replace('d', ''))) + teleport_pos[1]
 
         print(f'D4C teleport forceload position: x={x}, z={z}')  # デバッグ用
-        self.ext.extension_command(f'execute in minecraft:overworld run forceload add {x} {z}')
-        self.ext.extension_command(f'execute in minecraft:the_nether run forceload add {x} {z}')
-        self.ext.extension_command(f'execute in minecraft:the_end run forceload add {x} {z}')   #! エンドのボイドをロードする可能性あり
+        self.ext.extension_command(f'execute in minecraft:overworld run forceload add {x} {z}')     # ピンポイント方式だとspreadplayersが飛べない海の上を選択する可能性がある。
+        self.ext.extension_command(f'execute in minecraft:the_nether run forceload add {x} {z}')    # ピンポイント方式だとspreadplayersが飛べないマグマの海しかない可能性がある。
+        self.ext.extension_command(f'execute in minecraft:the_end run forceload add {x} {z}')   #! エンドのボイドをロードする可能性あり→エンドシティの開始座標を確認すればよい。
+        # そして共通の課題として、spreadplayersでは少なくも私のマシンですら、体感3秒以上かけてテレポートする。その間をどうするのか。
+        # やりたかったこととしては瞬時にテレポートさせたいから、事前に座標を決めてforceloadしておくという方法をとっていた。
+        # ただしこのやり方だとspreadplayersが飛べない環境を指定することが多々あった。これを解決したい。
         self.loaded_pos = [x, z]
 
 
@@ -311,9 +330,13 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         # テレポート先の強制読み込みを解除する処理
         if self.loaded_pos == [0, 0]:
             return
-        self.ext.extension_command(f'execute in minecraft:overworld run forceload remove {self.loaded_pos[0]} {self.loaded_pos[1]}')
-        self.ext.extension_command(f'execute in minecraft:the_nether run forceload remove {self.loaded_pos[0]} {self.loaded_pos[1]}')
-        self.ext.extension_command(f'execute in minecraft:the_end run forceload remove {self.loaded_pos[0]} {self.loaded_pos[1]}')
+        # 座標をforceloadで扱えるように16で割り、切り上げる。参考：ttps://qiita.com/iwbchi/items/a0296e15076482e074f6
+        x = (self.loaded_pos[0]+16-1)//16
+        y = (self.loaded_pos[1]+16-1)//16
+        #! pinを主として~ ~にするか？
+        self.ext.extension_command(f'execute in minecraft:overworld run forceload remove {x} {y}')
+        self.ext.extension_command(f'execute in minecraft:the_nether run forceload remove {x} {y}')
+        self.ext.extension_command(f'execute in minecraft:the_end run forceload remove {x} {y}')
 
 
     def forward_teleport(self):
@@ -321,12 +344,19 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         # ディメンションは変更しない
         # 事前に強制ロードしておいた座標から1*1(1)の範囲で、高さ100以下(under 100)の安全な地点に、チームメンバーが5ブロック以上(5)離れてテレポートする。同じ位置NG(false)
         # /execute in minecraft:the_nether run spreadplayers ~ ~ 5 5000 under 100 false @a[team=KASKA0511]
-
-        # ネザー以外なら高さ指定は不要
-        self.ext.extension_command(f'execute as {self.name} at @s unless dimension minecraft:the_nether run spreadplayers {self.loaded_pos[0]} {self.loaded_pos[1]} 5 1 false @s')
-        # ネザーなら高さ指定を行う（y座標100以下）
-        self.ext.extension_command(f'execute as {self.name} at @s if dimension minecraft:the_nether run spreadplayers {self.loaded_pos[0]} {self.loaded_pos[1]} 5 1 under 100 false @s')
-        time.sleep(0.5)  # 少し待機しないとテレポートが終わっていないことがある
+        for _ in range(5):
+            # テレポート先がロードされているか確認してからテレポートする。
+            if self.is_loaded_chunk():
+                # ネザー以外なら高さ指定は不要
+                self.ext.extension_command(f'execute as {self.name} at @s unless dimension minecraft:the_nether run spreadplayers {self.loaded_pos[0]} {self.loaded_pos[1]} 5 1 false @s')
+                # ネザーなら高さ指定を行う（y座標100以下）
+                self.ext.extension_command(f'execute as {self.name} at @s if dimension minecraft:the_nether run spreadplayers {self.loaded_pos[0]} {self.loaded_pos[1]} 5 1 under 100 false @s')
+                time.sleep(0.5)  # 少し待機しないとテレポートが終わっていないことがある
+                break
+            else:
+                print("まだ読み込まれていない")
+                # ロードされていないなら0.1秒ほど待つ。
+                time.sleep(0.1)
 
 
     def backward_teleport(self):
@@ -458,3 +488,10 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
 # /execute as @a at @s if items entity @s weapon.* *[minecraft:death_protection] run clear @s weapon.* *[minecraft:death_protection]
 # minecraft:custom_data={tag:"' + type(self).__name__ + '"}
 # /execute as @s at @s if items entity @s container.* *[minecraft:custom_data={tag:"test"}]
+
+
+# spreadplayersの成功判定
+# 1. storageを使い、spreadplayersが成功したら、spreadsの"成功"に 1bを格納する。失敗したら0bになる。
+# /execute as KASKA0511 at @s store success storage spreads "成功" byte 1 run spreadplayers ~ ~ 5 5000 false @s
+# 2.executeのif dataで参照する。→DeathTimeに繋がる。
+# /execute as KASKA0511 if data storage minecraft:spreads "成功" run data get entity KASKA0511 DeathTime

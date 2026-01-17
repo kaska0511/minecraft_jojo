@@ -34,7 +34,7 @@ def main(ext, is_server):
         # スタンド能力補助データパック配置
         #add_cooldown_datapack()
         add_datapack()
-        enable_datapack(ext)
+        restart_datapack(ext)
         # ゲームルール設定
         ext.extension_command("gamerule send_command_feedback false")   # 1.21.11?よりgameruleコマンドシンタックス変更
         # titleコマンドの基本表示設定（時間）
