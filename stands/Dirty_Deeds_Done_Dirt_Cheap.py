@@ -18,7 +18,6 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         self.hold_stay_time_base = 0        # 並行世界から基本世界へテレポートして帰ってきてからの最低在留時間を計測するための基準時間
         self.teleport_prepare = True        # テレポート準備完了フラグ
         self.teleport_mode = False          # テレポート状態かどうかのフラグ
-        self.loaded_pos = [0, 0]            # テレポート先の位置情報(x,z)
 
 
     def __del__(self):
@@ -28,10 +27,6 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
             return
-
-        # 初回テレポート先座標読み込み
-        if self.loaded_pos == [0, 0]:
-            self.forceload_add_teleport_pos()
 
         # 誰かがD4Cのスタンドアイテムを所持していたら、そのプレイヤーのインベントリから削除する。
         self.del_totem_other_players()
@@ -158,26 +153,11 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         return any(self.ext.extension_command(command) == '0s' for command in check_list)"""
 
 
-    def is_loaded_chunk(self, x=None, y=None):
-        if x == None:
-            x = self.loaded_pos[0]
-        if y == None:
-            y = self.loaded_pos[1]
-
-        dimensions = ('minecraft:overworld', 'minecraft:the_nether', 'minecraft:the_end')
-
-        for dimension in dimensions:
-            is_loaded = self.ext.extension_command(f'execute as {self.name} at @s in {dimension} if loaded {x} ~ {y} run data get entity {self.name} DeathTime')
-            if is_loaded != '0s':
-                return False
-            if dimension == 'minecraft:the_end' and is_loaded == '0s':
-                return True
-
     def is_rain_biome(self):
-        # 村人召喚。透明化と検知用のタグ付与を行う。
-        self.ext.extension_command(f'execute as {self.name} at @s rotated 0 0 positioned ~ 308 ~ run summon minecraft:villager ~ ~ ~')
-        self.ext.extension_command(f'effect give @n[tag=D4C_biomechecker,limit=1] minecraft:invisibility infinite 1 true')
-        self.ext.extension_command(f'execute as {self.name} at @s rotated 0 0 positioned ~ 308 ~ run data modify entity @n[type=minecraft:villager,limit=1] Tags set value ["D4C_biomechecker"]')
+        # 村人召喚。検知用のタグ付与し、透明化と無重力化を行う。
+        self.ext.extension_command(f'execute as {self.name} at @s rotated 0 0 positioned ~ 308 ~ summon minecraft:villager run tag @s add D4C_biomechecker')
+        self.ext.extension_command(f'effect give @n[tag=D4C_biomechecker] minecraft:invisibility infinite 1 true')
+        self.ext.extension_command(f'attribute @n[tag=D4C_biomechecker] minecraft:gravity base set 0')
 
         # 村人のバイオーム情報を取得
         biome = self.ext.extension_command(f'data get entity @n[tag=D4C_biomechecker,limit=1] VillagerData.type', 'Villager')
@@ -199,7 +179,6 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         self.ext.extension_command(f'kill @e[tag=D4C_alter_ego,tag=D4C_effect_alter_ego,tag=D4C_pin]')
         self.teleport_mode = False
         self.run_stand = False
-        self.forceload_del_teleport_pos()
 
 
     def prepare_datapack(self):
@@ -208,12 +187,16 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
 
 
     def teleport_paralel_world(self):
-        # テレポートしたら位置情報を悟られないようにする。
-        self.disable_waypoint()
         # テレポート前の現在地にピンを刺す
         self.prick_pin()
+        # スペクテイターモードになる
+        self.ext.extension_command(f'gamemode spectator {self.name}')
+        # 位置情報を悟られないようにする。
+        self.disable_waypoint()
         # 本体を遠方にテレポートさせる
         self.forward_teleport()
+        # サバイバルモードに戻す
+        self.ext.extension_command(f'gamemode survival {self.name}')
         # 分身を召喚する
         self.summon_alter_ego()
         # 分身と本体の距離を少し離す
@@ -222,10 +205,6 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
 
     def recovery_and_teleport_base_world(self):
         def teleport_base_world():
-            # 強制ロード解除
-            self.forceload_del_teleport_pos()
-            # 次のテレポート先を決定し、強制ロードしておく
-            self.forceload_add_teleport_pos()
             # 本体を元の位置(ピン)にテレポートさせ戻る
             self.backward_teleport()
             # 刺したピンを抜く
@@ -287,8 +266,8 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
     def set_spawnpoint_pin(self):
         # リスポーン地点をピンの位置に設定
         # ベッドやリスポーンアンカーで上書き可能だが、コマンドで更に上書きすることも可能
-        # つまり後勝ちの処理
-        self.ext.extension_command(f'execute as @n[tag=D4C_pin] at @s run spawnpoint {self.name} ~ ~ ~')
+        # つまり後勝ちの処理。ただしリスポーン地点についてはオーバーワールドの時だけにする。
+        self.ext.extension_command(f'execute as @n[tag=D4C_pin] at @s if dimension minecraft:overworld run spawnpoint {self.name} ~ ~ ~')
         self.ext.extension_command(f'execute as @n[tag=D4C_pin] at @s run forceload add ~ ~')  # リスポーン地点を強制読み込みしておく
 
     def pull_pin(self):
@@ -297,66 +276,29 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         self.ext.extension_command(f'kill @e[tag=D4C_pin]')
 
 
-    def _determine_teleport_pos(self):
-        # テレポート先の位置情報を決定する処理
-        # y座標は決定しない
-        number = (3000, 5000, 8000)
-        sign = (1, -1)
-
-        x_distance = random.choice(number) * random.choice(sign)
-        z_distance = random.choice(number) * random.choice(sign)
-        return x_distance, z_distance
-
-
-    def forceload_add_teleport_pos(self):
-        # テレポート先を強制読み込みする処理
-        # これによりspreadplayersコマンドでテレポートするときのラグを減らすことができる。
-        base_pos = self.get_pos()   # ['1.000d', '64.000d', '1.000d']
-        teleport_pos = self._determine_teleport_pos()
-        x = int(float(base_pos[0].replace('d', ''))) + teleport_pos[0]
-        z = int(float(base_pos[2].replace('d', ''))) + teleport_pos[1]
-
-        print(f'D4C teleport forceload position: x={x}, z={z}')  # デバッグ用
-        self.ext.extension_command(f'execute in minecraft:overworld run forceload add {x} {z}')     # ピンポイント方式だとspreadplayersが飛べない海の上を選択する可能性がある。
-        self.ext.extension_command(f'execute in minecraft:the_nether run forceload add {x} {z}')    # ピンポイント方式だとspreadplayersが飛べないマグマの海しかない可能性がある。
-        self.ext.extension_command(f'execute in minecraft:the_end run forceload add {x} {z}')   #! エンドのボイドをロードする可能性あり→エンドシティの開始座標を確認すればよい。
-        # そして共通の課題として、spreadplayersでは少なくも私のマシンですら、体感3秒以上かけてテレポートする。その間をどうするのか。
-        # やりたかったこととしては瞬時にテレポートさせたいから、事前に座標を決めてforceloadしておくという方法をとっていた。
-        # ただしこのやり方だとspreadplayersが飛べない環境を指定することが多々あった。これを解決したい。
-        self.loaded_pos = [x, z]
-
-
-    def forceload_del_teleport_pos(self):
-        # テレポート先の強制読み込みを解除する処理
-        if self.loaded_pos == [0, 0]:
-            return
-        # 座標をforceloadで扱えるように16で割り、切り上げる。参考：ttps://qiita.com/iwbchi/items/a0296e15076482e074f6
-        x = (self.loaded_pos[0]+16-1)//16
-        y = (self.loaded_pos[1]+16-1)//16
-        #! pinを主として~ ~にするか？
-        self.ext.extension_command(f'execute in minecraft:overworld run forceload remove {x} {y}')
-        self.ext.extension_command(f'execute in minecraft:the_nether run forceload remove {x} {y}')
-        self.ext.extension_command(f'execute in minecraft:the_end run forceload remove {x} {y}')
-
-
     def forward_teleport(self):
         # 本体をテレポートさせる処理
         # ディメンションは変更しない
-        # 事前に強制ロードしておいた座標から1*1(1)の範囲で、高さ100以下(under 100)の安全な地点に、チームメンバーが5ブロック以上(5)離れてテレポートする。同じ位置NG(false)
+        # 現在地座標から2500*2500(5000)の範囲で、高さ100以下(under 100)の安全な地点に、チームメンバーが5ブロック以上(5)離れてテレポートする。同じ位置NG(false)
         # /execute in minecraft:the_nether run spreadplayers ~ ~ 5 5000 under 100 false @a[team=KASKA0511]
-        for _ in range(5):
-            # テレポート先がロードされているか確認してからテレポートする。
-            if self.is_loaded_chunk():
-                # ネザー以外なら高さ指定は不要
-                self.ext.extension_command(f'execute as {self.name} at @s unless dimension minecraft:the_nether run spreadplayers {self.loaded_pos[0]} {self.loaded_pos[1]} 5 1 false @s')
-                # ネザーなら高さ指定を行う（y座標100以下）
-                self.ext.extension_command(f'execute as {self.name} at @s if dimension minecraft:the_nether run spreadplayers {self.loaded_pos[0]} {self.loaded_pos[1]} 5 1 under 100 false @s')
-                time.sleep(0.5)  # 少し待機しないとテレポートが終わっていないことがある
+        # ネザー以外なら高さ指定は不要
+        self.ext.extension_command(f'execute as {self.name} at @s unless dimension minecraft:the_nether store success storage d4c_spread "D4C_spread" byte 1 run spreadplayers ~ ~ 5 10000 false @s')
+        # ネザーなら高さ指定を行う（y座標100以下）
+        self.ext.extension_command(f'execute as {self.name} at @s if dimension minecraft:the_nether store success storage d4c_spread "D4C_spread" byte 1 run spreadplayers  ~ ~ 5 5000 under 100 false @s')
+        # テレポートできたか確認する。
+        for _ in range(10):
+            if self.ext.extension_command(f'execute as {self.name} at @s if data storage minecraft:d4c_spread "D4C_spread" run data get entity @s DeathTime') == '0s':
+                self.ext.extension_command(f'data remove storage minecraft:d4c_spread "D4C_spread"')
                 break
             else:
-                print("まだ読み込まれていない")
-                # ロードされていないなら0.1秒ほど待つ。
-                time.sleep(0.1)
+                self.ext.extension_command(f'title {self.name} clear')
+                self.ext.extension_command(f'title {self.name} actionbar "転送中..."')
+                # spreadplayersはそれなりに時間がかかるため、少し待つ。
+                time.sleep(1)
+        else:
+            # 処理問題について正直に通知する。
+            self.ext.extension_command(f'title {self.name} clear')
+            self.ext.extension_command(f'title {self.name} actionbar "何らかの問題でテレポートできませんでした。"')
 
 
     def backward_teleport(self):
