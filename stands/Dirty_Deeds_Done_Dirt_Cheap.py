@@ -176,6 +176,7 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         # ここにスタンドのキャンセル処理を記述する
         self.enable_waypoint()
         # 分身を削除して元に戻る処理
+        self.ext.extension_command(f'execute as @e[tag=D4C_alter_ego,tag=D4C_effect_alter_ego,type=wolf] at @s run data modify entity @s Owner set value []')
         self.ext.extension_command(f'kill @e[tag=D4C_alter_ego,tag=D4C_effect_alter_ego,tag=D4C_pin]')
         self.teleport_mode = False
         self.run_stand = False
@@ -231,6 +232,7 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
                 teleport_base_world()
         else:
             # 分身を削除
+            self.ext.extension_command(f'execute as @e[tag=D4C_alter_ego,tag=D4C_effect_alter_ego,type=wolf] at @s run data modify entity @s Owner set value []')
             self.ext.extension_command(f'kill @e[tag=D4C_alter_ego,tag=D4C_effect_alter_ego]')
             teleport_base_world()
 
@@ -316,16 +318,24 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
             self.ext.extension_command(f'title {self.name} actionbar "隣の世界の『能力』は このわたしに移った…"')
             # 触れたら回復＆分身削除処理
             # 行動トレース元のオオカミを削除
-            #self.ext.extension_command(f'kill @e[tag={tag},type=wolf]')
+            self.ext.extension_command(f'execute as @e[tag={tag},type=wolf] at @s run data modify entity @s Owner set value []')
+            self.ext.extension_command(f'kill @e[tag={tag},type=wolf]')
             # 本体の位置に演出用の分身を召喚。
-            #self.summon_alter_ego(tags='D4C_effect_alter_ego')
-            # 演出用分身の目線を本体の目線に合わせる
-            #self.ext.extension_command(f'data modify entity @e[tag=D4C_effect_alter_ego,limit=1] Rotation set from entity {self.name} Rotation')
+            self.summon_alter_ego(tags='D4C_effect_alter_ego')
+            # 演出用分身の目線を本体の目線に合わせ、コピーできるものはコピーする
+            self.ext.extension_command(f'data modify entity @n[tag=D4C_effect_alter_ego] Rotation set from entity {self.name} Rotation')
+            # Health,equipment,active_effects,attributes
+            copies = ('Health', 'equipment', 'active_effects', 'attributes')
+            for copy in copies:
+                self.ext.extension_command(f'data modify entity @n[tag=D4C_effect_alter_ego] {copy} set from entity {self.name} {copy}')
+            self.ext.extension_command(f'item replace entity @n[tag=D4C_effect_alter_ego] weapon.mainhand from entity {self.name} weapon.mainhand')
+            self.ext.extension_command(f'item replace entity @n[tag=D4C_effect_alter_ego] weapon.offhand from entity {self.name} weapon.offhand')
             # 本体を分身の位置にテレポート
-            #self.ext.extension_command(f'tp {self.name} @e[tag={tag},type=mannequin]')
+            self.ext.extension_command(f'tp {self.name} @n[tag={tag}]')
             # 全ての効果を解除し、即時回復
             self.clear_all_effects_and_instant_health()
             # 分身を削除
+            self.ext.extension_command(f'execute as @e[tag={tag},tag=D4C_effect_alter_ego,type=wolf] at @s run data modify entity @s Owner set value []')
             self.ext.extension_command(f'kill @e[tag={tag},tag=D4C_effect_alter_ego]')
             return True
         else:
@@ -430,10 +440,3 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
 # /execute as @a at @s if items entity @s weapon.* *[minecraft:death_protection] run clear @s weapon.* *[minecraft:death_protection]
 # minecraft:custom_data={tag:"' + type(self).__name__ + '"}
 # /execute as @s at @s if items entity @s container.* *[minecraft:custom_data={tag:"test"}]
-
-
-# spreadplayersの成功判定
-# 1. storageを使い、spreadplayersが成功したら、spreadsの"成功"に 1bを格納する。失敗したら0bになる。
-# /execute as KASKA0511 at @s store success storage spreads "成功" byte 1 run spreadplayers ~ ~ 5 5000 false @s
-# 2.executeのif dataで参照する。→DeathTimeに繋がる。
-# /execute as KASKA0511 if data storage minecraft:spreads "成功" run data get entity KASKA0511 DeathTime
