@@ -139,18 +139,18 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         is_in_block_upper_body = self.ext.extension_command(f'execute as {self.name} at @s rotated 90 0 unless block ^ ^1.5 ^ #minecraft:air run data get entity @s DeathTime') # 上半身が空気出ないなら
         if any([is_in_block_lower_body == '0s', is_in_block_upper_body == '0s']):
             return True
-        """# コマンドが長すぎる可能性あり。。。
+
         ## Check.3 本体の近くに居るエンティティを基準に、エンティティかブロックに挟まれているかチェック
         # check_list[0]と[1]:視線の先にブロックがあるかをチェック
         # check_list[2]と[3]:視線の先にエンティティがあるかをチェック。ただし分身（D4C_alter_ego）は挟み込み処理から除外
         tags = 'tag=!D4C_alter_ego,tag=!D4C_effect_alter_ego,tag=!D4C_pin'
-        check_list = (f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name},{tags}] at @s facing entity {self.name} eyes positioned ^ ^ ^2 unless block ~ ~ ~ #test:d4c_group run data get entity {self.name} DeathTime', \
-                      f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name},{tags}] at @s facing entity {self.name} feet positioned ^ ^ ^2 unless block ~ ~ ~ #test:d4c_group run data get entity {self.name} DeathTime', \
+        check_list = (f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name},{tags}] at @s facing entity {self.name} eyes positioned ^ ^ ^2 unless block ~ ~ ~ #minecraft:air unless block ~ ~ ~ #test:d4c_group run data get entity {self.name} DeathTime', \
+                      f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name},{tags}] at @s facing entity {self.name} feet positioned ^ ^ ^2 unless block ~ ~ ~ #minecraft:air unless block ~ ~ ~ #test:d4c_group run data get entity {self.name} DeathTime', \
                       f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name},{tags}] at @s facing entity {self.name} eyes positioned ^ ^ ^2 if entity @n[distance=..1,name=!{self.name},{tags}] run data get entity {self.name} DeathTime', \
                       f'execute as {self.name} at @s run execute as @e[distance=..2,name=!{self.name},{tags}] at @s facing entity {self.name} feet positioned ^ ^ ^2 if entity @n[distance=..1,name=!{self.name},{tags}] run data get entity {self.name} DeathTime')
 
         # check_listから一つでもヒットすればそれ以降のチェックは行わない。このためfor文を使用
-        return any(self.ext.extension_command(command) == '0s' for command in check_list)"""
+        return any(self.ext.extension_command(command) == '0s' for command in check_list)
 
 
     def is_rain_biome(self):
