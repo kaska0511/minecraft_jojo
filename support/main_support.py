@@ -489,6 +489,7 @@ def stand_lost_check(ext, stand, my_standname):
 
         case 'Dirty_Deeds_Done_Dirt_Cheap':
             if not stand.bool_have_a_stand(tag=my_standname) and stand.name != '1dummy':
+                # 下記のgiveコマンドを修正した場合はクラス内にも同様の実装がされているので両方修正する。
                 ext.extension_command('give ' + stand.name + ' music_disc_13[minecraft:custom_name="' + item_name_list[10] + '",minecraft:custom_data={tag:"' + my_standname + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
 
         case _:
@@ -610,14 +611,16 @@ def add_datapack():
         print(f"An error occurred while copying datapack: {e}")
 
 def restart_datapack(ext):
+        ext.extension_command('reload')
+        """
         # 再起動のため一度無効化
         ext.extension_command('datapack disable "file/off_cooldown"')
         ext.extension_command('datapack disable "file/block_tags"')
         ext.extension_command('datapack disable "file/item_modifiers"')
-        time.sleep(0.5)
+        time.sleep(1)
         # ザ・ワールドのクールダウン無効化データパックを有効化
         ext.extension_command('datapack enable "file/off_cooldown"')
         # D4Cの挟み込みブロックタグ一覧データパックを有効化
         ext.extension_command('datapack enable "file/block_tags"')
         # D4Cのトーテム化アイテム修正データパックを有効化
-        ext.extension_command('datapack enable "file/item_modifiers"')
+        ext.extension_command('datapack enable "file/item_modifiers"')"""

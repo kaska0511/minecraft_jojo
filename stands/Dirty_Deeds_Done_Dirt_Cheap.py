@@ -18,6 +18,9 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         self.hold_stay_time_base = 0        # 並行世界から基本世界へテレポートして帰ってきてからの最低在留時間を計測するための基準時間
         self.teleport_prepare = True        # テレポート準備完了フラグ
         self.teleport_mode = False          # テレポート状態かどうかのフラグ
+        self.multi_summon_mode = False      # 複数の分身召喚モード
+        self.multi_summon_time_base = 0     # 複数の分身召喚モードのための基準時間
+        self.ext.extension_command(f'scoreboard objectives add used_13 minecraft.used:minecraft.music_disc_13')
 
 
     def __del__(self):
@@ -38,16 +41,68 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
             # 時が止まっている間はトーテム効果を打ち消す。
             # これによりThe_Worldから攻撃を受けたら死亡するようになる。
             self.ext.extension_command(f'item modify entity {self.name} weapon.* minecraft:del_d4c_totem')
+            self.ext.extension_command(f'datapack disable "file/d4c_loop_pack"')
             return
 
-        # 召喚可能分身数を増やす時間計測
-        self.ability_time_counter()
+        # 複数の分身を召喚していたら、定期実行処理を実行
+        if self.multi_summon_mode:
+            self.multi_summon_time_base = time.time() if self.multi_summon_time_base == 0 else self.multi_summon_time_base
+            if self._keep_alter_ego_time <= time.time() - self.multi_summon_time_base:
+                # 能力有効時間外なので後片付け。
+                self._cleanup_multi_summon_mode()
+            else:
+                # 最初に必要な情報を取得
+                # トーテム化したアイテムが消費されているか確認
+                is_used_13 = self.ext.extension_command(f'execute if score {self.name} used_13 matches 1.. run data get entity {self.name} DeathTime')
+                # 分身がいるか確認 -> 居るならスタンドアイテムをトーテム化する。
+                is_exist_alter_ego = self.ext.extension_command(f'execute if entity @e[tag=D4C_alter_ego,type=mannequin] run data get entity {self.name} DeathTime')
+
+                if is_used_13 == '0s':
+                    # トーテムの使用履歴を削除
+                    self.ext.extension_command(f'scoreboard players reset {self.name} used_13')
+                    # トーテム化についてはこのタイミングでは行わない。
+                    self.ext.extension_command('item replace entity ' + self.name + ' weapon.offhand with music_disc_13[minecraft:custom_name="Dirty deeds done dirt cheap",minecraft:custom_data={tag:"'\
+                                                + type(self).__name__ + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
+                    if is_exist_alter_ego == '0s':
+                        # 分身と入れ替わり処理
+                        # 最も近い分身の追従元オオカミを削除。
+                        self.ext.extension_command(f'execute as {self.name} at @s run data modify entity @n[tag=D4C_alter_ego,type=wolf] Owner set value []')
+                        self.ext.extension_command(f'execute as @n[tag=D4C_alter_ego,type=wolf] at @s run kill @s')
+                        # 最も近い分身の元へ移動。
+                        self.ext.extension_command(f'execute as {self.name} at @s run tp @s @n[tag=D4C_alter_ego,type=mannequin,limit=1]')
+                        # 最も近い分身の現体力を取得し、削除。
+                        health = self.ext.extension_command(f'execute as {self.name} at @s run data get entity @n[tag=D4C_alter_ego,type=mannequin,limit=1] Health') # 分身の名前が適切にプレイヤー名が設定されていれば正常に体力を取得できる。
+                        self.ext.extension_command(f'execute as {self.name} at @s run kill @n[tag=D4C_alter_ego,type=mannequin,limit=1]')
+                        # attributeコマンドで移行元のマネキン体力調整。
+                        self.ext.extension_command(f'attribute {self.name} minecraft:max_health base set {health.rstrip('f')}')
+                        self.ext.extension_command(f'effect give {self.name} minecraft:instant_health 1 124 true')
+                        self.ext.extension_command(f'effect clear {self.name}')
+                        self.ext.extension_command(f'attribute {self.name} minecraft:max_health base reset')
+
+                elif self.get_OffHandItem()[1] != type(self).__name__:
+                        # スタンドアイテムが所定の位置にあるか確認
+                        # トーテムが使用されていないのに、スタンドアイテムが引っ込められていればモード解除。いろいろ元に戻す。
+                        self._cleanup_multi_summon_mode()
+
+                if is_exist_alter_ego == '0s':
+                    # 分身が一体でもいるならトーテム効果を付与。
+                    # トーテム効果を付与できるのはオフハンドにスタンドアイテムを持っているときのみ
+                    self.ext.extension_command(f'execute if items entity {self.name} weapon.offhand *[minecraft:custom_data={{tag: "{type(self).__name__}"}}] run item modify entity {self.name} weapon.offhand minecraft:add_d4c_totem')
+                else:
+                    self.ext.extension_command(f'item modify entity {self.name} weapon.* minecraft:del_d4c_totem')
+                    # 能力有効時間外なので後片付け。
+                    self._cleanup_multi_summon_mode()
+
+        else:
+            # 召喚可能分身数を増やす時間計測
+            self.ability_time_counter()
+
         # 並行世界から基本世界へテレポートして帰ってきてからの最低在留時間計測
         if not self.teleport_prepare:
             self.teleport_prepare = self.hold_time_for_base_world()
 
         # 並行世界へテレポートし、分身と入れ替わり回復
-        if self.get_OffHandItem()[1] == type(self).__name__:
+        if self.get_OffHandItem()[1] == type(self).__name__ and (not self.multi_summon_mode):
             if self.teleport_prepare and (not self.teleport_mode):
                 # スタンドアイテムを握っているだけで発動する能力をここに記述する
                 # 主に挟み込み確認と、挟み込みによる回復処理
@@ -76,17 +131,34 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
             ...
 
         # 分身能力発動処理
-        """
-        if self.run_stand == False and self.right_click:
+        # 他の能力が発動していない状態で、スタンドアイテムを持ち、右クリック、shiftを同時に押すと発動
+        if all([self.run_stand == False, self.right_click, 'shift' in self.press_keys, not self.teleport_mode]):
             if self.get_OffHandItem()[1] == type(self).__name__:
                 # 分身召喚能力発動
                 if self.number_of_summons_possible > 0:
-                    for _ in range(self.number_of_summons_possible):
-                        self.summon_alter_ego()
-                    self.number_of_summons_possible = 0
+                    for number in range(self.number_of_summons_possible):
+                        self.summon_alter_ego(str(number))
+                    self.ext.extension_command('datapack enable "file/d4c_loop_pack"')
                     self.run_stand = True
-        """
+                    self.multi_summon_mode = True
+                else:
+                    wait_time = int(self._charge_time - (time.time() - self.charge_time_base))
+                    self.ext.extension_command(f'title {self.name} clear')
+                    self.ext.extension_command(f'title {self.name} actionbar "最低召喚数を確保できていません。残り{wait_time}秒です。"')
+        else:
+            self.right_click = False
 
+
+    def _cleanup_multi_summon_mode(self):
+        # タイムリミットが来たら諸々リセット
+        self.multi_summon_mod = False
+        self.run_stand = False
+        self.number_of_summons_possible = 0
+        self.multi_summon_time_base = 0
+        self.charge_time_base = 0
+        self.ext.extension_command(f'datapack disable "file/d4c_loop_pack"')
+        self.ext.extension_command(f'execute as @e[tag=D4C_alter_ego,tag=D4C_effect_alter_ego,type=wolf] at @s run data modify entity @s Owner set value []')
+        self.ext.extension_command(f'kill @e[tag=D4C_alter_ego]')
 
     def del_totem_other_players(self):
         # 誰かがD4Cのスタンドアイテムを所持していたら、そのプレイヤーのインベントリから削除する。
@@ -104,7 +176,7 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
     def ability_time_counter(self):
         # 時間を計測し、一定時間経過したら召喚可能な分身数を増やす処理
 
-        if self.run_stand == False:
+        if self.multi_summon_mode == False:
             # 召喚可能な分身が最大数に達していたら何もしない。
             if self.number_of_summons_possible >= self._max_alter_ego:
                 return
@@ -117,6 +189,8 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
             if now_time - self.charge_time_base >= self._charge_time:
                 self.charge_time_base = 0   # チャージに使う基準時間をリセット
                 self.number_of_summons_possible += 1    # 召喚可能な分身の数を増やす
+                self.ext.extension_command(f'title {self.name} clear')
+                self.ext.extension_command(f'title {self.name} actionbar "召喚可能数：{self.number_of_summons_possible}体"')
         else:
             # 能力発動中はチャージ時間と召喚可能分身数をリセット
             self.charge_time_base = 0   # チャージに使う基準時間をリセット
@@ -155,14 +229,13 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
 
     def is_rain_biome(self):
         # 村人召喚。検知用のタグ付与し、透明化と無重力化を行う。
-        self.ext.extension_command(f'execute as {self.name} at @s rotated 0 0 positioned ~ 308 ~ summon minecraft:villager run tag @s add D4C_biomechecker')
-        self.ext.extension_command(f'effect give @n[tag=D4C_biomechecker] minecraft:invisibility infinite 1 true')
-        self.ext.extension_command(f'attribute @n[tag=D4C_biomechecker] minecraft:gravity base set 0')
+        self.ext.extension_command(f'function d4c:d4c_biome_check {{name:{self.name}, y:308}}')
 
         # 村人のバイオーム情報を取得
         biome = self.ext.extension_command(f'data get entity @n[tag=D4C_biomechecker,limit=1] VillagerData.type', 'Villager')
 
-        #検索に使用する村人は情報取得後殺す。
+        #検索に使用する村人は情報取得後殺す。killコマンドだと死亡時に白い煙が出るので奈落に落としてから。
+        self.ext.extension_command(f'execute as @n[tag=D4C_biomechecker] at @s run tp ~ -4096 ~')
         self.ext.extension_command(f'kill @n[tag=D4C_biomechecker]')
 
         # サバンナと砂漠バイオーム検索
@@ -178,16 +251,17 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         # 分身を削除して元に戻る処理
         self.ext.extension_command(f'execute as @e[tag=D4C_alter_ego,tag=D4C_effect_alter_ego,type=wolf] at @s run data modify entity @s Owner set value []')
         self.ext.extension_command(f'kill @e[tag=D4C_alter_ego,tag=D4C_effect_alter_ego,tag=D4C_pin]')
+        self.ext.extension_command(f'datapack disable "file/d4c_loop_pack"')
         self.teleport_mode = False
         self.run_stand = False
-
-
-    def prepare_datapack(self):
-        # ここにスタンドのデータパック準備処理を記述する
-        pass
+        self.multi_summon_mod = False
+        self.number_of_summons_possible = 0
+        self.multi_summon_time_base = 0
 
 
     def teleport_paralel_world(self):
+        self.ext.extension_command(f'kill @e[tag=D4C_alter_ego]')
+        self.pull_pin()
         # テレポート前の現在地にピンを刺す
         self.prick_pin()
         # スペクテイターモードになる
@@ -199,9 +273,11 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         # サバイバルモードに戻す
         self.ext.extension_command(f'gamemode survival {self.name}')
         # 分身を召喚する
-        self.summon_alter_ego()
+        self.summon_alter_ego('paralel')
         # 分身と本体の距離を少し離す
-        self.spread_alter_ego(distance=5)
+        self.spread_alter_ego(distance=5, tag='paralel')
+        # 追従状態開始
+        self.ext.extension_command(f'datapack enable "file/d4c_loop_pack"')
 
 
     def recovery_and_teleport_base_world(self):
@@ -212,6 +288,8 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
             self.pull_pin()
             # ロケーターバーの送受信設定をリセット
             self.enable_waypoint()
+            # 追従状態開始
+            self.ext.extension_command(f'datapack disable "file/d4c_loop_pack"')
             # テレポートモード解除を忘れずに。
             self.teleport_mode = False
             self.teleport_prepare = False
@@ -321,7 +399,7 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
             self.ext.extension_command(f'execute as @e[tag={tag},type=wolf] at @s run data modify entity @s Owner set value []')
             self.ext.extension_command(f'kill @e[tag={tag},type=wolf]')
             # 本体の位置に演出用の分身を召喚。
-            self.summon_alter_ego(tags='D4C_effect_alter_ego')
+            self.summon_alter_ego('D4C_effect_alter_ego')
             # 演出用分身の目線を本体の目線に合わせ、コピーできるものはコピーする
             self.ext.extension_command(f'data modify entity @n[tag=D4C_effect_alter_ego] Rotation set from entity {self.name} Rotation')
             # Health,equipment,active_effects,attributes
@@ -339,10 +417,6 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
             self.ext.extension_command(f'kill @e[tag={tag},tag=D4C_effect_alter_ego]')
             return True
         else:
-            # まだ分身に触れていない。
-            # 分身を移動させるだけ
-            self.manipulate_alter_ego_all()
-            self.manipulate_alter_ego_single()
             return False
 
 
@@ -356,53 +430,35 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         self.ext.extension_command(f'effect clear {self.name}')
         # 即時回復
         self.ext.extension_command(f'effect give {self.name} minecraft:instant_health 1 124 true')
+        # 満腹度も回復
+        self.ext.extension_command(f'effect give {self.name} minecraft:saturation 1 128 true')
 
 
-    def summon_alter_ego(self, tags="D4C_alter_ego"):
-        tag = ''
-        for_owner = ''
-
-        if type(tags) == list or type(tags) == tuple:
-            # 複数タグが渡された場合、","で連結して一つの文字列にする
-            if len(tags) == 0:
-                # 何もタグがない場合は処理しない
-                return False
-            elif len(tags) > 1:
-                # tagに入れられるように一つの文字列にする
-                # 例：tag1","tag2","tag3 ※両端にダブルクォートが付かないことに注意
-                tag = '","'.join(tags)
-                # Owner設定のため、tag=a,tag=bのように整形する
-                for_owner = ','.join(f'tag={tag}' for tag in tags)
-            else:
-                tag = tags[0]
-                # Owner設定のため、tag=aのように整形する
-                for_owner = f'tag={tags[0]}'
-
-        else:
-            if tags == '' or tags is None:
-                # 何もタグがない場合は処理しない
-                return False
-            tag = tags
-            for_owner = f'tag={tags}'
+    def summon_alter_ego(self, tag):
 
         # 極小の透明なオオカミを召喚、ほぼ同時にマネキンを召喚
         # オオカミの大きさが0.8d：マネキンよりも当たり判定が小さく（マネキンが攻撃されたときオオカミがダメージを吸収しずらい）、
         # か0.8d以下だとオオカミが壁にぶつかった時、マネキンがめり込み窒息することがある。その防止のため
-        self.ext.extension_command('execute as '+ self.name +' at @s run summon minecraft:mannequin ~ ~ ~ {Tags:["'+ tag +'"],profile:'+ self.name +',CustomName:'+ self.name +',hide_description:true}')
+        self.ext.extension_command('execute as '+ self.name +' at @s run summon minecraft:mannequin ~ ~ ~ {Tags:["D4C_alter_ego","'+ tag +'"],profile:'+ self.name +',CustomName:'+ self.name +',hide_description:true}')
         # 大きさ0.8、攻撃力0、透明化、SEナシ、無敵のオオカミを召喚
-        self.ext.extension_command('execute as '+ self.name +' at @s run summon minecraft:wolf ~ ~ ~ {attributes:[{id:"minecraft:scale",base:0.8d},{id:"minecraft:attack_damage",base:0d}],active_effects:[{duration:-1,show_particles:0b,id:"minecraft:invisibility"}],Tags:["'+ tag +'"],Silent:1b,Invulnerable:1b}')
+        self.ext.extension_command('execute as '+ self.name +' at @s run summon minecraft:wolf ~ ~ ~ {attributes:[{id:"minecraft:scale",base:0.8d},{id:"minecraft:attack_damage",base:0d},{id:"minecraft:attack_damage",base:0d}],active_effects:[{duration:-1,show_particles:0b,id:"minecraft:invisibility"}],Tags:["D4C_alter_ego","'+ tag +'"],Silent:1b,Invulnerable:1b}')
         # オオカミの飼い主を本体へ設定
-        self.ext.extension_command(f'execute as {self.name} at @s run data modify entity @n[type=wolf,{for_owner},limit=1] Owner set from entity {self.name} UUID')
+        self.ext.extension_command(f'execute as {self.name} at @s run data modify entity @n[type=wolf,tag=D4C_alter_ego,tag={tag},limit=1] Owner set from entity {self.name} UUID')
 
 
     def spread_alter_ego(self, distance=5, tag="D4C_alter_ego"):
         # 召喚した分身と本体の距離を少し離す処理
         # distance:本体から分身までの距離
+        for _ in range(5):
+            if self.ext.extension_command(f'execute as {self.name} at @s if loaded ~ ~ ~ run data get entity {self.name} DeathTime') == '0s':
+                break
+            else:
+                time.sleep(1)
 
         # ネザー以外なら高さ指定は不要
-        self.ext.extension_command(f'execute as {self.name} at @s unless dimension minecraft:the_nether run spreadplayers ~ ~ 1 {distance} false @e[tag={tag}]')
+        self.ext.extension_command(f'execute as {self.name} at @s unless dimension minecraft:the_nether run spreadplayers ~ ~ 1 {distance} false @e[tag=D4C_alter_ego,tag={tag}]')
         # ネザーなら高さ指定を行う（y座標100以下）
-        self.ext.extension_command(f'execute as {self.name} at @s if dimension minecraft:the_nether run spreadplayers ~ ~ 1 {distance} under 100 false @e[tag={tag}]')
+        self.ext.extension_command(f'execute as {self.name} at @s if dimension minecraft:the_nether run spreadplayers ~ ~ 1 {distance} under 100 false @e[tag=D4C_alter_ego,tag={tag}]')
 
 
     def manipulate_alter_ego_all(self, tag="D4C_alter_ego"):
@@ -413,18 +469,7 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         # パターン1. 能動的に本体が攻撃したエンティティを伝播させる
         self.ext.extension_command(f'execute as @e[nbt=!{{HurtTime:0s}}] at @s on attacker if entity @s[name={self.name}] run execute as @e[distance=..1,limit=1] at @s run data modify entity @n[type=wolf,tag={tag}] angry_at set from entity @s UUID')
         # パターン2. 受動的に本体に対して攻撃したエンティティを伝播させる
-        self.ext.extension_command(f'execute as {self.name} at @s on attacker run data modify entity @n[type=wolf,tag={tag}] angry_at set from entity @s UUID')
-
-
-    def manipulate_alter_ego_single(self, tag="D4C_alter_ego"):
-        # 単一の分身を操作する処理
-        # 主に分身の移動、攻撃する処理
-        self.ext.extension_command(f'tp @n[type=mannequin,tag={tag}] @n[type=wolf,tag={tag}]')
-        # オオカミが攻撃対象としているエンティティをマネキンが攻撃する。条件は攻撃射程距離（distance）に入る必要がある。on targetによってコマンド実行者が変わるため注意。
-        self.ext.extension_command(f'execute as @n[type=wolf,tag={tag}] at @s on target if entity @s[distance=..5,tag={tag}] run damage @s 5 minecraft:player_attack by @n[type=mannequin,tag={tag}]')
-        # 上記と同条件にすることで攻撃とほぼ同時に攻撃モーションを行う。
-        self.ext.extension_command(f'execute as @n[type=wolf,tag={tag}] at @s on target if entity @s[distance=..5,tag={tag}] run swing @n[type=mannequin,tag={tag}] mainhand')
-
+        self.ext.extension_command(f'execute as {self.name} at @s on attacker run data modify entity @e[type=wolf,tag={tag}] angry_at set from entity @s UUID')
 
 
 

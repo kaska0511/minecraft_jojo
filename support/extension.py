@@ -265,7 +265,7 @@ class Extension:
         for stand in stand_list:
             filter_str += f'{stand}|'
 
-        special_filter = ('Standlist', 'List', 'NEW', 'Villager')   # Villager is for Catch_The_Rainbow
+        special_filter = ('Standlist', 'List', 'NEW', 'Villager', 'Mannequin')   # Villager is for Catch_The_Rainbow
         for special in special_filter:
             filter_str += f'{special}|'
 
