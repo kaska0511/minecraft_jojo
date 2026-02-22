@@ -151,7 +151,7 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
 
     def _cleanup_multi_summon_mode(self):
         # タイムリミットが来たら諸々リセット
-        self.multi_summon_mod = False
+        self.multi_summon_mode = False
         self.run_stand = False
         self.number_of_summons_possible = 0
         self.multi_summon_time_base = 0
@@ -254,12 +254,12 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         self.ext.extension_command(f'datapack disable "file/d4c_loop_pack"')
         self.teleport_mode = False
         self.run_stand = False
-        self.multi_summon_mod = False
+        self.multi_summon_mode = False
         self.number_of_summons_possible = 0
         self.multi_summon_time_base = 0
 
 
-    def teleport_paralel_world(self):
+    def teleport_parallel_world(self):
         self.ext.extension_command(f'kill @e[tag=D4C_alter_ego]')
         self.pull_pin()
         # テレポート前の現在地にピンを刺す
@@ -273,9 +273,9 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         # サバイバルモードに戻す
         self.ext.extension_command(f'gamemode survival {self.name}')
         # 分身を召喚する
-        self.summon_alter_ego('paralel')
+        self.summon_alter_ego('parallel')
         # 分身と本体の距離を少し離す
-        self.spread_alter_ego(distance=5, tag='paralel')
+        self.spread_alter_ego(distance=5, tag='parallel')
         # 追従状態開始
         self.ext.extension_command(f'datapack enable "file/d4c_loop_pack"')
 
