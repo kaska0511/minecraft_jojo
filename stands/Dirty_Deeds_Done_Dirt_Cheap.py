@@ -364,7 +364,7 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         # ネザー以外なら高さ指定は不要
         self.ext.extension_command(f'execute as {self.name} at @s unless dimension minecraft:the_nether store success storage d4c_spread "D4C_spread" byte 1 run spreadplayers ~ ~ 5 10000 false @s')
         # ネザーなら高さ指定を行う（y座標100以下）
-        self.ext.extension_command(f'execute as {self.name} at @s if dimension minecraft:the_nether store success storage d4c_spread "D4C_spread" byte 1 run spreadplayers  ~ ~ 5 5000 under 100 false @s')
+        self.ext.extension_command(f'execute as {self.name} at @s if dimension minecraft:the_nether store success storage d4c_spread "D4C_spread" byte 1 run spreadplayers ~ ~ 5 5000 under 100 false @s')
         # テレポートできたか確認する。
         for _ in range(10):
             if self.ext.extension_command(f'execute as {self.name} at @s if data storage minecraft:d4c_spread "D4C_spread" run data get entity @s DeathTime') == '0s':
