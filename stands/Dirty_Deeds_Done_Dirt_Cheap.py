@@ -20,7 +20,7 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         self.teleport_mode = False          # テレポート状態かどうかのフラグ
         self.multi_summon_mode = False      # 複数の分身召喚モード
         self.multi_summon_time_base = 0     # 複数の分身召喚モードのための基準時間
-        self.ext.extension_command(f'scoreboard objectives add used_13 minecraft.used:minecraft.music_disc_13')
+        self.ext.extension_command(f'scoreboard objectives add used_13 minecraft.used:minecraft.music_disc_13')     # スタンドアイテムのトーテム効果が使われたかを検知するためのスコアボード
 
 
     def __del__(self):
@@ -44,7 +44,68 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
             self.ext.extension_command(f'datapack disable "file/d4c_loop_pack"')
             return
 
+        # 回復能力や分身償還能力はこの関数で検知し発動させる。
+        self.trigger_and_run()
+
         # 複数の分身を召喚していたら、定期実行処理を実行
+        self.running_multi_summon_mode()
+
+        # 並行世界から基本世界へテレポートして帰ってきてからの最低在留時間計測
+        if not self.teleport_prepare:
+            self.teleport_prepare = self.hold_time_for_base_world()
+
+        if self.teleport_mode:
+            # テレポートしている時間を設定すべき。時間の長さによっては予期せぬ行動により思いもよらない挙動を見せる可能性があり十分な検討が必要。
+            self.recovery_and_teleport_base_world()
+            return
+
+
+        # 分身能力未発動　かつ　右クリックしたとき、ドア(トラップドア、フェンスゲート含む)を使用していたら（右クリックした後open=false）挟み込み発動
+        # これについては特別な判定を行う
+        if self.run_stand == False and self.right_click:
+            ...
+
+
+
+    def trigger_and_run(self):
+        # 1. 並行世界へテレポートし、分身と入れ替わり回復する処理
+        if self.get_OffHandItem()[1] == type(self).__name__ and (not self.multi_summon_mode):
+            if self.teleport_prepare and (not self.teleport_mode):
+                # スタンドアイテムを握っているだけで発動する能力をここに記述する
+                # 主に挟み込み確認と、挟み込みによる回復処理
+                # この場合、self.run_standはTrueにはならない。
+                if self.check_get_stuck():
+                    # この時点では並行世界へのテレポートだけ行う。
+                    self.teleport_parallel_world()
+                    self.teleport_mode = True
+                    self.run_stand = True
+            elif (not self.teleport_prepare) and (not self.teleport_mode):
+                if self.check_get_stuck():
+                    # 並行世界から基本世界へテレポートして帰ってきてからの最低在留時間が経過していない場合は何もしない。
+                    wait_time = int(self._hold_stay_time - (time.time() - self.hold_stay_time_base))
+                    self.ext.extension_command(f'title {self.name} clear')
+                    self.ext.extension_command(f'title {self.name} actionbar "残り{wait_time}秒で再度テレポート可能"')
+
+        # 2. 分身能力発動処理
+        # 他の能力が発動していない状態で、スタンドアイテムを持ち、右クリック、shiftを同時に押すと発動
+        if all([self.run_stand == False, self.right_click, 'shift' in self.press_keys, not self.teleport_mode]):
+            if self.get_OffHandItem()[1] == type(self).__name__:
+                # 分身召喚能力発動
+                if self.number_of_summons_possible > 0:
+                    for number in range(self.number_of_summons_possible):
+                        self.summon_alter_ego(str(number))
+                    self.ext.extension_command('datapack enable "file/d4c_loop_pack"')
+                    self.run_stand = True
+                    self.multi_summon_mode = True
+                else:
+                    wait_time = int(self._charge_time - (time.time() - self.charge_time_base))
+                    self.ext.extension_command(f'title {self.name} clear')
+                    self.ext.extension_command(f'title {self.name} actionbar "最低召喚数を確保できていません。残り{wait_time}秒です。"')
+        else:
+            self.right_click = False
+
+
+    def running_multi_summon_mode(self):
         if self.multi_summon_mode:
             self.multi_summon_time_base = time.time() if self.multi_summon_time_base == 0 else self.multi_summon_time_base
             if self._keep_alter_ego_time <= time.time() - self.multi_summon_time_base:
@@ -96,57 +157,6 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         else:
             # 召喚可能分身数を増やす時間計測
             self.ability_time_counter()
-
-        # 並行世界から基本世界へテレポートして帰ってきてからの最低在留時間計測
-        if not self.teleport_prepare:
-            self.teleport_prepare = self.hold_time_for_base_world()
-
-        # 並行世界へテレポートし、分身と入れ替わり回復
-        if self.get_OffHandItem()[1] == type(self).__name__ and (not self.multi_summon_mode):
-            if self.teleport_prepare and (not self.teleport_mode):
-                # スタンドアイテムを握っているだけで発動する能力をここに記述する
-                # 主に挟み込み確認と、挟み込みによる回復処理
-                # この場合、self.run_standはTrueにはならない。
-                if self.check_get_stuck():
-                    # この時点では並行世界へのテレポートだけ行う。
-                    self.teleport_paralel_world()
-                    self.teleport_mode = True
-                    self.run_stand = True
-            elif (not self.teleport_prepare) and (not self.teleport_mode):
-                if self.check_get_stuck():
-                    # 並行世界から基本世界へテレポートして帰ってきてからの最低在留時間が経過していない場合は何もしない。
-                    wait_time = int(self._hold_stay_time - (time.time() - self.hold_stay_time_base))
-                    self.ext.extension_command(f'title {self.name} clear')
-                    self.ext.extension_command(f'title {self.name} actionbar "残り{wait_time}秒で再度テレポート可能"')
-
-        if self.teleport_mode:
-            # テレポートしている時間を設定すべき。時間の長さによっては予期せぬ行動により思いもよらない挙動を見せる可能性があり十分な検討が必要。
-            self.recovery_and_teleport_base_world()
-            return
-
-
-        # 分身能力未発動　かつ　右クリックしたとき、ドア(トラップドア、フェンスゲート含む)を使用していたら（右クリックした後open=false）挟み込み発動
-        # これについては特別な判定を行う
-        if self.run_stand == False and self.right_click:
-            ...
-
-        # 分身能力発動処理
-        # 他の能力が発動していない状態で、スタンドアイテムを持ち、右クリック、shiftを同時に押すと発動
-        if all([self.run_stand == False, self.right_click, 'shift' in self.press_keys, not self.teleport_mode]):
-            if self.get_OffHandItem()[1] == type(self).__name__:
-                # 分身召喚能力発動
-                if self.number_of_summons_possible > 0:
-                    for number in range(self.number_of_summons_possible):
-                        self.summon_alter_ego(str(number))
-                    self.ext.extension_command('datapack enable "file/d4c_loop_pack"')
-                    self.run_stand = True
-                    self.multi_summon_mode = True
-                else:
-                    wait_time = int(self._charge_time - (time.time() - self.charge_time_base))
-                    self.ext.extension_command(f'title {self.name} clear')
-                    self.ext.extension_command(f'title {self.name} actionbar "最低召喚数を確保できていません。残り{wait_time}秒です。"')
-        else:
-            self.right_click = False
 
 
     def _cleanup_multi_summon_mode(self):
