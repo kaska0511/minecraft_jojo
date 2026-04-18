@@ -23,6 +23,7 @@ class Love_Train(Common_func):
         self.run_love_train = False
         self.ext.extension_command(f'effect clear {self.name}')
         self.ext.extension_command(f'attribute {self.name} minecraft:attack_damage base reset')
+        self.ext.extension_command(f'tag {self.name} remove Love_Train_mode')
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
@@ -63,11 +64,17 @@ class Love_Train(Common_func):
 
         # 能力が発動しているなら、詳細な能力処理
         if self.run_love_train:
-            # プレイヤーは付与された効果を元に戻した上で、無敵化を付与する。
+            if self.ext.extension_command(f'execute if entity @a[name={self.name},tag=Love_Train_mode] run data get entity {self.name} DeathTime') == '0s':
+                # 重複実行して問題ないが、極力付与しないようにするコマンド。
+                # 無敵化を付与する。
+                self.ext.extension_command(f'effect give {self.name} minecraft:resistance infinite 255 true')
+                # 通常攻撃を10ダメージに引き上げ、致命傷とする。
+                self.ext.extension_command(f'attribute {self.name} minecraft:attack_damage base set 10')
+                # particleコマンドでエフェクトを出すためにtagを付与。
+                self.ext.extension_command(f'execute if entity @a[name={self.name},tag=Love_Train_mode] run tag {self.name} add Love_Train_mode')
             self.ext.extension_command(f'effect clear {self.name}')
-            self.ext.extension_command(f'effect give {self.name} minecraft:resistance infinite 255 true')
-            # 通常攻撃を10ダメージに引き上げ、致命傷とする。
-            self.ext.extension_command(f'attribute {self.name} minecraft:attack_damage base set 10')
+            # 光の壁
+            self.ext.extension_command(f'execute as {self.name} at @s run particle minecraft:end_rod ^ ^1 ^ 2 1 0 0 100 force @a')
         else:
             # 能力を解除
             self.reset()
