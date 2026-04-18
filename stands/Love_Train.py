@@ -24,6 +24,7 @@ class Love_Train(Common_func):
         self.ext.extension_command(f'effect clear {self.name}')
         self.ext.extension_command(f'attribute {self.name} minecraft:attack_damage base reset')
         self.ext.extension_command(f'tag {self.name} remove Love_Train_mode')
+        self.ext.extension_command(f'datapack disable "file/d4c_loop_particle_pack"')
 
     def loop(self):
         if self.name == "1dummy" or self.get_logout():
@@ -74,6 +75,7 @@ class Love_Train(Common_func):
                 self.ext.extension_command(f'execute if entity @a[name={self.name},tag=Love_Train_mode] run tag {self.name} add Love_Train_mode')
             self.ext.extension_command(f'effect clear {self.name}')
             # 光の壁
+            self.ext.extension_command(f'datapack enable "file/d4c_loop_particle_pack"')
             self.ext.extension_command(f'execute as {self.name} at @s run particle minecraft:end_rod ^ ^1 ^ 2 1 0 0 100 force @a')
         else:
             # 能力を解除
