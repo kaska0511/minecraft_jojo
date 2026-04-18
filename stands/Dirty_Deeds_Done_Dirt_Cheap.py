@@ -1,4 +1,3 @@
-import random
 import time
 from stands.Common_func import Common_func
 
@@ -21,7 +20,7 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         self.multi_summon_mode = False      # 複数の分身召喚モード
         self.multi_summon_time_base = 0     # 複数の分身召喚モードのための基準時間
         self.ext.extension_command(f'scoreboard objectives add used_13 minecraft.used:minecraft.music_disc_13')     # スタンドアイテムのトーテム効果が使われたかを検知するためのスコアボード
-
+        self.ext.extension_command(f'team add d4c_team')    # D4Cの分身達が所属するチーム。これにより、分身同士・同種族同士の攻撃を防ぐ。
 
     def __del__(self):
         self.cancel_stand()
@@ -108,7 +107,7 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
     def running_multi_summon_mode(self):
         if self.multi_summon_mode:
             self.multi_summon_time_base = time.time() if self.multi_summon_time_base == 0 else self.multi_summon_time_base
-            if self._keep_alter_ego_time <= time.time() - self.multi_summon_time_base:
+            if self._keep_alter_ego_time <= time.time() - self.multi_summon_time_base:  # TODO: ザ・ワールドの能力によって最大10秒程度短縮されてしまう。
                 # 能力有効時間外なので後片付け。
                 self._cleanup_multi_summon_mode()
             else:
@@ -126,9 +125,8 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
                                                 + type(self).__name__ + '"},minecraft:enchantments={"minecraft:vanishing_curse":1}]')
                     if is_exist_alter_ego == '0s':
                         # 分身と入れ替わり処理
-                        # 最も近い分身の追従元オオカミを削除。
-                        self.ext.extension_command(f'execute as {self.name} at @s run data modify entity @n[tag=D4C_alter_ego,type=wolf] Owner set value []')
-                        self.ext.extension_command(f'execute as @n[tag=D4C_alter_ego,type=wolf] at @s run kill @s')
+                        # 最も近い分身の追従元ゾンビピグリンを削除。
+                        self.ext.extension_command(f'execute as {self.name} at @s run kill @n[tag=D4C_alter_ego,type=zombified_piglin]')
                         # 最も近い分身の元へ移動。
                         self.ext.extension_command(f'execute as {self.name} at @s run tp @s @n[tag=D4C_alter_ego,type=mannequin,limit=1]')
                         # 最も近い分身の現体力を取得し、削除。
@@ -167,7 +165,6 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         self.multi_summon_time_base = 0
         self.charge_time_base = 0
         self.ext.extension_command(f'datapack disable "file/d4c_loop_pack"')
-        self.ext.extension_command(f'execute as @e[tag=D4C_alter_ego,tag=D4C_effect_alter_ego,type=wolf] at @s run data modify entity @s Owner set value []')
         self.ext.extension_command(f'kill @e[tag=D4C_alter_ego]')
 
     def del_totem_other_players(self):
@@ -259,8 +256,7 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
         # ここにスタンドのキャンセル処理を記述する
         self.enable_waypoint()
         # 分身を削除して元に戻る処理
-        self.ext.extension_command(f'execute as @e[tag=D4C_alter_ego,tag=D4C_effect_alter_ego,type=wolf] at @s run data modify entity @s Owner set value []')
-        self.ext.extension_command(f'kill @e[tag=D4C_alter_ego,tag=D4C_effect_alter_ego,tag=D4C_pin]')
+        self.ext.extension_command(f'kill @e[tag=D4C_alter_ego,tag=D4C_effect_alter_ego,tag=D4C_pin]')  #! 読み込みチャンク外にいると削除できない。。。
         self.ext.extension_command(f'datapack disable "file/d4c_loop_pack"')
         self.teleport_mode = False
         self.run_stand = False
@@ -320,7 +316,6 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
                 teleport_base_world()
         else:
             # 分身を削除
-            self.ext.extension_command(f'execute as @e[tag=D4C_alter_ego,tag=D4C_effect_alter_ego,type=wolf] at @s run data modify entity @s Owner set value []')
             self.ext.extension_command(f'kill @e[tag=D4C_alter_ego,tag=D4C_effect_alter_ego]')
             teleport_base_world()
 
@@ -405,9 +400,8 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
             self.ext.extension_command(f'title {self.name} clear')
             self.ext.extension_command(f'title {self.name} actionbar "隣の世界の『能力』は このわたしに移った…"')
             # 触れたら回復＆分身削除処理
-            # 行動トレース元のオオカミを削除
-            self.ext.extension_command(f'execute as @e[tag={tag},type=wolf] at @s run data modify entity @s Owner set value []')
-            self.ext.extension_command(f'kill @e[tag={tag},type=wolf]')
+            # 行動トレース元のゾンビピグリンを削除
+            self.ext.extension_command(f'kill @e[tag={tag},type=zombified_piglin]')
             # 本体の位置に演出用の分身を召喚。
             self.summon_alter_ego('D4C_effect_alter_ego')
             # 演出用分身の目線を本体の目線に合わせ、コピーできるものはコピーする
@@ -423,7 +417,6 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
             # 全ての効果を解除し、即時回復
             self.clear_all_effects_and_instant_health()
             # 分身を削除
-            self.ext.extension_command(f'execute as @e[tag={tag},tag=D4C_effect_alter_ego,type=wolf] at @s run data modify entity @s Owner set value []')
             self.ext.extension_command(f'kill @e[tag={tag},tag=D4C_effect_alter_ego]')
             return True
         else:
@@ -445,15 +438,15 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
 
 
     def summon_alter_ego(self, tag):
-
-        # 極小の透明なオオカミを召喚、ほぼ同時にマネキンを召喚
-        # オオカミの大きさが0.8d：マネキンよりも当たり判定が小さく（マネキンが攻撃されたときオオカミがダメージを吸収しずらい）、
-        # か0.8d以下だとオオカミが壁にぶつかった時、マネキンがめり込み窒息することがある。その防止のため
+        # プレイヤー自身をteamに所属させておく。
+        self.ext.extension_command(f'execute unless entity @a[name={self.name},team=d4c_team] run team join d4c_team')
+        # 透明なゾンビピグリンを召喚、ほぼ同時にマネキンを召喚
+        # 元々の大きさが0.8dのオオカミを召喚していたが、マネキンが壁にめり込み窒息することがあった。これをかいしょうするためゾンビピグリンに変更。
         self.ext.extension_command('execute as '+ self.name +' at @s run summon minecraft:mannequin ~ ~ ~ {Tags:["D4C_alter_ego","'+ tag +'"],profile:'+ self.name +',CustomName:'+ self.name +',hide_description:true}')
-        # 大きさ0.8、攻撃力0、透明化、SEナシ、無敵のオオカミを召喚
-        self.ext.extension_command('execute as '+ self.name +' at @s run summon minecraft:wolf ~ ~ ~ {attributes:[{id:"minecraft:scale",base:0.8d},{id:"minecraft:attack_damage",base:0d},{id:"minecraft:attack_damage",base:0d}],active_effects:[{duration:-1,show_particles:0b,id:"minecraft:invisibility"}],Tags:["D4C_alter_ego","'+ tag +'"],Silent:1b,Invulnerable:1b}')
-        # オオカミの飼い主を本体へ設定
-        self.ext.extension_command(f'execute as {self.name} at @s run data modify entity @n[type=wolf,tag=D4C_alter_ego,tag={tag},limit=1] Owner set from entity {self.name} UUID')
+        # 攻撃力0、透明化、SEナシ、無敵、ドロップ無しのゾンビピグリンを召喚
+        self.ext.extension_command('execute as '+ self.name +' at @s run summon minecraft:zombified_piglin ~ ~ ~ {attributes:[{id:"minecraft:attack_damage",base:0d},{id:"minecraft:attack_damage",base:0d}],active_effects:[{duration:-1,show_particles:0b,id:"minecraft:invisibility"}],Tags:["D4C_alter_ego","'+ tag +'"],DeathLootTable:"minecraft:empty",Silent:1b,Invulnerable:1b}')
+        # ゾンビピグリンをteamへ所属させる。
+        self.ext.extension_command(f'team join d4c_team @e[type=zombified_piglin,tag=D4C_alter_ego,tag={tag},limit=1]')
 
 
     def spread_alter_ego(self, distance=5, tag="D4C_alter_ego"):
@@ -474,20 +467,20 @@ class Dirty_Deeds_Done_Dirt_Cheap(Common_func):
     def manipulate_alter_ego_all(self, tag="D4C_alter_ego"):
         # 全ての分身を操作する処理
         # 主に攻撃対象者を分身に伝える処理
-        # 分身はオオカミの動きをトレースするが、オオカミが攻撃対象とするエンティティは全てではない
-        # そこで、分身に攻撃対象を伝えるためにオオカミのangry_atを操作する。
+        # 分身はゾンビピグリンの動きをトレースするが、ゾンビピグリンが攻撃対象とするエンティティは全種類ではない
+        # そこで、分身に攻撃対象を伝えるためにゾンビピグリンのangry_atを操作する。
         # パターン1. 能動的に本体が攻撃したエンティティを伝播させる
-        self.ext.extension_command(f'execute as @e[nbt=!{{HurtTime:0s}}] at @s on attacker if entity @s[name={self.name}] run execute as @e[distance=..1,limit=1] at @s run data modify entity @n[type=wolf,tag={tag}] angry_at set from entity @s UUID')
+        self.ext.extension_command(f'execute as @e[nbt=!{{HurtTime:0s}}] at @s on attacker if entity @s[name={self.name}] run execute as @e[distance=..1,limit=1] at @s run data modify entity @n[type=zombified_piglin,tag={tag}] angry_at set from entity @s UUID')
         # パターン2. 受動的に本体に対して攻撃したエンティティを伝播させる
-        self.ext.extension_command(f'execute as {self.name} at @s on attacker run data modify entity @e[type=wolf,tag={tag}] angry_at set from entity @s UUID')
+        self.ext.extension_command(f'execute as {self.name} at @s on attacker run data modify entity @e[type=zombified_piglin,tag={tag}] angry_at set from entity @s UUID')
 
 
 
 # デバッグ用コマンド
-# /item modify entity KASKA0511 weapon.mainhand minecraft:add_d4c_totem
-# /item modify entity KASKA0511 weapon.mainhand minecraft:del_d4c_totem
+# /item modify entity <> weapon.mainhand minecraft:add_d4c_totem
+# /item modify entity <> weapon.mainhand minecraft:del_d4c_totem
 # totem発動検知用をイメージこれの返り値が23b?23ならトーテムが発動していることになる。23なのは大統領が23代だったから
-# /data get entity KASKA0511 active_effects[{id:"minecraft:resistance"}].amplifier
+# /data get entity <> active_effects[{id:"minecraft:resistance"}].amplifier
 
 # hint
 # 全プレイヤーを対象に、インベントリ内のdeath_protectionコンポーネント付きアイテムをクリアするコマンド
